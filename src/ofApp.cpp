@@ -131,11 +131,13 @@ void ofApp::update(){
 	kinect2.update();
 #endif
     
+    /**
     //for each client lets send them a message letting them know what port they are connected on
 	for(int i = 0; i < TCP.getLastID(); i++){
 		if(TCP.isClientConnected(i))
             TCP.send(i, "hello client - you are connected on port - ");//+ofToString(TCP.getClientPort(i)) );
 	}
+     **/
 }
 
 //--------------------------------------------------------------
@@ -229,6 +231,10 @@ void ofApp::drawTCPConnection(){
 		//we only want to update the text we have recieved there is data
 		string str = TCP.receive(i);
         
+        if(str == "connectioninit")
+            TCP.send(i, "server connection confirmed with " + ip);
+        
+        
 		if(str.length() > 0){
 			storeText[i] = str;
 		}
@@ -277,6 +283,16 @@ void ofApp::exit() {
 #ifdef USE_TWO_KINECTS
 	kinect2.close();
 #endif
+    
+    //for each client lets send them a message letting them know what port they are connected on
+	for(int i = 0; i < TCP.getLastID(); i++){
+		if(TCP.isClientConnected(i)){
+            TCP.send(i, "serverexit");
+            TCP.disconnectClient(i);
+        }
+	}
+
+    TCP.close();
 }
 
 //--------------------------------------------------------------
@@ -450,3 +466,5 @@ void ofApp::gotMessage(ofMessage msg){
 void ofApp::dragEvent(ofDragInfo dragInfo){ 
 
 }
+
+
