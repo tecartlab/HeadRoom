@@ -14,7 +14,7 @@ void ofApp::setup(){
 	//udpConnection.SetNonBlocking(true);
 
     //setup the server to listen on 11999
-	TCP.setup(11999);
+	rgbaMatrixServer.setup(11999);
 	//optionally set the delimiter to something else.  The delimter in the client and the server have to be the same, default being [/TCP]
 	//TCP.setMessageDelimiter("\n");
 
@@ -197,7 +197,7 @@ void ofApp::draw(){
 void ofApp::drawTCPConnection(){
     
 	ofSetHexColor(0xDDDDDD);
-	ofDrawBitmapString("TCP SERVER Example connect on port: "+ofToString(TCP.getPort()), 10, 700);
+	ofDrawBitmapString("TCP SERVER Example connect on port: "+ofToString(rgbaMatrixServer.getPort()), 10, 700);
     
 	//ofSetHexColor(0x000000);
 	//ofRect(10, 60, ofGetWidth()-24, ofGetHeight() - 65 - 15);
@@ -205,9 +205,9 @@ void ofApp::drawTCPConnection(){
 	ofSetHexColor(0xDDDDDD);
     
 	//for each connected client lets get the data being sent and lets print it to the screen
-	for(unsigned int i = 0; i < (unsigned int)TCP.getLastID(); i++){
+	for(unsigned int i = 0; i < (unsigned int)rgbaMatrixServer.getLastID(); i++){
         
-		if( !TCP.isClientConnected(i) )continue;
+		if( !rgbaMatrixServer.isClientConnected(i) )continue;
         
 		//give each client its own color
 		ofSetColor(255 - i*30, 255 - i * 20, 100 + i*40);
@@ -217,8 +217,8 @@ void ofApp::drawTCPConnection(){
 		int yPos = 720 + (12 * i * 4);
         
 		//get the ip and port of the client
-		string port = ofToString( TCP.getClientPort(i) );
-		string ip   = TCP.getClientIP(i);
+		string port = ofToString( rgbaMatrixServer.getClientPort(i) );
+		string ip   = rgbaMatrixServer.getClientIP(i);
 		string info = "client "+ofToString(i)+" -connected from "+ip+" on port: "+port;
         
         
@@ -229,10 +229,10 @@ void ofApp::drawTCPConnection(){
 		}
         
 		//we only want to update the text we have recieved there is data
-		string str = TCP.receive(i);
+		string str = rgbaMatrixServer.receive(i);
         
         if(str == "connectioninit")
-            TCP.send(i, "server connection confirmed with " + ip);
+            rgbaMatrixServer.send(i, "confirmed with " + ip);
         
         
 		if(str.length() > 0){
@@ -283,16 +283,8 @@ void ofApp::exit() {
 #ifdef USE_TWO_KINECTS
 	kinect2.close();
 #endif
-    
-    //for each client lets send them a message letting them know what port they are connected on
-	for(int i = 0; i < TCP.getLastID(); i++){
-		if(TCP.isClientConnected(i)){
-            TCP.send(i, "serverexit");
-            TCP.disconnectClient(i);
-        }
-	}
 
-    TCP.close();
+    rgbaMatrixServer.exit();
 }
 
 //--------------------------------------------------------------

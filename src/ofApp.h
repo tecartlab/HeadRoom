@@ -4,6 +4,7 @@
 #include "ofxNetwork.h"
 #include "ofxOpenCv.h"
 #include "ofxKinect.h"
+#include "ofxMatrixNetworkServer.h"
 
 class ofApp : public ofBaseApp{
 
@@ -28,7 +29,7 @@ class ofApp : public ofBaseApp{
 
         void createCone(float f_left, float f_right, float f_top, float f_bottom, float f_near, float f_far);
 
-        ofxTCPServer TCP;
+        ofxMatrixNetworkServer rgbaMatrixServer;
         vector <string> storeText;
 		
         ofxUDPManager udpConnection;
