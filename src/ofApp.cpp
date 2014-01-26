@@ -131,14 +131,11 @@ void ofApp::update(){
 	kinect2.update();
 #endif
     
-    /**
-    //for each client lets send them a message letting them know what port they are connected on
-	for(int i = 0; i < TCP.getLastID(); i++){
-		if(TCP.isClientConnected(i))
-            TCP.send(i, "hello client - you are connected on port - ");//+ofToString(TCP.getClientPort(i)) );
-	}
-     **/
+    rgbaMatrixServer.update();
+
+    rgbaMatrixServer.sendFrame(kinect.getPixelsRef());
 }
+
 
 //--------------------------------------------------------------
 void ofApp::draw(){
@@ -190,61 +187,8 @@ void ofApp::draw(){
 	if(!bDrawPointCloud) {
         ofDrawBitmapString(msg,430,320);
         
-        drawTCPConnection();
+        rgbaMatrixServer.draw(10, 640);
     }
-}
-
-void ofApp::drawTCPConnection(){
-    
-	ofSetHexColor(0xDDDDDD);
-	ofDrawBitmapString("TCP SERVER Example connect on port: "+ofToString(rgbaMatrixServer.getPort()), 10, 700);
-    
-	//ofSetHexColor(0x000000);
-	//ofRect(10, 60, ofGetWidth()-24, ofGetHeight() - 65 - 15);
-    
-	ofSetHexColor(0xDDDDDD);
-    
-	//for each connected client lets get the data being sent and lets print it to the screen
-	for(unsigned int i = 0; i < (unsigned int)rgbaMatrixServer.getLastID(); i++){
-        
-		if( !rgbaMatrixServer.isClientConnected(i) )continue;
-        
-		//give each client its own color
-		ofSetColor(255 - i*30, 255 - i * 20, 100 + i*40);
-        
-		//calculate where to draw the text
-		int xPos = 15;
-		int yPos = 720 + (12 * i * 4);
-        
-		//get the ip and port of the client
-		string port = ofToString( rgbaMatrixServer.getClientPort(i) );
-		string ip   = rgbaMatrixServer.getClientIP(i);
-		string info = "client "+ofToString(i)+" -connected from "+ip+" on port: "+port;
-        
-        
-		//if we don't have a string allocated yet
-		//lets create one
-		if(i >= storeText.size() ){
-			storeText.push_back( string() );
-		}
-        
-		//we only want to update the text we have recieved there is data
-		string str = rgbaMatrixServer.receive(i);
-        
-        if(str == "connectioninit")
-            rgbaMatrixServer.send(i, "confirmed with " + ip);
-        
-        
-		if(str.length() > 0){
-			storeText[i] = str;
-		}
-        
-		//draw the info text and the received text bellow it
-		ofDrawBitmapString(info, xPos, yPos);
-		ofDrawBitmapString(storeText[i], 25, yPos + 10);
-        
-	}
-    
 }
 
 void ofApp::drawPointCloud() {

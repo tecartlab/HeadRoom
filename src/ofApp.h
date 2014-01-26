@@ -15,7 +15,6 @@ class ofApp : public ofBaseApp{
         void exit();
     
         void drawPointCloud();
-        void drawTCPConnection();
     
 		void keyPressed(int key);
 		void keyReleased(int key);
@@ -30,9 +29,10 @@ class ofApp : public ofBaseApp{
         void createCone(float f_left, float f_right, float f_top, float f_bottom, float f_near, float f_far);
 
         ofxMatrixNetworkServer rgbaMatrixServer;
+
         vector <string> storeText;
 		
-        ofxUDPManager udpConnection;
+        //ofxUDPManager udpConnection;
 
 		ofTrueTypeFont  mono;
 		ofTrueTypeFont  monosm;
