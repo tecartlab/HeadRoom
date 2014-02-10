@@ -221,6 +221,8 @@ void ofApp::drawPointCloud() {
 
 //--------------------------------------------------------------
 void ofApp::exit() {
+    ofLog(OF_LOG_NOTICE, "exiting application...");
+
 	kinect.setCameraTiltAngle(0); // zero the tilt on exit
 	kinect.close();
 	
