@@ -133,7 +133,12 @@ void ofApp::update(){
     
     rgbaMatrixServer.update();
 
-    rgbaMatrixServer.sendFrame(kinect.getPixelsRef());
+    //rgbaMatrixServer.sendFrame(kinect.getPixelsRef());
+    
+    //rgbaMatrixServer.sendFrame(kinect.getDepthPixelsRef());
+    
+    rgbaMatrixServer.sendFrame(kinect.getRawDepthPixelsRef());
+    
 }
 
 
