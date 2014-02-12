@@ -13,8 +13,11 @@ void ofApp::setup(){
 	//udpConnection.Connect("127.0.0.1",4653);
 	//udpConnection.SetNonBlocking(true);
 
-    //setup the server to listen on 11999
-	rgbaMatrixServer.setup(11999);
+    //setup the servers to listen
+    rgbaMatrixServer.setup(34101);
+	depthMatrixServer.setup(34102);
+	rawMatrixServer.setup(34103);
+
 	//optionally set the delimiter to something else.  The delimter in the client and the server have to be the same, default being [/TCP]
 	//TCP.setMessageDelimiter("\n");
 
@@ -132,12 +135,12 @@ void ofApp::update(){
 #endif
     
     rgbaMatrixServer.update();
+	depthMatrixServer.update();
+	rawMatrixServer.update();
 
-    //rgbaMatrixServer.sendFrame(kinect.getPixelsRef());
-    
-    //rgbaMatrixServer.sendFrame(kinect.getDepthPixelsRef());
-    
-    rgbaMatrixServer.sendFrame(kinect.getRawDepthPixelsRef());
+    rgbaMatrixServer.sendFrame(kinect.getPixelsRef());
+    depthMatrixServer.sendFrame(kinect.getDepthPixelsRef());
+    rawMatrixServer.sendFrame(kinect.getRawDepthPixelsRef());
     
 }
 
@@ -236,6 +239,8 @@ void ofApp::exit() {
 #endif
 
     rgbaMatrixServer.exit();
+    depthMatrixServer.exit();
+    rawMatrixServer.exit();
 }
 
 //--------------------------------------------------------------

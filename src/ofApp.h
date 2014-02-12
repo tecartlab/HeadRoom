@@ -29,6 +29,8 @@ class ofApp : public ofBaseApp{
         void createCone(float f_left, float f_right, float f_top, float f_bottom, float f_near, float f_far);
 
         ofxMatrixNetworkServer rgbaMatrixServer;
+        ofxMatrixNetworkServer depthMatrixServer;
+        ofxMatrixNetworkServer rawMatrixServer;
 
         vector <string> storeText;
 		
