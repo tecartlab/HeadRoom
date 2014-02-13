@@ -6,6 +6,8 @@
 #include "ofxKinect.h"
 #include "ofxMatrixNetworkServer.h"
 
+#include <ofMatrix4x4.h>
+
 class ofApp : public ofBaseApp{
 
 	public:
@@ -40,7 +42,6 @@ class ofApp : public ofBaseApp{
 		ofTrueTypeFont  monosm;
 		vector<ofPoint> stroke;
     
-    
         ofEasyCam cam;
         ofVboMesh mesh, meshraw;
         bool dispRaw;
@@ -55,7 +56,9 @@ class ofApp : public ofBaseApp{
         //////////
         
         ofxKinect kinect;
-        
+    
+        ofMatrix4x4 unprojection;
+    
     #ifdef USE_TWO_KINECTS
         ofxKinect kinect2;
     #endif

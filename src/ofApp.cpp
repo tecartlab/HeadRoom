@@ -2,6 +2,10 @@
 
 #define RECONNECT_TIME 400
 
+#define DEPTH_X_RES 640
+#define DEPTH_Y_RES 480
+
+
 //--------------------------------------------------------------
 void ofApp::setup(){
 	// we don't want to be running to fast
@@ -62,16 +66,67 @@ void ofApp::setup(){
 	// start from the front
 	bDrawPointCloud = false;
     
-    createCone(-.1, .1, -.1, .1, .1, 10);
+    createCone(-.1, .1, -.1, .1, .2, 5000.);
 
 }
 
 void ofApp::createCone(float f_left, float f_right, float f_top, float f_bottom, float f_near, float f_far){
-	frustum.clear();
+    double ref_pix_size = kinect.getZeroPlanePixelSize();
+    double ref_distance = kinect.getZeroPlaneDistance();
+    ofShortPixelsRef raw = kinect.getRawDepthPixelsRef();
+    double factorNear = 2 * ref_pix_size * 400 / ref_distance;
+    double factorFar = 2 * ref_pix_size * 4000 / ref_distance;
+    
+    int near = -400;
+    int far = -4000;
+	//ofVec3f((x - DEPTH_X_RES/2) *factor, (y - DEPTH_Y_RES/2) *factor, raw[y * w + x]));
+
+    frustum.clear();
+    frustum.setMode(OF_PRIMITIVE_LINES);
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, (0 - DEPTH_Y_RES/2) *factorNear, near));
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, (0 - DEPTH_Y_RES/2) *factorFar, far));
+    
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, (0 - DEPTH_Y_RES/2) *factorNear, near));
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, (0 - DEPTH_Y_RES/2) *factorFar, far));
+
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, (480 - DEPTH_Y_RES/2) *factorNear, near));
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, (480 - DEPTH_Y_RES/2) *factorFar, far));
+
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, (480 - DEPTH_Y_RES/2) *factorNear, near));
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, (480 - DEPTH_Y_RES/2) *factorFar, far));
+
+    
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, (0 - DEPTH_Y_RES/2) *factorNear, near));
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, (0 - DEPTH_Y_RES/2) *factorNear, near));
+
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, (0 - DEPTH_Y_RES/2) *factorNear, near));
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, (480 - DEPTH_Y_RES/2) *factorNear, near));
+    
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, (480 - DEPTH_Y_RES/2) *factorNear, near));
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, (480 - DEPTH_Y_RES/2) *factorNear, near));
+
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, (480 - DEPTH_Y_RES/2) *factorNear, near));
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, (0 - DEPTH_Y_RES/2) *factorNear, near));
+
+    
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, (0 - DEPTH_Y_RES/2) *factorFar, far));
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, (0 - DEPTH_Y_RES/2) *factorFar, far));
+    
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, (0 - DEPTH_Y_RES/2) *factorFar, far));
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, (480 - DEPTH_Y_RES/2) *factorFar, far));
+
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, (480 - DEPTH_Y_RES/2) *factorFar, far));
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, (480 - DEPTH_Y_RES/2) *factorFar, far));
+
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, (480 - DEPTH_Y_RES/2) *factorFar, far));
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, (0 - DEPTH_Y_RES/2) *factorFar, far));
+
+
+    /*
     float coneRatio = f_far / f_near;
     //	outlet(0,"linesegment", 0, f_left, -f_near, 0, f_left * coneRatio, -f_far);
-    frustum.addVertex(ofPoint(f_left, f_bottom, -f_near));
-    frustum.addVertex(ofPoint(f_left * coneRatio, f_bottom * coneRatio, -f_far));
+//    frustum.addVertex(ofPoint(f_left, f_bottom, -f_near));
+//    frustum.addVertex(ofPoint(f_left * coneRatio, f_bottom * coneRatio, -f_far));
     
     //	outlet(0,"linesegment", 0, f_right, -f_near, 0, f_right * coneRatio, -f_far);
     frustum.addVertex(ofPoint(f_right, f_bottom, -f_near));
@@ -84,6 +139,7 @@ void ofApp::createCone(float f_left, float f_right, float f_top, float f_bottom,
     //outlet(0,"linesegment", f_bottom, 0, -f_near,f_bottom * coneRatio, 0, -f_far);
     frustum.addVertex(ofPoint(f_right, f_top, -f_near));
     frustum.addVertex(ofPoint(f_right * coneRatio, f_top * coneRatio, -f_far));
+    */
 }
 
 //--------------------------------------------------------------
@@ -200,22 +256,28 @@ void ofApp::draw(){
 }
 
 void ofApp::drawPointCloud() {
-    
-	frustum.drawWireframe();
-    
+        
     int w = 640;
 	int h = 480;
 	ofMesh mesh;
 	mesh.setMode(OF_PRIMITIVE_POINTS);
-	int step = 2;
+
+    double ref_pix_size = kinect.getZeroPlanePixelSize();
+    double ref_distance = kinect.getZeroPlaneDistance();
+    ofShortPixelsRef raw = kinect.getRawDepthPixelsRef();
+    double factor = 0;
+    
+    int step = 2;
 	for(int y = 0; y < h; y += step) {
 		for(int x = 0; x < w; x += step) {
-			if(kinect.getDistanceAt(x, y) > 0) {
+            factor = 2 * ref_pix_size * raw[y * w + x] / ref_distance;
+ 			if(raw[y * w + x] > 0) {
 				mesh.addColor(kinect.getColorAt(x,y));
-				mesh.addVertex(kinect.getWorldCoordinateAt(x, y));
+				mesh.addVertex(ofVec3f((x - DEPTH_X_RES/2) *factor, (y - DEPTH_Y_RES/2) *factor, raw[y * w + x]));
 			}
 		}
 	}
+  
 	glPointSize(3);
 	ofPushMatrix();
 	// the projected points are 'upside down' and 'backwards'
@@ -225,6 +287,9 @@ void ofApp::drawPointCloud() {
 	mesh.drawVertices();
 	glDisable(GL_DEPTH_TEST);
 	ofPopMatrix();
+    
+    frustum.drawWireframe();
+
 }
 
 //--------------------------------------------------------------
@@ -324,6 +389,10 @@ void ofApp::keyPressed(int key){
 			break;
 			
 		case '5':
+			kinect.setLed(ofxKinect::LED_BLINK_YELLOW_RED);
+			break;
+            
+		case '6':
 			kinect.setLed(ofxKinect::LED_BLINK_YELLOW_RED);
 			break;
 			
