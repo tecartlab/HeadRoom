@@ -22,10 +22,22 @@ void ofApp::setup(){
 	depthMatrixServer.setup(34102);
 	rawMatrixServer.setup(34103);
 
-	//optionally set the delimiter to something else.  The delimter in the client and the server have to be the same, default being [/TCP]
 	//TCP.setMessageDelimiter("\n");
 
-
+    //////////
+    //GUI   //
+    //////////
+    
+    tiltAngle.addListener(this, &ofApp::setKinectTiltAngle);
+    
+    gui.setup("panel");
+    gui.add(calibPoint1.set("calib1", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
+    gui.add(calibPoint2.set("calib2", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
+    gui.add(calibPoint3.set("calib3", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
+    gui.add(tiltAngle.set("tilt", 0, -30, 30));
+    
+    gui.loadFromFile("settings.xml");
+    
     //////////
     //KINECT//
     //////////
@@ -58,16 +70,11 @@ void ofApp::setup(){
 	bThreshWithOpenCV = true;
 	
 	ofSetFrameRate(60);
-	
-	// zero the tilt on startup
-	angle = 0;
-	kinect.setCameraTiltAngle(angle);
-	
+		
 	// start from the front
 	bDrawPointCloud = false;
     
     createCone(-.1, .1, -.1, .1, .2, 5000.);
-
 }
 
 void ofApp::createCone(float f_left, float f_right, float f_top, float f_bottom, float f_near, float f_far){
@@ -142,12 +149,93 @@ void ofApp::createCone(float f_left, float f_right, float f_top, float f_bottom,
     */
 }
 
+void ofApp::setKinectTiltAngle(int & angle){
+	kinect.setCameraTiltAngle(angle);
+    bUpdateCalc = true;
+}
+
+//--------------------------------------------------------------
+void ofApp::updateCalc(){
+    if(kinect.isConnected() && kinect.isFrameNewDepth()){
+        
+        planePoint1 = calcPlanePoint(calibPoint1, 1, 1);
+        planePoint2 = calcPlanePoint(calibPoint2, 1, 1);
+        planePoint3 = calcPlanePoint(calibPoint3, 1, 1);
+        
+        sphere1.setPosition(planePoint1);
+        sphere2.setPosition(planePoint2);
+        sphere3.setPosition(planePoint3);
+
+        sphere1.setRadius(10);
+        sphere2.setRadius(10);
+        sphere3.setRadius(10);
+
+        //sphere1.enableColors();
+        //sphere2.enableColors();
+        //sphere3.enableColors();
+        
+        Planef plane = Planef(planePoint1, planePoint2, planePoint3);
+        Linef centerLine = Linef(ofVec3f(0, 0, 0), ofVec3f(0, 0, -1));
+        
+
+        frustumCenterPoint = plane.getIntersection(centerLine);
+    
+        ofLog(OF_LOG_NOTICE, "planePoint1" + ofToString(planePoint1));
+        ofLog(OF_LOG_NOTICE, "frustumCenterPoint:" + ofToString(frustumCenterPoint));
+
+        frustumCenterSphere.setPosition(frustumCenterPoint);
+        frustumCenterSphere.setRadius(20);
+        
+        bUpdateCalc = false;
+    }
+}
+
+//--------------------------------------------------------------
+ofVec3f ofApp::calcPlanePoint(ofParameter<ofVec2f> & cpoint, int _size, int _step){
+    int width = kinect.getWidth();
+    int height = kinect.getHeight();
+    double ref_pix_size = kinect.getZeroPlanePixelSize();
+    double ref_distance = kinect.getZeroPlaneDistance();
+    ofShortPixelsRef raw = kinect.getRawDepthPixelsRef();
+    
+    int size = _size;
+    int step = _step;
+    float factor;
+    int counter = 0;
+    
+    int minX = ((cpoint.get().x - size) >= 0)?(cpoint.get().x - 1): 0;
+    int minY = ((cpoint.get().y - size) >= 0)?(cpoint.get().y - 1): 0;
+    int maxY = ((cpoint.get().y + size) < cpoint.getMax().y)?(cpoint.get().y + size): cpoint.getMax().y - 1;
+    int maxX = ((cpoint.get().x + size) < cpoint.getMax().x)?(cpoint.get().x + size): cpoint.getMax().x - 1;
+    
+    ofVec3f ppoint;
+    
+    for(int y = minY; y <= maxY; y = y + step) {
+        for(int x = minX; x <= maxX; x = x + step) {
+            factor = 2 * ref_pix_size * raw[y * width + x] / ref_distance;
+            if(raw[y * width + x] > 0) {
+                ppoint += ofVec3f((x - DEPTH_X_RES/2) *factor, (y - DEPTH_Y_RES/2) *factor, raw[y * width + x]);
+                counter++;
+            }
+        }
+    }
+    ppoint /= counter;
+    
+    return ppoint;
+    
+}
+
+
 //--------------------------------------------------------------
 void ofApp::update(){
 	
 	ofBackground(100, 100, 100);
 	
 	kinect.update();
+    
+    if(bUpdateCalc && kinect.getCurrentCameraTiltAngle() == tiltAngle){
+        updateCalc();
+    }
 	
 	// there is a new frame and we are connected
 	if(kinect.isFrameNew()) {
@@ -235,7 +323,7 @@ void ofApp::draw(){
 	msg += "set far threshold " + ofToString(farThreshold) + " (press: < >) num blobs found " + ofToString(contourFinder.nBlobs) + "\n";
 	msg += ", fps: " + ofToString(ofGetFrameRate()) + "\n";
 	msg += "press c to close the connection and o to open it again, connection is: " + ofToString(kinect.isConnected()) + "\n";
-	msg += "press UP and DOWN to change the tilt angle: " + ofToString(angle) + " degrees\n";
+	msg += "press UP and DOWN to change the tilt angle: " + ofToString(tiltAngle) + " degrees\n";
 	msg += "press 1-5 & 0 to change the led mode (mac/linux only)\n";
     msg += "Using mouse inputs to navigate (press 'M' to toggle): " + ofToString(cam.getMouseInputEnabled() ? "YES" : "NO");
 	msg += "\nShowing help (press 'h' to toggle) \n";
@@ -253,6 +341,8 @@ void ofApp::draw(){
         
         rgbaMatrixServer.draw(10, 640);
     }
+    
+    gui.draw();
 }
 
 void ofApp::drawPointCloud() {
@@ -280,10 +370,18 @@ void ofApp::drawPointCloud() {
   
 	glPointSize(3);
 	ofPushMatrix();
-	// the projected points are 'upside down' and 'backwards'
+    // the projected points are 'upside down' and 'backwards'
 	ofScale(1, -1, -1);
 	ofTranslate(0, 0, 0); // center the points a bit
 	glEnable(GL_DEPTH_TEST);
+    
+    glColor3i(100, 50, 100);
+    
+    sphere1.draw();
+    sphere2.draw();
+    sphere3.draw();
+    frustumCenterSphere.draw();
+    
 	mesh.drawVertices();
 	glDisable(GL_DEPTH_TEST);
 	ofPopMatrix();
@@ -303,6 +401,8 @@ void ofApp::exit() {
 	kinect2.close();
 #endif
 
+    tiltAngle.removeListener(this, &ofApp::setKinectTiltAngle);
+    
     rgbaMatrixServer.exit();
     depthMatrixServer.exit();
     rawMatrixServer.exit();
@@ -325,7 +425,15 @@ void ofApp::keyPressed(int key){
             
         case 'k':
             break;
-            
+ 
+        case 's':
+            gui.saveToFile("settings.xml");
+            break;
+
+        case 'l':
+            gui.loadFromFile("settings.xml");
+            break;
+
 		case 'M':
 			if(cam.getMouseInputEnabled()) cam.disableMouseInput();
 			else cam.enableMouseInput();
@@ -363,15 +471,18 @@ void ofApp::keyPressed(int key){
 			break;
 			
 		case 'o':
-			kinect.setCameraTiltAngle(angle); // go back to prev tilt
 			kinect.open();
 			break;
 			
 		case 'c':
-			kinect.setCameraTiltAngle(0); // zero the tilt
 			kinect.close();
 			break;
 			
+		case '0':
+            //angle.set(0);
+			kinect.setLed(ofxKinect::LED_OFF);
+			break;
+            
 		case '1':
 			kinect.setLed(ofxKinect::LED_GREEN);
 			break;
@@ -395,21 +506,11 @@ void ofApp::keyPressed(int key){
 		case '6':
 			kinect.setLed(ofxKinect::LED_BLINK_YELLOW_RED);
 			break;
-			
-		case '0':
-			kinect.setLed(ofxKinect::LED_OFF);
-			break;
-			
+						
 		case OF_KEY_UP:
-			angle++;
-			if(angle>30) angle=30;
-			kinect.setCameraTiltAngle(angle);
 			break;
 			
 		case OF_KEY_DOWN:
-			angle--;
-			if(angle<-30) angle=-30;
-			kinect.setCameraTiltAngle(angle);
 			break;
             
 		case OF_KEY_RIGHT:

@@ -29,6 +29,12 @@
 		BBAB23CB13894F3D00AA2426 /* GLUT.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BBAB23BE13894E4700AA2426 /* GLUT.framework */; };
 		D14A8F2403316BDB1A8E118E /* cameras.c in Sources */ = {isa = PBXBuildFile; fileRef = 3824859C5A24841E8AAAE47E /* cameras.c */; };
 		D3301F6A0B43BB293ED97C1D /* ofxCvShortImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A4DD23693DFAB8EC05FAA5D /* ofxCvShortImage.cpp */; };
+		DB6C52B818AE3D73008CC794 /* tinyxml.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB6C52B118AE3D73008CC794 /* tinyxml.cpp */; };
+		DB6C52B918AE3D73008CC794 /* tinyxmlerror.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB6C52B318AE3D73008CC794 /* tinyxmlerror.cpp */; };
+		DB6C52BA18AE3D73008CC794 /* tinyxmlparser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB6C52B418AE3D73008CC794 /* tinyxmlparser.cpp */; };
+		DB6C52BB18AE3D73008CC794 /* ofxXmlSettings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB6C52B618AE3D73008CC794 /* ofxXmlSettings.cpp */; };
+		DB6C52C018AEA3B6008CC794 /* Planef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB6C52BF18AEA3B6008CC794 /* Planef.cpp */; };
+		DB6C52C318AEA657008CC794 /* Linef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB6C52C118AEA657008CC794 /* Linef.cpp */; };
 		DB82805C18AB9BF4009AB0BE /* ofxKinectNetworkServer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB82805B18AB9BF4009AB0BE /* ofxKinectNetworkServer.cpp */; };
 		DBC1C5121893FD1700591956 /* ofxMatrixNetworkServer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DBC1C5101893FD1700591956 /* ofxMatrixNetworkServer.cpp */; };
 		E212C821D1064B92DD953A42 /* ofxCvHaarFinder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9A16CBF2E8CFE43AF54FE6F5 /* ofxCvHaarFinder.cpp */; };
@@ -218,6 +224,16 @@
 		D76A59E7B3601E76351C9BDB /* cvaux.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = cvaux.h; path = ../../../addons/ofxOpenCv/libs/opencv/include/opencv/cvaux.h; sourceTree = SOURCE_ROOT; };
 		D847EBE484F4F500F9CF2549 /* ofxCvImage.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = ofxCvImage.h; path = ../../../addons/ofxOpenCv/src/ofxCvImage.h; sourceTree = SOURCE_ROOT; };
 		D902EB2409214285BCF5F191 /* stream_accessor.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = stream_accessor.hpp; path = ../../../addons/ofxOpenCv/libs/opencv/include/opencv2/gpu/stream_accessor.hpp; sourceTree = SOURCE_ROOT; };
+		DB6C52B118AE3D73008CC794 /* tinyxml.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tinyxml.cpp; sourceTree = "<group>"; };
+		DB6C52B218AE3D73008CC794 /* tinyxml.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinyxml.h; sourceTree = "<group>"; };
+		DB6C52B318AE3D73008CC794 /* tinyxmlerror.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tinyxmlerror.cpp; sourceTree = "<group>"; };
+		DB6C52B418AE3D73008CC794 /* tinyxmlparser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tinyxmlparser.cpp; sourceTree = "<group>"; };
+		DB6C52B618AE3D73008CC794 /* ofxXmlSettings.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxXmlSettings.cpp; sourceTree = "<group>"; };
+		DB6C52B718AE3D73008CC794 /* ofxXmlSettings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxXmlSettings.h; sourceTree = "<group>"; };
+		DB6C52BE18AEA22F008CC794 /* Planef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Planef.h; sourceTree = "<group>"; };
+		DB6C52BF18AEA3B6008CC794 /* Planef.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Planef.cpp; sourceTree = "<group>"; };
+		DB6C52C118AEA657008CC794 /* Linef.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Linef.cpp; sourceTree = "<group>"; };
+		DB6C52C218AEA657008CC794 /* Linef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Linef.h; sourceTree = "<group>"; };
 		DB82805B18AB9BF4009AB0BE /* ofxKinectNetworkServer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxKinectNetworkServer.cpp; sourceTree = "<group>"; };
 		DB82805D18AB9C03009AB0BE /* ofxKinectNetworkServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxKinectNetworkServer.h; sourceTree = "<group>"; };
 		DB8653D6433E14BF06F3EFAF /* cvwimage.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = cvwimage.h; path = ../../../addons/ofxOpenCv/libs/opencv/include/opencv/cvwimage.h; sourceTree = SOURCE_ROOT; };
@@ -648,6 +664,7 @@
 		BB4B014C10F69532006C3DED /* addons */ = {
 			isa = PBXGroup;
 			children = (
+				DB6C52AF18AE3D73008CC794 /* ofxXmlSettings */,
 				DBC1C50B1893FD1700591956 /* ofxMatrixNetworkServer */,
 				480A780D8D0308AE4A368801 /* ofxGui */,
 				9683228C705CA3FF4F2EA945 /* ofxKinect */,
@@ -729,6 +746,36 @@
 			name = objdetect;
 			sourceTree = "<group>";
 		};
+		DB6C52AF18AE3D73008CC794 /* ofxXmlSettings */ = {
+			isa = PBXGroup;
+			children = (
+				DB6C52B018AE3D73008CC794 /* libs */,
+				DB6C52B518AE3D73008CC794 /* src */,
+			);
+			name = ofxXmlSettings;
+			path = ../../../addons/ofxXmlSettings;
+			sourceTree = "<group>";
+		};
+		DB6C52B018AE3D73008CC794 /* libs */ = {
+			isa = PBXGroup;
+			children = (
+				DB6C52B118AE3D73008CC794 /* tinyxml.cpp */,
+				DB6C52B218AE3D73008CC794 /* tinyxml.h */,
+				DB6C52B318AE3D73008CC794 /* tinyxmlerror.cpp */,
+				DB6C52B418AE3D73008CC794 /* tinyxmlparser.cpp */,
+			);
+			path = libs;
+			sourceTree = "<group>";
+		};
+		DB6C52B518AE3D73008CC794 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				DB6C52B618AE3D73008CC794 /* ofxXmlSettings.cpp */,
+				DB6C52B718AE3D73008CC794 /* ofxXmlSettings.h */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
 		DBC1C50B1893FD1700591956 /* ofxMatrixNetworkServer */ = {
 			isa = PBXGroup;
 			children = (
@@ -790,9 +837,13 @@
 		E4B69E1C0A3A1BDC003C02F2 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				DB6C52C118AEA657008CC794 /* Linef.cpp */,
+				DB6C52C218AEA657008CC794 /* Linef.h */,
 				E4B69E1D0A3A1BDC003C02F2 /* main.cpp */,
 				E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */,
 				E4B69E1F0A3A1BDC003C02F2 /* ofApp.h */,
+				DB6C52BF18AEA3B6008CC794 /* Planef.cpp */,
+				DB6C52BE18AEA22F008CC794 /* Planef.h */,
 			);
 			path = src;
 			sourceTree = SOURCE_ROOT;
@@ -976,6 +1027,12 @@
 				D3301F6A0B43BB293ED97C1D /* ofxCvShortImage.cpp in Sources */,
 				DBC1C5121893FD1700591956 /* ofxMatrixNetworkServer.cpp in Sources */,
 				DB82805C18AB9BF4009AB0BE /* ofxKinectNetworkServer.cpp in Sources */,
+				DB6C52B818AE3D73008CC794 /* tinyxml.cpp in Sources */,
+				DB6C52B918AE3D73008CC794 /* tinyxmlerror.cpp in Sources */,
+				DB6C52BA18AE3D73008CC794 /* tinyxmlparser.cpp in Sources */,
+				DB6C52BB18AE3D73008CC794 /* ofxXmlSettings.cpp in Sources */,
+				DB6C52C018AEA3B6008CC794 /* Planef.cpp in Sources */,
+				DB6C52C318AEA657008CC794 /* Linef.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

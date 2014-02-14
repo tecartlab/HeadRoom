@@ -4,7 +4,10 @@
 #include "ofxNetwork.h"
 #include "ofxOpenCv.h"
 #include "ofxKinect.h"
+#include "ofxGui.h"
 #include "ofxMatrixNetworkServer.h"
+#include "Planef.h"
+#include "Linef.h"
 
 #include <ofMatrix4x4.h>
 
@@ -62,7 +65,11 @@ class ofApp : public ofBaseApp{
     #ifdef USE_TWO_KINECTS
         ofxKinect kinect2;
     #endif
-        
+    
+    /////////////////
+    //COLOR CONTOUR//
+    /////////////////
+
         ofxCvColorImage colorImg;
         
         ofxCvGrayscaleImage grayImage; // grayscale depth image
@@ -76,13 +83,50 @@ class ofApp : public ofBaseApp{
         
         int nearThreshold;
         int farThreshold;
-        
-        int angle;
-        
+            
         // used for viewing the point cloud
         ofEasyCam easyCam;
         
         bool bShowHelp;
+    
+
+    ///////////////
+    //CALCUALTION//
+    ///////////////
+    void updateCalc();
+    ofVec3f calcPlanePoint(ofParameter<ofVec2f> & cpoint, int _size, int _step);
+    
+    bool bUpdateCalc = false;
+   
+    ofVec3f planePoint1;
+    ofVec3f planePoint2;
+    ofVec3f planePoint3;
+    
+    ofSpherePrimitive sphere1;
+    ofSpherePrimitive sphere2;
+    ofSpherePrimitive sphere3;
+    
+    ofSpherePrimitive frustumCenterSphere;
+    ofSpherePrimitive frustumTopSphere;
+
+    ofVec3f frustumCenterPoint;
+    ofVec3f frustumTopPoint;
+
+    
+    //////////////
+    //PROPERTIES//
+    //////////////
+    ofxPanel gui;
+    
+    ofParameter<ofVec2f> calibPoint1;
+    ofParameter<ofVec2f> calibPoint2;
+    ofParameter<ofVec2f> calibPoint3;
+    
+    ofParameter<int> tiltAngle;
+    
+    void setKinectTiltAngle(int & tiltAngle);
+    
+
     
 };
 
