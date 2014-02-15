@@ -17,6 +17,7 @@
 class Linef {
     
 public:
+    Linef();
     Linef(ofVec3f origin, ofVec3f pointA);
     
     //ofVec3f getIntersection(Linef line);

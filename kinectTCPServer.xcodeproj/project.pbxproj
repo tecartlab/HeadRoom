@@ -37,6 +37,7 @@
 		DB6C52C318AEA657008CC794 /* Linef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB6C52C118AEA657008CC794 /* Linef.cpp */; };
 		DB82805C18AB9BF4009AB0BE /* ofxKinectNetworkServer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB82805B18AB9BF4009AB0BE /* ofxKinectNetworkServer.cpp */; };
 		DBC1C5121893FD1700591956 /* ofxMatrixNetworkServer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DBC1C5101893FD1700591956 /* ofxMatrixNetworkServer.cpp */; };
+		DBF54CED18AFC8F200D5F8D4 /* Grid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DBF54CEB18AFC8F200D5F8D4 /* Grid.cpp */; };
 		E212C821D1064B92DD953A42 /* ofxCvHaarFinder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9A16CBF2E8CFE43AF54FE6F5 /* ofxCvHaarFinder.cpp */; };
 		E2564CF7DDB3713772BB682E /* ofxUDPManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 35BB9BB90DBABFD3B39F8DB6 /* ofxUDPManager.cpp */; };
 		E4328149138ABC9F0047C5CB /* openFrameworksDebug.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E4328148138ABC890047C5CB /* openFrameworksDebug.a */; };
@@ -239,6 +240,8 @@
 		DB8653D6433E14BF06F3EFAF /* cvwimage.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = cvwimage.h; path = ../../../addons/ofxOpenCv/libs/opencv/include/opencv/cvwimage.h; sourceTree = SOURCE_ROOT; };
 		DBC1C5101893FD1700591956 /* ofxMatrixNetworkServer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxMatrixNetworkServer.cpp; sourceTree = "<group>"; };
 		DBC1C5111893FD1700591956 /* ofxMatrixNetworkServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxMatrixNetworkServer.h; sourceTree = "<group>"; };
+		DBF54CEB18AFC8F200D5F8D4 /* Grid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Grid.cpp; sourceTree = "<group>"; };
+		DBF54CEC18AFC8F200D5F8D4 /* Grid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Grid.h; sourceTree = "<group>"; };
 		DCB56F4E9F44E31D571BC9C4 /* index_testing.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = index_testing.h; path = ../../../addons/ofxOpenCv/libs/opencv/include/opencv2/flann/index_testing.h; sourceTree = SOURCE_ROOT; };
 		DEA2EDC0AFD59176FDEDC222 /* ofxCvShortImage.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = ofxCvShortImage.h; path = ../../../addons/ofxOpenCv/src/ofxCvShortImage.h; sourceTree = SOURCE_ROOT; };
 		DF3CFB6367F0771D65ACDED6 /* core.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 30; name = core.c; path = ../../../addons/ofxKinect/libs/libfreenect/core.c; sourceTree = SOURCE_ROOT; };
@@ -837,13 +840,15 @@
 		E4B69E1C0A3A1BDC003C02F2 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				DB6C52C118AEA657008CC794 /* Linef.cpp */,
-				DB6C52C218AEA657008CC794 /* Linef.h */,
 				E4B69E1D0A3A1BDC003C02F2 /* main.cpp */,
 				E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */,
 				E4B69E1F0A3A1BDC003C02F2 /* ofApp.h */,
 				DB6C52BF18AEA3B6008CC794 /* Planef.cpp */,
 				DB6C52BE18AEA22F008CC794 /* Planef.h */,
+				DB6C52C118AEA657008CC794 /* Linef.cpp */,
+				DB6C52C218AEA657008CC794 /* Linef.h */,
+				DBF54CEB18AFC8F200D5F8D4 /* Grid.cpp */,
+				DBF54CEC18AFC8F200D5F8D4 /* Grid.h */,
 			);
 			path = src;
 			sourceTree = SOURCE_ROOT;
@@ -1033,6 +1038,7 @@
 				DB6C52BB18AE3D73008CC794 /* ofxXmlSettings.cpp in Sources */,
 				DB6C52C018AEA3B6008CC794 /* Planef.cpp in Sources */,
 				DB6C52C318AEA657008CC794 /* Linef.cpp in Sources */,
+				DBF54CED18AFC8F200D5F8D4 /* Grid.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

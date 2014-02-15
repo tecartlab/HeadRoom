@@ -12,3 +12,8 @@ Linef::Linef(ofVec3f _origin, ofVec3f _pointA){
     origin = ofVec3f(_origin);
     direction = ofVec3f(_pointA-_origin);
 }
+
+Linef::Linef(){
+    origin = ofVec3f();
+    direction = ofVec3f(0, 0, -1);
+}

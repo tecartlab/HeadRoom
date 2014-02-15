@@ -23,6 +23,28 @@ ofVec3f Planef::getIntersection(Linef _line){
     return (_line.origin + vector);
 }
 
+Linef Planef::getIntersection(Planef _plane){
+    // first check if thePlane is parallel to plane:
+    if(intersects(_plane)){
+        ofVec3f direction = _plane.normal.cross(normal).normalize();
+        ofVec3f point = _plane.getOrigin() + getOrigin();
+        return Linef(point, point + direction);
+    }
+    return Linef();
+}
+
+bool Planef::intersects(Planef _plane){
+    return (_plane.normal.cross(normal).length() == 0.0f)? false: true;
+}
+
 bool Planef::intersects(Linef line){
     return (line.direction.dot(normal) == 0.0f)? false: true;
 }
+
+ofVec3f Planef::getOrigin(){
+    ofVec3f orig = ofVec3f(normal);
+    orig.scale(p);
+    return orig;
+}
+
+

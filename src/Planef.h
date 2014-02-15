@@ -21,8 +21,11 @@ public:
     Planef(ofVec3f origin, ofVec3f pointA, ofVec3f pointB);
     
     ofVec3f getIntersection(Linef line);
+    Linef getIntersection(Planef _plane);
     bool intersects(Linef line);
-
+    bool intersects(Planef _plane);
+    ofVec3f getOrigin();
+    
     ofVec3f normal;
     float p;
 

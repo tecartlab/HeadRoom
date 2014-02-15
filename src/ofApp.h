@@ -8,6 +8,7 @@
 #include "ofxMatrixNetworkServer.h"
 #include "Planef.h"
 #include "Linef.h"
+#include "Grid.h"
 
 #include <ofMatrix4x4.h>
 
@@ -53,7 +54,9 @@ class ofApp : public ofBaseApp{
         
         vector<ofVboMesh> meshes;
         vector<ofVboMesh>::iterator mit;
-        
+    
+    grid mainGrid;
+    
         //////////
         //KINECT//
         //////////
@@ -111,6 +114,15 @@ class ofApp : public ofBaseApp{
 
     ofVec3f frustumCenterPoint;
     ofVec3f frustumTopPoint;
+
+    ofVboMesh geometry;
+    
+    float kinectRransform_xAxisRot;
+    float kinectRransform_yAxisRot;
+    
+    float kinectRransform_zTranslate;
+    
+    ofMatrix4x4 kinectRransform;
 
     
     //////////////
