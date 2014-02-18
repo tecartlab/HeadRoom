@@ -13,5 +13,25 @@ ICON_FILE_PATH = $(OF_PATH)/libs/openFrameworksCompiled/project/osx/
 //IF YOU WANT AN APP TO HAVE A CUSTOM ICON - PUT THEM IN YOUR DATA FOLDER AND CHANGE ICON_FILE_PATH to:
 //ICON_FILE_PATH = bin/data/
 
-OTHER_LDFLAGS = $(OF_CORE_LIBS) 
-HEADER_SEARCH_PATHS = $(OF_CORE_HEADERS)
+///////////////////////////////////////////
+// ADDONS
+
+// path to the addons dir
+ADDONS_PATH = $(OF_PATH)/addons
+
+//ofxOpenCV
+OFX_OPENCV_HEADERS = "$(ADDONS_PATH)/ofxOpenCv/libs/opencv/include/"
+
+// ofxKinect
+OFX_KINECT_HEADERS = "$(ADDONS_PATH)/ofxKinect/libs/libusb-1.0/include/libusb-1.0/"
+OFX_KINECT_LIBS = "$(ADDONS_PATH)/ofxKinect/libs/libusb-1.0/lib/osx/usb-1.0.a"
+
+// all addons
+OF_ADDON_HEADERS = $(OFX_KINECT_HEADERS) $(OFX_OPENCV_HEADERS)
+OF_ADDON_LIBS = $(OFX_KINECT_LIBS)
+
+///////////////////////////////////////////
+// MAIN
+
+HEADER_SEARCH_PATHS = $(OF_CORE_HEADERS) $(OF_ADDON_HEADERS)
+OTHER_LDFLAGS = $(OF_CORE_LIBS) $(OF_ADDON_LIBS)

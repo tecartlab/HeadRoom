@@ -349,6 +349,8 @@ void ofApp::draw(){
 	ofSetColor(255, 255, 255);
 	
 	if(bDrawPointCloud) {
+        kinect.draw(420, 10, 400, 300);
+
 		easyCam.begin();
 		drawPointCloud();
 		easyCam.end();
@@ -414,16 +416,24 @@ void ofApp::drawPointCloud() {
     ofShortPixelsRef raw = kinect.getRawDepthPixelsRef();
     double factor = 0;
     
+    int minRaw = 10000;
+    int maxRaw = 0;
+    
     int step = 2;
 	for(int y = 0; y < h; y += step) {
 		for(int x = 0; x < w; x += step) {
             factor = 2 * ref_pix_size * raw[y * w + x] / ref_distance;
  			if(raw[y * w + x] > 0) {
+                minRaw = (minRaw > raw[y * w + x])?raw[y * w + x]:minRaw;
+                maxRaw = (maxRaw < raw[y * w + x])?raw[y * w + x]:maxRaw;
 				mesh.addColor(kinect.getColorAt(x,y));
 				mesh.addVertex(ofVec3f((x - DEPTH_X_RES/2) *factor, (y - DEPTH_Y_RES/2) *factor, raw[y * w + x]));
 			}
 		}
 	}
+    
+    ofLog(OF_LOG_NOTICE, "Raw Data Range: minRaw" + ofToString(minRaw) + " | maxRaw" + ofToString(maxRaw));
+
   
 	glPointSize(3);
 	ofPushMatrix();
