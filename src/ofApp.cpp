@@ -27,10 +27,15 @@ void ofApp::setup(){
     //////////
     //GUI   //
     //////////
+
+    gui.setup("panel");
+    iMainCamera = 0;
     
+    setupViewports();
+    createHelp();
+
     tiltAngle.addListener(this, &ofApp::setKinectTiltAngle);
     
-    gui.setup("panel");
     gui.add(calibPoint1.set("calib1", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
     gui.add(calibPoint2.set("calib2", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
     gui.add(calibPoint3.set("calib3", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
@@ -54,12 +59,7 @@ void ofApp::setup(){
 	kinect.open();		// opens first available kinect
 	//kinect.open(1);	// open a kinect by id, starting with 0 (sorted by serial # lexicographically))
 	//kinect.open("A00362A08602047A");	// open a kinect using it's unique serial #
-	
-#ifdef USE_TWO_KINECTS
-	kinect2.init();
-	kinect2.open();
-#endif
-	
+		
 	colorImg.allocate(kinect.width, kinect.height);
 	grayImage.allocate(kinect.width, kinect.height);
 	grayThreshNear.allocate(kinect.width, kinect.height);
@@ -77,6 +77,38 @@ void ofApp::setup(){
     createCone(-.1, .1, -.1, .1, .2, 5000.);
     
 }
+
+
+//--------------------------------------------------------------
+void ofApp::setupViewports(){
+	//call here whenever we resize the window
+ 
+    gui.setPosition(ofGetWidth() - 200, 20);
+    //ofLog(OF_LOG_NOTICE, "ofGetWidth()" + ofToString(ofGetWidth()));
+
+	//--
+	// Define viewports
+    
+	float xOffset = 160; //ofGetWidth() / 3;
+	float yOffset = ofGetHeight() / N_CAMERAS;
+    
+	viewMain.x = xOffset;
+	viewMain.y = 0;
+	viewMain.width = ofGetWidth() - xOffset - 200; //xOffset * 2;
+	viewMain.height = ofGetHeight();
+    
+	for(int i = 0; i < N_CAMERAS; i++){
+        
+		viewGrid[i].x = 0;
+		viewGrid[i].y = yOffset * i;
+		viewGrid[i].width = xOffset;
+		viewGrid[i].height = yOffset;
+	}
+    
+	//
+	//--
+}
+
 
 void ofApp::createCone(float f_left, float f_right, float f_top, float f_bottom, float f_near, float f_far){
     double ref_pix_size = kinect.getZeroPlanePixelSize();
@@ -294,6 +326,9 @@ void ofApp::update(){
 	
 	// there is a new frame and we are connected
 	if(kinect.isFrameNew()) {
+        if(bDrawPointCloud) {
+            updatePointCloud();
+        }
 		
 		// load grayscale depth image from the kinect source
 		grayImage.setFromPixels(kinect.getDepthPixels(), kinect.width, kinect.height);
@@ -343,74 +378,115 @@ void ofApp::update(){
     
 }
 
+void ofApp::createHelp(){
+    string help = string("accel is: " + ofToString(kinect.getMksAccel().x, 2) + " / ");
+	help += ofToString(kinect.getMksAccel().y, 2) + " / ";
+	help += ofToString(kinect.getMksAccel().z, 2) + "\n";
+	help += "press p to start updateing the pointcloud\n";
+	help += "press s to save current settings\n";
+	help += "press l to load last saved settings\n";
+	help += "using opencv threshold = " + ofToString(bThreshWithOpenCV) + " (press spacebar)\n";
+	help += "set near threshold " + ofToString(nearThreshold) + " (press: + -)\n";
+	help += "set far threshold " + ofToString(farThreshold) + " (press: < >) num blobs found " + ofToString(contourFinder.nBlobs) + "\n";
+	help += ", fps: " + ofToString(ofGetFrameRate()) + "\n";
+	help += "press c to close the connection and o to open it again, connection is: " + ofToString(kinect.isConnected()) + "\n";
+	help += "press UP and DOWN to change the tilt angle: " + ofToString(tiltAngle) + " degrees\n";
+	help += "press 0 - 5 to change the viewport\n";
+    help += "Using mouse inputs to navigate (press 'M' to toggle): " + ofToString(cam.getMouseInputEnabled() ? "YES" : "NO");
+	help += "\npress 'h' to show help \n";
+    help += "\n....\n";
+    help += "LEFT MOUSE BUTTON DRAG + TRANSLATION KEY (" + ofToString(cam.getTranslationKey()) + ") PRESSED\n";
+    help += "OR MIDDLE MOUSE BUTTON (if available):\n";
+    help += "move over XY axes (truck and boom).\n";
+    help += "RIGHT MOUSE BUTTON:\n";
+    help += "move over Z axis (dolly)\n";
+}
 
 //--------------------------------------------------------------
 void ofApp::draw(){
+    
 	ofSetColor(255, 255, 255);
-	
-	if(bDrawPointCloud) {
-        kinect.draw(420, 10, 400, 300);
 
-		easyCam.begin();
-		drawPointCloud();
-		easyCam.end();
-	} else {
-		// draw from the live kinect
-		kinect.drawDepth(10, 10, 400, 300);
-		kinect.draw(420, 10, 400, 300);
-		
-		grayImage.draw(10, 320, 400, 300);
-		contourFinder.draw(10, 320, 400, 300);
-		
-#ifdef USE_TWO_KINECTS
-		kinect2.draw(420, 320, 400, 300);
-#endif
-	}
-	
+    //Draw viewport previews
+    kinect.drawDepth(viewGrid[0]);
+    kinect.draw(viewGrid[1]);
+    grayImage.draw(viewGrid[2]);
+    contourFinder.draw(viewGrid[3]);
+
+    switch (iMainCamera) {
+        case 0:
+            kinect.drawDepth(viewMain);
+            
+            glDisable(GL_DEPTH_TEST);
+            ofPushStyle();
+            ofSetColor(255, 0, 0);
+            ofNoFill();
+            ofCircle(calibPoint1.get().x + 150, calibPoint1.get().y, 2);
+            ofCircle(calibPoint2.get().x + 150, calibPoint2.get().y, 2);
+            ofCircle(calibPoint3.get().x + 150, calibPoint3.get().y, 2);
+            ofPopStyle();
+            glEnable(GL_DEPTH_TEST);
+
+            break;
+        case 1:
+            kinect.draw(viewMain);
+            break;
+        case 2:
+            grayImage.draw(viewMain);
+            break;
+        case 3:
+            contourFinder.draw(viewMain);
+            break;
+        case 4:
+            easyCam.begin(viewMain);
+            drawPointCloud();
+            easyCam.end();
+            break;
+            
+        default:
+            break;
+    }
+
+    //Draw opengl viewport previews (pfImages dont like opengl calls before they are drawn
+    if(iMainCamera != 4){ // make sure the camera is drawn only once (so the interaction with the mouse works)
+        easyCam.begin(viewGrid[4]);
+        drawPointCloud();
+        easyCam.end();
+    }
+
 	// draw instructions
 	ofSetColor(255, 255, 255);
-	string msg = string("accel is: " + ofToString(kinect.getMksAccel().x, 2) + " / ");
-	msg += ofToString(kinect.getMksAccel().y, 2) + " / ";
-	msg += ofToString(kinect.getMksAccel().z, 2) + "\n";
-	msg += "press p to switch between images and point cloud, rotate the point cloud with the mouse\n";
-	msg += "press k to c(k)apture point cloud\n";
-	msg += "press R to switch Raw Pointcloud and Normalized Pointcloud\n";
-	msg += "using opencv threshold = " + ofToString(bThreshWithOpenCV) + " (press spacebar)\n";
-	msg += "set near threshold " + ofToString(nearThreshold) + " (press: + -)\n";
-	msg += "set far threshold " + ofToString(farThreshold) + " (press: < >) num blobs found " + ofToString(contourFinder.nBlobs) + "\n";
-	msg += ", fps: " + ofToString(ofGetFrameRate()) + "\n";
-	msg += "press c to close the connection and o to open it again, connection is: " + ofToString(kinect.isConnected()) + "\n";
-	msg += "press UP and DOWN to change the tilt angle: " + ofToString(tiltAngle) + " degrees\n";
-	msg += "press 1-5 & 0 to change the led mode (mac/linux only)\n";
-    msg += "Using mouse inputs to navigate (press 'M' to toggle): " + ofToString(cam.getMouseInputEnabled() ? "YES" : "NO");
-	msg += "\nShowing help (press 'h' to toggle) \n";
-	if (bShowHelp) {
-		msg += "\nLEFT MOUSE BUTTON DRAG:\nStart dragging INSIDE the yellow circle -> camera XY rotation .\nStart dragging OUTSIDE the yellow circle -> camera Z rotation (roll).\n";
-		msg += "LEFT MOUSE BUTTON DRAG + TRANSLATION KEY (" + ofToString(cam.getTranslationKey()) + ") PRESSED\n";
-		msg += "OR MIDDLE MOUSE BUTTON (if available):\n";
-		msg += "move over XY axes (truck and boom).\n";
-		msg += "RIGHT MOUSE BUTTON:\n";
-		msg += "move over Z axis (dolly)\n";
-	}
+    
+    if(bShowHelp) {
+        ofDrawBitmapString(help,430,320);
+    }
     
 	if(!bDrawPointCloud) {
-        ofDrawBitmapString(msg,430,320);
-        
         rgbaMatrixServer.draw(10, 640);
     }
     
     gui.draw();
+    
+    //--
+	// Highlight background of selected camera
+    
+	glDisable(GL_DEPTH_TEST);
+	ofPushStyle();
+	ofSetColor(100, 0, 100, 100);
+	ofRect(viewGrid[iMainCamera]);
+	ofPopStyle();
+	glEnable(GL_DEPTH_TEST);
+
 }
 
-void ofApp::drawPointCloud() {
+void ofApp::updatePointCloud() {
     
-    mainGrid.drawPlane(1000., 5, false);
-        
     int w = 640;
 	int h = 480;
-	ofMesh mesh;
+    //	ofMesh mesh;
+    mesh.clear();
 	mesh.setMode(OF_PRIMITIVE_POINTS);
-
+    
     double ref_pix_size = kinect.getZeroPlanePixelSize();
     double ref_distance = kinect.getZeroPlaneDistance();
     ofShortPixelsRef raw = kinect.getRawDepthPixelsRef();
@@ -431,14 +507,16 @@ void ofApp::drawPointCloud() {
 			}
 		}
 	}
-    
-    ofLog(OF_LOG_NOTICE, "Raw Data Range: minRaw" + ofToString(minRaw) + " | maxRaw" + ofToString(maxRaw));
+}
 
-  
+void ofApp::drawPointCloud() {
+    
+    mainGrid.drawPlane(10., 5, false);
+          
 	glPointSize(3);
 	ofPushMatrix();
     // the projected points are 'upside down' and 'backwards'
-	ofScale(1, -1, -1);
+	ofScale(0.01, -0.01, -0.01);
     //ofRotateX(kinectRransform_xAxisRot);
     //ofRotateY(kinectRransform_yAxisRot);
 	ofMultMatrix(kinectRransform);
@@ -493,7 +571,6 @@ void ofApp::keyPressed(int key){
             break;
             
         case 'R':
-            dispRaw = !dispRaw;
             break;
             
         case 'k':
@@ -513,7 +590,7 @@ void ofApp::keyPressed(int key){
 			break;
             
 		case 'h':
-			bShowHelp ^=true;
+			bShowHelp = !bShowHelp;
 			break;
             
 		case '>':
@@ -552,31 +629,37 @@ void ofApp::keyPressed(int key){
 			break;
 			
 		case '0':
-            //angle.set(0);
+            iMainCamera = 0;
 			kinect.setLed(ofxKinect::LED_OFF);
 			break;
             
 		case '1':
+            iMainCamera = 0;
 			kinect.setLed(ofxKinect::LED_GREEN);
 			break;
 			
 		case '2':
+            iMainCamera = 1;
 			kinect.setLed(ofxKinect::LED_YELLOW);
 			break;
 			
 		case '3':
+            iMainCamera = 2;
 			kinect.setLed(ofxKinect::LED_RED);
 			break;
 			
 		case '4':
+            iMainCamera = 3;
 			kinect.setLed(ofxKinect::LED_BLINK_GREEN);
 			break;
 			
 		case '5':
+            iMainCamera = 4;
 			kinect.setLed(ofxKinect::LED_BLINK_YELLOW_RED);
 			break;
             
 		case '6':
+            iMainCamera = 5;
 			kinect.setLed(ofxKinect::LED_BLINK_YELLOW_RED);
 			break;
 						
@@ -587,10 +670,6 @@ void ofApp::keyPressed(int key){
 			break;
             
 		case OF_KEY_RIGHT:
-            advance(mit, 1);
-            if( mit == meshes.end() ) {
-                mit = meshes.begin();
-            }
 			break;
             
 	}
@@ -645,7 +724,7 @@ void ofApp::mouseReleased(int x, int y, int button){
 
 //--------------------------------------------------------------
 void ofApp::windowResized(int w, int h){
-
+    setupViewports();
 }
 
 //--------------------------------------------------------------

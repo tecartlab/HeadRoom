@@ -12,6 +12,9 @@
 
 #include <ofMatrix4x4.h>
 
+#define N_CAMERAS 6
+
+
 class ofApp : public ofBaseApp{
 
 	public:
@@ -20,7 +23,8 @@ class ofApp : public ofBaseApp{
 		void draw();
         void exit();
     
-        void drawPointCloud();
+    void updatePointCloud();
+    void drawPointCloud();
     
 		void keyPressed(int key);
 		void keyReleased(int key);
@@ -46,29 +50,42 @@ class ofApp : public ofBaseApp{
 		ofTrueTypeFont  monosm;
 		vector<ofPoint> stroke;
     
-        ofEasyCam cam;
-        ofVboMesh mesh, meshraw;
-        bool dispRaw;
-        
-        ofVboMesh frustum;
-        
-        vector<ofVboMesh> meshes;
-        vector<ofVboMesh>::iterator mit;
+
+    //////////////////
+    //OPENGL CAMERAS//
+    //////////////////
+
+    //viewports
+    void setupViewports();
+    
+    ofRectangle viewMain;
+    ofRectangle viewGrid[N_CAMERAS];
+
+    //camera pointers
+    ofCamera * cameras[N_CAMERAS];
+    int iMainCamera;
+
+    ofEasyCam cam;
     
     grid mainGrid;
     
-        //////////
-        //KINECT//
-        //////////
+    //////////
+    //KINECT//
+    //////////
         
-        ofxKinect kinect;
+    ofxKinect kinect;
     
-        ofMatrix4x4 unprojection;
+    ofMatrix4x4 unprojection;
     
     #ifdef USE_TWO_KINECTS
         ofxKinect kinect2;
     #endif
-    
+
+    bool dispRaw;
+
+    ofVboMesh mesh, meshraw;
+    ofVboMesh frustum;
+        
     /////////////////
     //COLOR CONTOUR//
     /////////////////
@@ -138,7 +155,12 @@ class ofApp : public ofBaseApp{
     
     void setKinectTiltAngle(int & tiltAngle);
     
+    //////////
+    // HELP //
+    //////////
+    string help;
 
-    
+    void createHelp();
+
 };
 
