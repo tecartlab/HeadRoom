@@ -48,9 +48,9 @@ void ofApp::setup(){
     gui.add(calibPoint1.set("calib1", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
     gui.add(calibPoint2.set("calib2", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
     gui.add(calibPoint3.set("calib3", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
-    sensorBoxGuiGroup.setName("sensorBox");
-    sensorBoxGuiGroup.add(sensorBoxLeft.set("left", -50, 0, -2000));
-    sensorBoxGuiGroup.add(sensorBoxRight.set("right", 50, 0, 2000));
+    sensorBoxGuiGroup.setName("sensorField");
+    sensorBoxGuiGroup.add(sensorBoxLeft.set("left", -500, 0, -2000));
+    sensorBoxGuiGroup.add(sensorBoxRight.set("right", 500, 0, 2000));
     sensorBoxGuiGroup.add(sensorBoxFront.set("front", 0, 0, 7000));
     sensorBoxGuiGroup.add(sensorBoxBack.set("back", 2000, 0, 7000));
     sensorBoxGuiGroup.add(sensorBoxTop.set("top", 2200, 0, 3000));
@@ -81,6 +81,8 @@ void ofApp::setup(){
 	kinect.open();		// opens first available kinect
 	//kinect.open(1);	// open a kinect by id, starting with 0 (sorted by serial # lexicographically))
 	//kinect.open("A00362A08602047A");	// open a kinect using it's unique serial #
+    
+    kinect.setCameraTiltAngle(tiltAngle.get());
 		
 	colorImg.allocate(kinect.width, kinect.height);
 	grayImage.allocate(kinect.width, kinect.height);
@@ -164,7 +166,6 @@ void ofApp::updateSensorBox(int & value){
 void ofApp::updateFrustumCone(int & value){
     if(kinect.isConnected()){
         createFrustumCone();
-        ofLog(OF_LOG_NOTICE, "updateFrustumCone()" + ofToString(value));
     }
 }
 
@@ -257,13 +258,10 @@ void ofApp::updateCalc(){
     sphere2.setPosition(planePoint2);
     sphere3.setPosition(planePoint3);
 
-    sphere1.setRadius(10);
-    sphere2.setRadius(10);
-    sphere3.setRadius(10);
+    sphere1.setRadius(25);
+    sphere2.setRadius(25);
+    sphere3.setRadius(25);
 
-    //sphere1.enableColors();
-    //sphere2.enableColors();
-    //sphere3.enableColors();
     
     Planef floorPlane = Planef(planePoint1, planePoint2, planePoint3);
     Linef centerLine = Linef(ofVec3f(0, 0, 0), ofVec3f(0, 0, -1));
@@ -317,12 +315,11 @@ void ofApp::updateCalc(){
     
     ofMatrix4x4 kinectTransform = ofMatrix4x4();
     kinectTransform.translate(0, 0, kinectRransform_zTranslate);
-    //kinectRransform.rotate(ofQuaternion(kinectRransform_xAxisRot, ofVec3f(1, 0, 0), kinectRransform_yAxisRot, ofVec3f(0, 1, 0), 0, ofVec3f(0, 0, 1)));
-    
+
     kinectTransform.rotate(kinectRransform_xAxisRot, 1, 0, 0);
     kinectTransform.rotate(kinectRransform_yAxisRot, 0, 1, 0);
     
-    ofLog(OF_LOG_NOTICE, "zpos: " + ofToString(kinectTransform.getTranslation().z));
+    //ofLog(OF_LOG_NOTICE, "zpos: " + ofToString(kinectTransform.getTranslation().z));
 
     
     transformation.set(ofVec3f(kinectRransform_xAxisRot, kinectRransform_yAxisRot, kinectTransform.getTranslation().z));
@@ -330,7 +327,6 @@ void ofApp::updateCalc(){
     //ofLog(OF_LOG_NOTICE, "xAxisRot" + ofToString(kinectRransform_xAxisRot));
     //ofLog(OF_LOG_NOTICE, "yAxisRot" + ofToString(kinectRransform_yAxisRot));
 
-    frustumCenterSphere.setPosition(frustumCenterPoint);
     frustumCenterSphere.setRadius(20);
     
     bUpdateCalc = false;
@@ -568,6 +564,13 @@ void ofApp::updatePointCloud() {
     
     ofVec3f vertex;
     
+    float sensorFieldFront = sensorBoxFront.get();
+    float sensorFieldBack = sensorBoxBack.get();
+    float sensorFieldLeft = sensorBoxLeft.get();
+    float sensorFieldRight = sensorBoxRight.get();
+    float sensorFieldTop = sensorBoxTop .get();
+    float sensorFieldBottom = sensorBoxBottom.get();
+    
     int step = 2;
 	for(int y = 0; y < h; y += step) {
 		for(int x = 0; x < w; x += step) {
@@ -577,11 +580,11 @@ void ofApp::updatePointCloud() {
                 maxRaw = (maxRaw < raw[y * w + x])?raw[y * w + x]:maxRaw;
                 vertex = ofVec3f((x - DEPTH_X_RES/2) *factor, -(y - DEPTH_Y_RES/2) *factor, -raw[y * w + x]);
                 vertex = kinectRransform.preMult(vertex);
-                if(sensorBoxLeft.get() < vertex.x && vertex.x < sensorBoxRight.get() &&
-                   sensorBoxFront.get() < vertex.y && vertex.y < sensorBoxBack.get() &&
-                   sensorBoxBottom.get() < vertex.z && vertex.z < sensorBoxTop.get()){
+                if(sensorFieldLeft < vertex.x && vertex.x < sensorFieldRight &&
+                   sensorFieldFront < vertex.y && vertex.y < sensorFieldBack &&
+                   sensorFieldBottom < vertex.z && vertex.z < sensorFieldTop){
                     //mesh.addColor(kinect.getColorAt(x,y));
-                    mesh.addColor(vertex.z / 2500.);
+                    mesh.addColor(vertex.z / sensorFieldTop);
                 } else {
                     mesh.addColor(ofColor::black);
                 }
@@ -599,14 +602,15 @@ void ofApp::drawPointCloud() {
 
     mesh.drawVertices();
 
+    ofSetColor(255, 255, 0);
     sensorBox.draw();
 
 	glEnable(GL_DEPTH_TEST);
     
-    glColor3i(100, 50, 100);
 
     ofMultMatrix(kinectRransform);
 
+    ofSetColor(255, 0, 0);
     sphere1.enableColors();
     sphere1.draw();
     sphere2.draw();
@@ -615,6 +619,7 @@ void ofApp::drawPointCloud() {
     
     geometry.draw();
 
+    ofSetColor(0, 0, 255);
     frustum.drawWireframe();
 
 	glDisable(GL_DEPTH_TEST);
