@@ -14,6 +14,8 @@
 
 #define N_CAMERAS 6
 
+#define N_MEASURMENT_CYCLES 60
+
 
 class ofApp : public ofBaseApp{
 
@@ -35,8 +37,6 @@ class ofApp : public ofBaseApp{
 		void windowResized(int w, int h);
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);		
-
-        void createCone(float f_left, float f_right, float f_top, float f_bottom, float f_near, float f_far);
 
         ofxMatrixNetworkServer rgbaMatrixServer;
         ofxMatrixNetworkServer depthMatrixServer;
@@ -85,7 +85,10 @@ class ofApp : public ofBaseApp{
 
     ofVboMesh mesh, meshraw;
     ofVboMesh frustum;
-        
+ 
+    void createFrustumCone();
+    void updateFrustumCone(int & value);
+
     /////////////////
     //COLOR CONTOUR//
     /////////////////
@@ -114,10 +117,19 @@ class ofApp : public ofBaseApp{
     //CALCUALTION//
     ///////////////
     void updateCalc();
+    void updateMatrix();
+    void measurementCycle();
+
     ofVec3f calcPlanePoint(ofParameter<ofVec2f> & cpoint, int _size, int _step);
     
     bool bUpdateCalc = false;
+    bool bUpdateMeasurment = false;
+    int cycleCounter = 0;
    
+    ofVec3f planePoint1Meas[N_MEASURMENT_CYCLES];
+    ofVec3f planePoint2Meas[N_MEASURMENT_CYCLES];
+    ofVec3f planePoint3Meas[N_MEASURMENT_CYCLES];
+    
     ofVec3f planePoint1;
     ofVec3f planePoint2;
     ofVec3f planePoint3;
@@ -129,16 +141,8 @@ class ofApp : public ofBaseApp{
     ofSpherePrimitive frustumCenterSphere;
     ofSpherePrimitive frustumTopSphere;
 
-    ofVec3f frustumCenterPoint;
-    ofVec3f frustumTopPoint;
-
     ofVboMesh geometry;
-    
-    float kinectRransform_xAxisRot;
-    float kinectRransform_yAxisRot;
-    
-    float kinectRransform_zTranslate;
-    
+        
     ofMatrix4x4 kinectRransform;
 
     
@@ -151,6 +155,10 @@ class ofApp : public ofBaseApp{
     ofParameter<ofVec2f> calibPoint2;
     ofParameter<ofVec2f> calibPoint3;
     
+    ofParameter<ofVec3f> transformation;
+    
+    ofParameter<int> nearFrustum;
+    ofParameter<int> farFrustum;
     ofParameter<int> tiltAngle;
     
     void setKinectTiltAngle(int & tiltAngle);

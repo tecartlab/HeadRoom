@@ -8,11 +8,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/Properties.h"
-         timestampString = "414071848.085313"
+         timestampString = "415206069.279604"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "11"
-         endingLineNumber = "11">
+         startingLineNumber = "7"
+         endingLineNumber = "7">
       </FileBreakpoint>
       <FileBreakpoint
          shouldBeEnabled = "No"

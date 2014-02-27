@@ -34,14 +34,21 @@ void ofApp::setup(){
     setupViewports();
     createHelp();
 
+    nearFrustum.addListener(this, &ofApp::updateFrustumCone);
+    farFrustum.addListener(this, &ofApp::updateFrustumCone);
     tiltAngle.addListener(this, &ofApp::setKinectTiltAngle);
     
     gui.add(calibPoint1.set("calib1", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
     gui.add(calibPoint2.set("calib2", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
     gui.add(calibPoint3.set("calib3", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
+    gui.add(nearFrustum.set("near", 400, 200, 2000));
+    gui.add(farFrustum.set("far", 4000, 2000, 6000));
     gui.add(tiltAngle.set("tilt", 0, -30, 30));
+    gui.add(transformation.set("matrix rx ry tz", ofVec3f(0, 0, 0), ofVec3f(-90, -90, -6000), ofVec3f(90, 90, 6000)));
     
     gui.loadFromFile("settings.xml");
+    
+    updateMatrix();
     
     //////////
     //KINECT//
@@ -74,7 +81,7 @@ void ofApp::setup(){
 	// start from the front
 	bDrawPointCloud = false;
     
-    createCone(-.1, .1, -.1, .1, .2, 5000.);
+    createFrustumCone();
     
 }
 
@@ -109,16 +116,24 @@ void ofApp::setupViewports(){
 	//--
 }
 
+void ofApp::updateFrustumCone(int & value){
+    if(kinect.isConnected()){
+        createFrustumCone();
+        ofLog(OF_LOG_NOTICE, "updateFrustumCone()" + ofToString(value));
+    }
+}
 
-void ofApp::createCone(float f_left, float f_right, float f_top, float f_bottom, float f_near, float f_far){
+void ofApp::createFrustumCone(){
     double ref_pix_size = kinect.getZeroPlanePixelSize();
     double ref_distance = kinect.getZeroPlaneDistance();
     ofShortPixelsRef raw = kinect.getRawDepthPixelsRef();
-    double factorNear = 2 * ref_pix_size * 400 / ref_distance;
-    double factorFar = 2 * ref_pix_size * 4000 / ref_distance;
     
-    int near = 400;
-    int far = 4000;
+    int near = nearFrustum.get();
+    int far = farFrustum.get();
+
+    double factorNear = 2 * ref_pix_size * near / ref_distance;
+    double factorFar = 2 * ref_pix_size * far / ref_distance;
+    
 	//ofVec3f((x - DEPTH_X_RES/2) *factor, (y - DEPTH_Y_RES/2) *factor, raw[y * w + x]));
 
     frustum.clear();
@@ -160,121 +175,134 @@ void ofApp::createCone(float f_left, float f_right, float f_top, float f_bottom,
 
     frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, (480 - DEPTH_Y_RES/2) *factorFar, far));
     frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, (0 - DEPTH_Y_RES/2) *factorFar, far));
-
-
-    /*
-    float coneRatio = f_far / f_near;
-    //	outlet(0,"linesegment", 0, f_left, -f_near, 0, f_left * coneRatio, -f_far);
-//    frustum.addVertex(ofPoint(f_left, f_bottom, -f_near));
-//    frustum.addVertex(ofPoint(f_left * coneRatio, f_bottom * coneRatio, -f_far));
-    
-    //	outlet(0,"linesegment", 0, f_right, -f_near, 0, f_right * coneRatio, -f_far);
-    frustum.addVertex(ofPoint(f_right, f_bottom, -f_near));
-    frustum.addVertex(ofPoint(f_right * coneRatio, f_bottom * coneRatio, -f_far));
-    
-    //	outlet(0,"linesegment", f_top, 0, -f_near, f_top * coneRatio, 0, -f_far);
-    frustum.addVertex(ofPoint(f_left, f_top, -f_near));
-    frustum.addVertex(ofPoint(f_left * coneRatio, f_top * coneRatio, -f_far));
-    
-    //outlet(0,"linesegment", f_bottom, 0, -f_near,f_bottom * coneRatio, 0, -f_far);
-    frustum.addVertex(ofPoint(f_right, f_top, -f_near));
-    frustum.addVertex(ofPoint(f_right * coneRatio, f_top * coneRatio, -f_far));
-    */
 }
 
 void ofApp::setKinectTiltAngle(int & angle){
 	kinect.setCameraTiltAngle(angle);
-    ofResetElapsedTimeCounter();
-    bUpdateCalc = true;
+}
+
+void ofApp::measurementCycle(){
+    if(cycleCounter < N_MEASURMENT_CYCLES){
+        planePoint1Meas[cycleCounter] = calcPlanePoint(calibPoint1, 0, 1);
+        planePoint2Meas[cycleCounter] = calcPlanePoint(calibPoint2, 0, 1);
+        planePoint3Meas[cycleCounter] = calcPlanePoint(calibPoint3, 0, 1);
+        cycleCounter++;
+    } else {
+        planePoint1 = ofVec3f();
+        planePoint2 = ofVec3f();
+        planePoint3 = ofVec3f();
+        for(int y = 0; y < N_MEASURMENT_CYCLES; y++){
+            planePoint1 += planePoint1Meas[y];
+            planePoint2 += planePoint2Meas[y];
+            planePoint3 += planePoint3Meas[y];
+        }
+        planePoint1 /= N_MEASURMENT_CYCLES;
+        planePoint2 /= N_MEASURMENT_CYCLES;
+        planePoint3 /= N_MEASURMENT_CYCLES;
+        bUpdateMeasurment = false;
+        cycleCounter = 0;
+        updateCalc();
+    }
 }
 
 //--------------------------------------------------------------
 void ofApp::updateCalc(){
-    if(kinect.isConnected() && kinect.isFrameNewDepth()){
         
-        planePoint1 = calcPlanePoint(calibPoint1, 1, 1);
-        planePoint2 = calcPlanePoint(calibPoint2, 1, 1);
-        planePoint3 = calcPlanePoint(calibPoint3, 1, 1);
-        
-        sphere1.setPosition(planePoint1);
-        sphere2.setPosition(planePoint2);
-        sphere3.setPosition(planePoint3);
+    sphere1.setPosition(planePoint1);
+    sphere2.setPosition(planePoint2);
+    sphere3.setPosition(planePoint3);
 
-        sphere1.setRadius(10);
-        sphere2.setRadius(10);
-        sphere3.setRadius(10);
+    sphere1.setRadius(10);
+    sphere2.setRadius(10);
+    sphere3.setRadius(10);
 
-        //sphere1.enableColors();
-        //sphere2.enableColors();
-        //sphere3.enableColors();
-        
-        Planef floorPlane = Planef(planePoint1, planePoint2, planePoint3);
-        Linef centerLine = Linef(ofVec3f(0, 0, 0), ofVec3f(0, 0, -1));
-        
-        Planef verticalViewPlane = Planef(ofVec3f(0, 0, 0), ofVec3f(0, 0, -1), ofVec3f(0, 1, -1));
-        Planef horizontalViewPlane = Planef(ofVec3f(0, 0, 0), ofVec3f(0, 0, -1), ofVec3f(1, 0, -1));
-        
-        Linef verticalLine;
-        if(verticalViewPlane.intersects(floorPlane))
-           verticalLine = verticalViewPlane.getIntersection(floorPlane);
-        
-        frustumCenterPoint = floorPlane.getIntersection(centerLine);
-        
-        ofVec3f CenterPointXAxis = ofVec3f(frustumCenterPoint).cross(ofVec3f(verticalLine.direction).scale(100));
-        
-        ofVec3f planeZAxis = ofVec3f(floorPlane.normal).scale(1000);
-        
-        ofVec3f CenterPointRotXtoZAxis = ofVec3f(CenterPointXAxis).cross(ofVec3f(verticalLine.direction).scale(100));
+    //sphere1.enableColors();
+    //sphere2.enableColors();
+    //sphere3.enableColors();
+    
+    Planef floorPlane = Planef(planePoint1, planePoint2, planePoint3);
+    Linef centerLine = Linef(ofVec3f(0, 0, 0), ofVec3f(0, 0, -1));
+    
+    Planef verticalViewPlane = Planef(ofVec3f(0, 0, 0), ofVec3f(0, 0, -1), ofVec3f(0, 1, -1));
+    Planef horizontalViewPlane = Planef(ofVec3f(0, 0, 0), ofVec3f(0, 0, -1), ofVec3f(1, 0, -1));
+    
+    Linef verticalLine;
+    if(verticalViewPlane.intersects(floorPlane))
+       verticalLine = verticalViewPlane.getIntersection(floorPlane);
+    
+    ofVec3f frustumCenterPoint = floorPlane.getIntersection(centerLine);
+    
+    ofVec3f CenterPointXAxis = ofVec3f(frustumCenterPoint).cross(ofVec3f(verticalLine.direction).scale(100));
+    
+    ofVec3f planeZAxis = ofVec3f(floorPlane.normal).scale(1000);
+    
+    ofVec3f CenterPointRotXtoZAxis = ofVec3f(CenterPointXAxis).cross(ofVec3f(verticalLine.direction).scale(100));
+
+
+    geometry.clear();
+    geometry.setMode(OF_PRIMITIVE_LINES);
+    geometry.addColor(ofColor::blueSteel);
+    geometry.addVertex(ofVec3f(0, 0, 0));
+    geometry.addColor(ofColor::blueSteel);
+    geometry.addVertex(frustumCenterPoint);
+    geometry.addColor(ofColor::greenYellow);
+    geometry.addVertex(frustumCenterPoint);
+    geometry.addColor(ofColor::greenYellow);
+    geometry.addVertex(frustumCenterPoint + ofVec3f(verticalLine.direction).scale(1000));
+    
+    geometry.addColor(ofColor::red);
+    geometry.addVertex(frustumCenterPoint);
+    geometry.addColor(ofColor::red);
+    geometry.addVertex(frustumCenterPoint + CenterPointXAxis);
+    
+    geometry.addColor(ofColor::blue);
+    geometry.addVertex(frustumCenterPoint);
+    geometry.addColor(ofColor::blue);
+    geometry.addVertex(frustumCenterPoint + planeZAxis);
+
+    geometry.addColor(ofColor::blueViolet);
+    geometry.addVertex(frustumCenterPoint);
+    geometry.addColor(ofColor::blueViolet);
+    geometry.addVertex(frustumCenterPoint + CenterPointRotXtoZAxis);
+
+    float kinectRransform_xAxisRot = frustumCenterPoint.angle(ofVec3f(CenterPointRotXtoZAxis).scale(-1.));
+    float kinectRransform_yAxisRot = CenterPointRotXtoZAxis.angle(planeZAxis);
+    
+    float kinectRransform_zTranslate = - frustumCenterPoint.length();
+    
+    ofMatrix4x4 kinectTransform = ofMatrix4x4();
+    kinectTransform.translate(0, 0, kinectRransform_zTranslate);
+    //kinectRransform.rotate(ofQuaternion(kinectRransform_xAxisRot, ofVec3f(1, 0, 0), kinectRransform_yAxisRot, ofVec3f(0, 1, 0), 0, ofVec3f(0, 0, 1)));
+    
+    kinectTransform.rotate(kinectRransform_xAxisRot, 1, 0, 0);
+    kinectTransform.rotate(kinectRransform_yAxisRot, 0, 1, 0);
+    
+    ofLog(OF_LOG_NOTICE, "zpos: " + ofToString(kinectTransform.getTranslation().z));
 
     
-        geometry.clear();
-        geometry.setMode(OF_PRIMITIVE_LINES);
-        geometry.addColor(ofColor::blueSteel);
-        geometry.addVertex(ofVec3f(0, 0, 0));
-        geometry.addColor(ofColor::blueSteel);
-        geometry.addVertex(frustumCenterPoint);
-        geometry.addColor(ofColor::greenYellow);
-        geometry.addVertex(frustumCenterPoint);
-        geometry.addColor(ofColor::greenYellow);
-        geometry.addVertex(frustumCenterPoint + ofVec3f(verticalLine.direction).scale(1000));
-        
-        geometry.addColor(ofColor::red);
-        geometry.addVertex(frustumCenterPoint);
-        geometry.addColor(ofColor::red);
-        geometry.addVertex(frustumCenterPoint + CenterPointXAxis);
-        
-        geometry.addColor(ofColor::blue);
-        geometry.addVertex(frustumCenterPoint);
-        geometry.addColor(ofColor::blue);
-        geometry.addVertex(frustumCenterPoint + planeZAxis);
+    transformation.set(ofVec3f(kinectRransform_xAxisRot, kinectRransform_yAxisRot, kinectTransform.getTranslation().z));
+           
+    //ofLog(OF_LOG_NOTICE, "xAxisRot" + ofToString(kinectRransform_xAxisRot));
+    //ofLog(OF_LOG_NOTICE, "yAxisRot" + ofToString(kinectRransform_yAxisRot));
 
-        geometry.addColor(ofColor::blueViolet);
-        geometry.addVertex(frustumCenterPoint);
-        geometry.addColor(ofColor::blueViolet);
-        geometry.addVertex(frustumCenterPoint + CenterPointRotXtoZAxis);
+    frustumCenterSphere.setPosition(frustumCenterPoint);
+    frustumCenterSphere.setRadius(20);
+    
+    bUpdateCalc = false;
+    
+    updateMatrix();
+}
 
-        
-        kinectRransform_xAxisRot = frustumCenterPoint.angle(ofVec3f(CenterPointRotXtoZAxis).scale(-1.));
-        kinectRransform_yAxisRot = CenterPointRotXtoZAxis.angle(planeZAxis);
-        
-        kinectRransform_zTranslate = - frustumCenterPoint.length();
-        
-        kinectRransform = ofMatrix4x4();
-        kinectRransform.translate(0, 0, kinectRransform_zTranslate);
-        //kinectRransform.rotate(ofQuaternion(kinectRransform_xAxisRot, ofVec3f(1, 0, 0), kinectRransform_yAxisRot, ofVec3f(0, 1, 0), 0, ofVec3f(0, 0, 1)));
-        
-        kinectRransform.rotate(kinectRransform_xAxisRot, 1, 0, 0);
-        kinectRransform.rotate(kinectRransform_yAxisRot, 0, 1, 0);
-        
-        //ofLog(OF_LOG_NOTICE, "xAxisRot" + ofToString(kinectRransform_xAxisRot));
-        //ofLog(OF_LOG_NOTICE, "yAxisRot" + ofToString(kinectRransform_yAxisRot));
-        //ofLog(OF_LOG_NOTICE, "zTranslate: " + ofToString(kinectRransform_zTranslate));
+//--------------------------------------------------------------
+void ofApp::updateMatrix(){
+    kinectRransform = ofMatrix4x4();
+    
+    kinectRransform.rotate(transformation.get().x, 1, 0, 0);
+    kinectRransform.rotate(transformation.get().y, 0, 1, 0);
 
-        frustumCenterSphere.setPosition(frustumCenterPoint);
-        frustumCenterSphere.setRadius(20);
-        
-        bUpdateCalc = false;
-    }
+    kinectRransform.translate(0, 0, transformation.get().z);
+    //kinectRransform.rotate(ofQuaternion(kinectRransform_xAxisRot, ofVec3f(1, 0, 0), kinectRransform_yAxisRot, ofVec3f(0, 1, 0), 0, ofVec3f(0, 0, 1)));
+    
 }
 
 //--------------------------------------------------------------
@@ -319,17 +347,16 @@ void ofApp::update(){
 	ofBackground(100, 100, 100);
 	
 	kinect.update();
-    
-    if(bUpdateCalc && ofGetElapsedTimeMillis() > 1000){
-        updateCalc();
-    }
-	
+    	
 	// there is a new frame and we are connected
 	if(kinect.isFrameNew()) {
         if(bDrawPointCloud) {
             updatePointCloud();
         }
 		
+        if(bUpdateMeasurment){
+            measurementCycle();
+        }
 		// load grayscale depth image from the kinect source
 		grayImage.setFromPixels(kinect.getDepthPixels(), kinect.width, kinect.height);
 		
@@ -363,11 +390,7 @@ void ofApp::update(){
 		// also, find holes is set to true so we will get interior contours as well....
 		contourFinder.findContours(grayImage, 10, (kinect.width*kinect.height)/2, 20, false);
 	}
-	
-#ifdef USE_TWO_KINECTS
-	kinect2.update();
-#endif
-    
+	    
     rgbaMatrixServer.update();
 	depthMatrixServer.update();
 	rawMatrixServer.update();
@@ -382,6 +405,7 @@ void ofApp::createHelp(){
     string help = string("accel is: " + ofToString(kinect.getMksAccel().x, 2) + " / ");
 	help += ofToString(kinect.getMksAccel().y, 2) + " / ";
 	help += ofToString(kinect.getMksAccel().z, 2) + "\n";
+	help += "press k to update the calculation\n";
 	help += "press p to start updateing the pointcloud\n";
 	help += "press s to save current settings\n";
 	help += "press l to load last saved settings\n";
@@ -495,15 +519,19 @@ void ofApp::updatePointCloud() {
     int minRaw = 10000;
     int maxRaw = 0;
     
+    ofVec3f vertex;
+    
     int step = 2;
 	for(int y = 0; y < h; y += step) {
 		for(int x = 0; x < w; x += step) {
             factor = 2 * ref_pix_size * raw[y * w + x] / ref_distance;
- 			if(raw[y * w + x] > 0) {
+ 			if(nearFrustum.get() < raw[y * w + x] && raw[y * w + x] < farFrustum.get()) {
                 minRaw = (minRaw > raw[y * w + x])?raw[y * w + x]:minRaw;
                 maxRaw = (maxRaw < raw[y * w + x])?raw[y * w + x]:maxRaw;
+                vertex = ofVec3f((x - DEPTH_X_RES/2) *factor, (y - DEPTH_Y_RES/2) *factor, raw[y * w + x]);
+                //kinectRransform.glTranslate(vertex);
 				mesh.addColor(kinect.getColorAt(x,y));
-				mesh.addVertex(ofVec3f((x - DEPTH_X_RES/2) *factor, (y - DEPTH_Y_RES/2) *factor, raw[y * w + x]));
+				mesh.addVertex(vertex);
 			}
 		}
 	}
@@ -517,8 +545,7 @@ void ofApp::drawPointCloud() {
 	ofPushMatrix();
     // the projected points are 'upside down' and 'backwards'
 	ofScale(0.01, -0.01, -0.01);
-    //ofRotateX(kinectRransform_xAxisRot);
-    //ofRotateY(kinectRransform_yAxisRot);
+
 	ofMultMatrix(kinectRransform);
 
 	glEnable(GL_DEPTH_TEST);
@@ -574,6 +601,7 @@ void ofApp::keyPressed(int key){
             break;
             
         case 'k':
+            bUpdateMeasurment = true;
             break;
  
         case 's':

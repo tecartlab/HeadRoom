@@ -27,6 +27,7 @@
 		DB6C52C018AEA3B6008CC794 /* Planef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB6C52BF18AEA3B6008CC794 /* Planef.cpp */; };
 		DB6C52C318AEA657008CC794 /* Linef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB6C52C118AEA657008CC794 /* Linef.cpp */; };
 		DB82805C18AB9BF4009AB0BE /* ofxKinectNetworkServer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB82805B18AB9BF4009AB0BE /* ofxKinectNetworkServer.cpp */; };
+		DBA8C06A18BF816C005B7A11 /* Properties.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DBA8C06818BF816C005B7A11 /* Properties.cpp */; };
 		DBC1C5121893FD1700591956 /* ofxMatrixNetworkServer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DBC1C5101893FD1700591956 /* ofxMatrixNetworkServer.cpp */; };
 		DBF54CED18AFC8F200D5F8D4 /* Grid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DBF54CEB18AFC8F200D5F8D4 /* Grid.cpp */; };
 		DBFD41B918B36EB6008A0E04 /* audio.c in Sources */ = {isa = PBXBuildFile; fileRef = DBFD414318B36EB6008A0E04 /* audio.c */; };
@@ -209,6 +210,8 @@
 		DB82805B18AB9BF4009AB0BE /* ofxKinectNetworkServer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxKinectNetworkServer.cpp; sourceTree = "<group>"; };
 		DB82805D18AB9C03009AB0BE /* ofxKinectNetworkServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxKinectNetworkServer.h; sourceTree = "<group>"; };
 		DB8653D6433E14BF06F3EFAF /* cvwimage.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = cvwimage.h; path = ../../../addons/ofxOpenCv/libs/opencv/include/opencv/cvwimage.h; sourceTree = SOURCE_ROOT; };
+		DBA8C06818BF816C005B7A11 /* Properties.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Properties.cpp; sourceTree = "<group>"; };
+		DBA8C06918BF816C005B7A11 /* Properties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Properties.h; sourceTree = "<group>"; };
 		DBC1C5101893FD1700591956 /* ofxMatrixNetworkServer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxMatrixNetworkServer.cpp; sourceTree = "<group>"; };
 		DBC1C5111893FD1700591956 /* ofxMatrixNetworkServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxMatrixNetworkServer.h; sourceTree = "<group>"; };
 		DBF54CEB18AFC8F200D5F8D4 /* Grid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Grid.cpp; sourceTree = "<group>"; };
@@ -887,6 +890,8 @@
 				DB6C52C218AEA657008CC794 /* Linef.h */,
 				DBF54CEB18AFC8F200D5F8D4 /* Grid.cpp */,
 				DBF54CEC18AFC8F200D5F8D4 /* Grid.h */,
+				DBA8C06818BF816C005B7A11 /* Properties.cpp */,
+				DBA8C06918BF816C005B7A11 /* Properties.h */,
 			);
 			path = src;
 			sourceTree = SOURCE_ROOT;
@@ -1037,6 +1042,7 @@
 				DBFD41DE18B36F93008A0E04 /* ofxTCPManager.cpp in Sources */,
 				DBFD41DF18B36F93008A0E04 /* ofxTCPServer.cpp in Sources */,
 				DBFD41E018B36F93008A0E04 /* ofxUDPManager.cpp in Sources */,
+				DBA8C06A18BF816C005B7A11 /* Properties.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
