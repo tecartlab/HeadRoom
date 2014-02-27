@@ -33,6 +33,13 @@ void ofApp::setup(){
     
     setupViewports();
     createHelp();
+    
+    sensorBoxLeft.addListener(this, &ofApp::updateSensorBox);
+    sensorBoxRight.addListener(this, &ofApp::updateSensorBox);
+    sensorBoxFront.addListener(this, &ofApp::updateSensorBox);
+    sensorBoxBack.addListener(this, &ofApp::updateSensorBox);
+    sensorBoxTop.addListener(this, &ofApp::updateSensorBox);
+    sensorBoxBottom.addListener(this, &ofApp::updateSensorBox);
 
     nearFrustum.addListener(this, &ofApp::updateFrustumCone);
     farFrustum.addListener(this, &ofApp::updateFrustumCone);
@@ -41,8 +48,16 @@ void ofApp::setup(){
     gui.add(calibPoint1.set("calib1", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
     gui.add(calibPoint2.set("calib2", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
     gui.add(calibPoint3.set("calib3", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
-    gui.add(nearFrustum.set("near", 400, 200, 2000));
-    gui.add(farFrustum.set("far", 4000, 2000, 6000));
+    sensorBoxGuiGroup.setName("sensorBox");
+    sensorBoxGuiGroup.add(sensorBoxLeft.set("left", -50, 0, -2000));
+    sensorBoxGuiGroup.add(sensorBoxRight.set("right", 50, 0, 2000));
+    sensorBoxGuiGroup.add(sensorBoxFront.set("front", 0, 0, 7000));
+    sensorBoxGuiGroup.add(sensorBoxBack.set("back", 2000, 0, 7000));
+    sensorBoxGuiGroup.add(sensorBoxTop.set("top", 2200, 0, 3000));
+    sensorBoxGuiGroup.add(sensorBoxBottom.set("bottom", 1000, 0, 3000));
+    gui.add(sensorBoxGuiGroup);
+    gui.add(nearFrustum.set("nearFrustum", 400, 200, 2000));
+    gui.add(farFrustum.set("farFrustum", 4000, 2000, 6000));
     gui.add(tiltAngle.set("tilt", 0, -30, 30));
     gui.add(transformation.set("matrix rx ry tz", ofVec3f(0, 0, 0), ofVec3f(-90, -90, -6000), ofVec3f(90, 90, 6000)));
     
@@ -90,7 +105,7 @@ void ofApp::setup(){
 void ofApp::setupViewports(){
 	//call here whenever we resize the window
  
-    gui.setPosition(ofGetWidth() - 200, 20);
+    gui.setPosition(ofGetWidth() - 200, 0);
     //ofLog(OF_LOG_NOTICE, "ofGetWidth()" + ofToString(ofGetWidth()));
 
 	//--
@@ -116,6 +131,36 @@ void ofApp::setupViewports(){
 	//--
 }
 
+
+void ofApp::updateSensorBox(int & value){
+    sensorBox.clear();
+    sensorBox.setMode(OF_PRIMITIVE_LINES);
+ 
+    sensorBox.addVertex(ofPoint(sensorBoxLeft.get(), sensorBoxFront.get(), sensorBoxBottom.get()));
+    sensorBox.addVertex(ofPoint(sensorBoxRight.get(), sensorBoxFront.get(), sensorBoxBottom.get()));
+
+    sensorBox.addVertex(ofPoint(sensorBoxRight.get(), sensorBoxFront.get(), sensorBoxBottom.get()));
+    sensorBox.addVertex(ofPoint(sensorBoxRight.get(), sensorBoxBack.get(), sensorBoxBottom.get()));
+
+    sensorBox.addVertex(ofPoint(sensorBoxRight.get(), sensorBoxBack.get(), sensorBoxBottom.get()));
+    sensorBox.addVertex(ofPoint(sensorBoxLeft.get(), sensorBoxBack.get(), sensorBoxBottom.get()));
+
+    sensorBox.addVertex(ofPoint(sensorBoxLeft.get(), sensorBoxBack.get(), sensorBoxBottom.get()));
+    sensorBox.addVertex(ofPoint(sensorBoxLeft.get(), sensorBoxFront.get(), sensorBoxBottom.get()));
+    
+    sensorBox.addVertex(ofPoint(sensorBoxLeft.get(), sensorBoxFront.get(), sensorBoxTop.get()));
+    sensorBox.addVertex(ofPoint(sensorBoxRight.get(), sensorBoxFront.get(), sensorBoxTop.get()));
+    
+    sensorBox.addVertex(ofPoint(sensorBoxRight.get(), sensorBoxFront.get(), sensorBoxTop.get()));
+    sensorBox.addVertex(ofPoint(sensorBoxRight.get(), sensorBoxBack.get(), sensorBoxTop.get()));
+    
+    sensorBox.addVertex(ofPoint(sensorBoxRight.get(), sensorBoxBack.get(), sensorBoxTop.get()));
+    sensorBox.addVertex(ofPoint(sensorBoxLeft.get(), sensorBoxBack.get(), sensorBoxTop.get()));
+    
+    sensorBox.addVertex(ofPoint(sensorBoxLeft.get(), sensorBoxBack.get(), sensorBoxTop.get()));
+    sensorBox.addVertex(ofPoint(sensorBoxLeft.get(), sensorBoxFront.get(), sensorBoxTop.get()));
+}
+
 void ofApp::updateFrustumCone(int & value){
     if(kinect.isConnected()){
         createFrustumCone();
@@ -138,43 +183,43 @@ void ofApp::createFrustumCone(){
 
     frustum.clear();
     frustum.setMode(OF_PRIMITIVE_LINES);
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, (0 - DEPTH_Y_RES/2) *factorNear, near));
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, (0 - DEPTH_Y_RES/2) *factorFar, far));
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, -(0 - DEPTH_Y_RES/2) *factorNear, -near));
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, -(0 - DEPTH_Y_RES/2) *factorFar, -far));
     
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, (0 - DEPTH_Y_RES/2) *factorNear, near));
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, (0 - DEPTH_Y_RES/2) *factorFar, far));
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, -(0 - DEPTH_Y_RES/2) *factorNear, -near));
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, -(0 - DEPTH_Y_RES/2) *factorFar, -far));
 
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, (480 - DEPTH_Y_RES/2) *factorNear, near));
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, (480 - DEPTH_Y_RES/2) *factorFar, far));
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, -(480 - DEPTH_Y_RES/2) *factorNear, -near));
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, -(480 - DEPTH_Y_RES/2) *factorFar, -far));
 
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, (480 - DEPTH_Y_RES/2) *factorNear, near));
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, (480 - DEPTH_Y_RES/2) *factorFar, far));
-
-    
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, (0 - DEPTH_Y_RES/2) *factorNear, near));
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, (0 - DEPTH_Y_RES/2) *factorNear, near));
-
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, (0 - DEPTH_Y_RES/2) *factorNear, near));
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, (480 - DEPTH_Y_RES/2) *factorNear, near));
-    
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, (480 - DEPTH_Y_RES/2) *factorNear, near));
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, (480 - DEPTH_Y_RES/2) *factorNear, near));
-
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, (480 - DEPTH_Y_RES/2) *factorNear, near));
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, (0 - DEPTH_Y_RES/2) *factorNear, near));
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, -(480 - DEPTH_Y_RES/2) *factorNear, -near));
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, -(480 - DEPTH_Y_RES/2) *factorFar, -far));
 
     
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, (0 - DEPTH_Y_RES/2) *factorFar, far));
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, (0 - DEPTH_Y_RES/2) *factorFar, far));
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, -(0 - DEPTH_Y_RES/2) *factorNear, -near));
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, -(0 - DEPTH_Y_RES/2) *factorNear, -near));
+
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, -(0 - DEPTH_Y_RES/2) *factorNear, -near));
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, -(480 - DEPTH_Y_RES/2) *factorNear, -near));
     
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, (0 - DEPTH_Y_RES/2) *factorFar, far));
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, (480 - DEPTH_Y_RES/2) *factorFar, far));
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, -(480 - DEPTH_Y_RES/2) *factorNear, -near));
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, -(480 - DEPTH_Y_RES/2) *factorNear, -near));
 
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, (480 - DEPTH_Y_RES/2) *factorFar, far));
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, (480 - DEPTH_Y_RES/2) *factorFar, far));
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, -(480 - DEPTH_Y_RES/2) *factorNear, -near));
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, -(0 - DEPTH_Y_RES/2) *factorNear, -near));
 
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, (480 - DEPTH_Y_RES/2) *factorFar, far));
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, (0 - DEPTH_Y_RES/2) *factorFar, far));
+    
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, -(0 - DEPTH_Y_RES/2) *factorFar, -far));
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, -(0 - DEPTH_Y_RES/2) *factorFar, -far));
+    
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, -(0 - DEPTH_Y_RES/2) *factorFar, -far));
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, -(480 - DEPTH_Y_RES/2) *factorFar, -far));
+
+    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, -(480 - DEPTH_Y_RES/2) *factorFar, -far));
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, -(480 - DEPTH_Y_RES/2) *factorFar, -far));
+
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, -(480 - DEPTH_Y_RES/2) *factorFar, -far));
+    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, -(0 - DEPTH_Y_RES/2) *factorFar, -far));
 }
 
 void ofApp::setKinectTiltAngle(int & angle){
@@ -266,9 +311,9 @@ void ofApp::updateCalc(){
     geometry.addVertex(frustumCenterPoint + CenterPointRotXtoZAxis);
 
     float kinectRransform_xAxisRot = frustumCenterPoint.angle(ofVec3f(CenterPointRotXtoZAxis).scale(-1.));
-    float kinectRransform_yAxisRot = CenterPointRotXtoZAxis.angle(planeZAxis);
+    float kinectRransform_yAxisRot = - CenterPointRotXtoZAxis.angle(planeZAxis);
     
-    float kinectRransform_zTranslate = - frustumCenterPoint.length();
+    float kinectRransform_zTranslate = frustumCenterPoint.length();
     
     ofMatrix4x4 kinectTransform = ofMatrix4x4();
     kinectTransform.translate(0, 0, kinectRransform_zTranslate);
@@ -329,7 +374,7 @@ ofVec3f ofApp::calcPlanePoint(ofParameter<ofVec2f> & cpoint, int _size, int _ste
         for(int x = minX; x <= maxX; x = x + step) {
             factor = 2 * ref_pix_size * raw[y * width + x] / ref_distance;
             if(raw[y * width + x] > 0) {
-                ppoint += ofVec3f((x - DEPTH_X_RES/2) *factor, (y - DEPTH_Y_RES/2) *factor, raw[y * width + x]);
+                ppoint += ofVec3f((x - DEPTH_X_RES/2) *factor, -(y - DEPTH_Y_RES/2) *factor, -raw[y * width + x]);
                 counter++;
             }
         }
@@ -463,6 +508,7 @@ void ofApp::draw(){
             break;
         case 4:
             easyCam.begin(viewMain);
+            mainGrid.drawPlane(50., 5, false);
             drawPointCloud();
             easyCam.end();
             break;
@@ -474,6 +520,7 @@ void ofApp::draw(){
     //Draw opengl viewport previews (pfImages dont like opengl calls before they are drawn
     if(iMainCamera != 4){ // make sure the camera is drawn only once (so the interaction with the mouse works)
         easyCam.begin(viewGrid[4]);
+        mainGrid.drawPlane(50., 5, false);
         drawPointCloud();
         easyCam.end();
     }
@@ -528,40 +575,46 @@ void ofApp::updatePointCloud() {
  			if(nearFrustum.get() < raw[y * w + x] && raw[y * w + x] < farFrustum.get()) {
                 minRaw = (minRaw > raw[y * w + x])?raw[y * w + x]:minRaw;
                 maxRaw = (maxRaw < raw[y * w + x])?raw[y * w + x]:maxRaw;
-                vertex = ofVec3f((x - DEPTH_X_RES/2) *factor, (y - DEPTH_Y_RES/2) *factor, raw[y * w + x]);
+                vertex = ofVec3f((x - DEPTH_X_RES/2) *factor, -(y - DEPTH_Y_RES/2) *factor, -raw[y * w + x]);
                 vertex = kinectRransform.preMult(vertex);
-				//mesh.addColor(kinect.getColorAt(x,y));
-				mesh.addColor(- vertex.z / 2500.);
-				mesh.addVertex(vertex);
+                if(sensorBoxLeft.get() < vertex.x && vertex.x < sensorBoxRight.get() &&
+                   sensorBoxFront.get() < vertex.y && vertex.y < sensorBoxBack.get() &&
+                   sensorBoxBottom.get() < vertex.z && vertex.z < sensorBoxTop.get()){
+                    //mesh.addColor(kinect.getColorAt(x,y));
+                    mesh.addColor(vertex.z / 2500.);
+                } else {
+                    mesh.addColor(ofColor::black);
+                }
+                mesh.addVertex(vertex);
 			}
 		}
 	}
 }
 
 void ofApp::drawPointCloud() {
-    
-    mainGrid.drawPlane(10., 5, false);
-          
 	glPointSize(3);
 	ofPushMatrix();
     // the projected points are 'upside down' and 'backwards'
-	ofScale(0.01, -0.01, -0.01);
+	ofScale(0.01, 0.01, 0.01);
 
     mesh.drawVertices();
 
-	ofMultMatrix(kinectRransform);
+    sensorBox.draw();
 
 	glEnable(GL_DEPTH_TEST);
     
     glColor3i(100, 50, 100);
-    
+
+    ofMultMatrix(kinectRransform);
+
+    sphere1.enableColors();
     sphere1.draw();
     sphere2.draw();
     sphere3.draw();
     frustumCenterSphere.draw();
     
     geometry.draw();
-    
+
     frustum.drawWireframe();
 
 	glDisable(GL_DEPTH_TEST);

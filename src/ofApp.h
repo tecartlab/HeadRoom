@@ -84,10 +84,13 @@ class ofApp : public ofBaseApp{
     bool dispRaw;
 
     ofVboMesh mesh, meshraw;
+    
     ofVboMesh frustum;
+    ofVboMesh sensorBox;
  
     void createFrustumCone();
     void updateFrustumCone(int & value);
+    void updateSensorBox(int & value);
 
     /////////////////
     //COLOR CONTOUR//
@@ -157,6 +160,15 @@ class ofApp : public ofBaseApp{
     
     ofParameter<ofVec3f> transformation;
     
+    ofParameterGroup sensorBoxGuiGroup;
+
+    ofParameter<int> sensorBoxLeft;
+    ofParameter<int> sensorBoxRight;
+    ofParameter<int> sensorBoxTop;
+    ofParameter<int> sensorBoxBottom;
+    ofParameter<int> sensorBoxFront;
+    ofParameter<int> sensorBoxBack;
+
     ofParameter<int> nearFrustum;
     ofParameter<int> farFrustum;
     ofParameter<int> tiltAngle;
