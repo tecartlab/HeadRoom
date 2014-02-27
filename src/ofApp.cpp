@@ -529,8 +529,9 @@ void ofApp::updatePointCloud() {
                 minRaw = (minRaw > raw[y * w + x])?raw[y * w + x]:minRaw;
                 maxRaw = (maxRaw < raw[y * w + x])?raw[y * w + x]:maxRaw;
                 vertex = ofVec3f((x - DEPTH_X_RES/2) *factor, (y - DEPTH_Y_RES/2) *factor, raw[y * w + x]);
-                //kinectRransform.glTranslate(vertex);
-				mesh.addColor(kinect.getColorAt(x,y));
+                vertex = kinectRransform.preMult(vertex);
+				//mesh.addColor(kinect.getColorAt(x,y));
+				mesh.addColor(- vertex.z / 2500.);
 				mesh.addVertex(vertex);
 			}
 		}
@@ -546,6 +547,8 @@ void ofApp::drawPointCloud() {
     // the projected points are 'upside down' and 'backwards'
 	ofScale(0.01, -0.01, -0.01);
 
+    mesh.drawVertices();
+
 	ofMultMatrix(kinectRransform);
 
 	glEnable(GL_DEPTH_TEST);
@@ -559,8 +562,6 @@ void ofApp::drawPointCloud() {
     
     geometry.draw();
     
-	mesh.drawVertices();
-
     frustum.drawWireframe();
 
 	glDisable(GL_DEPTH_TEST);
