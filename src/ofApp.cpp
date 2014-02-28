@@ -85,9 +85,19 @@ void ofApp::setup(){
     kinect.setCameraTiltAngle(tiltAngle.get());
     
     
-    captureFBO.allocate(400, 400, GL_RGBA);
+    
+    ofFbo::Settings s;
+    s.width             = 640;
+    s.height			= 480;
+    s.internalformat    = GL_RGBA;
+    s.useDepth			= true;
+    // and assigning this values to the fbo like this:
+    captureFBO.allocate(s);
+
+    capturedImage.allocate(kinect.width, kinect.height, OF_IMAGE_COLOR_ALPHA);
     
 	colorImg.allocate(kinect.width, kinect.height);
+    
 	grayImage.allocate(kinect.width, kinect.height);
 	grayThreshNear.allocate(kinect.width, kinect.height);
 	grayThreshFar.allocate(kinect.width, kinect.height);
@@ -421,7 +431,8 @@ void ofApp::update(){
         captureFBO.begin();
         ofClear(0, 0, 0, 0);
         captureCam.scale = 0.01;
-        captureCam.begin(ofRectangle(0, 0, 400, 400), sensorBoxLeft.get(), sensorBoxRight.get(), sensorBoxFront.get(),sensorBoxBack.get(), - sensorBoxTop.get(), sensorBoxTop.get());
+        // FBO capturing 
+        captureCam.begin(ofRectangle(0, 0, 640, 480), sensorBoxLeft.get(), sensorBoxRight.get(), sensorBoxBack.get(), sensorBoxFront.get(), - sensorBoxTop.get(), sensorBoxTop.get());
         drawCapturePointCloud();
         captureCam.end();
         captureFBO.end();
@@ -429,8 +440,19 @@ void ofApp::update(){
         //////////////////////////////////
         
 		// load grayscale depth image from the kinect source
-		grayImage.setFromPixels(kinect.getDepthPixels(), kinect.width, kinect.height);
+        ofPixels fbopixels;
+        fbopixels.allocate(640, 480, OF_PIXELS_RGB);
+        captureFBO.readToPixels(fbopixels);
+        capturedImage.setFromPixels(fbopixels);
+        
+        colorImg.setFromPixels(capturedImage.getPixels(), capturedImage.width, capturedImage.height);
+        //colorImg.setFromPixels(fbopixels);
+        
+        grayImage.setFromColorImage(colorImg);
+        
+        //grayImage.setFromPixels(fbopixels.getPixels(), fbopixels.getWidth(), fbopixels.getHeight());
 		
+        /*
 		// we do two thresholds - one for the far plane and one for the near plane
 		// we then do a cvAnd to get the pixels which are a union of the two thresholds
 		if(bThreshWithOpenCV) {
@@ -456,6 +478,7 @@ void ofApp::update(){
 		
 		// update the cv images
 		grayImage.flagImageChanged();
+         */
 		
 		// find contours which are between the size of 20 pixels and 1/3 the w*h pixels.
 		// also, find holes is set to true so we will get interior contours as well....
@@ -507,7 +530,8 @@ void ofApp::draw(){
     kinect.drawDepth(viewGrid[0]);
     kinect.draw(viewGrid[1]);
     captureFBO.draw(viewGrid[2]);
-    contourFinder.draw(viewGrid[3]);
+    colorImg.draw(viewGrid[3]);
+    //grayImage.draw(viewGrid[3]);
 
     switch (iMainCamera) {
         case 0:
@@ -531,7 +555,7 @@ void ofApp::draw(){
             captureFBO.draw(viewMain);
             break;
         case 3:
-            contourFinder.draw(viewMain);
+            grayImage.draw(viewMain);
             break;
         case 4:
             previewCam.begin(viewMain);

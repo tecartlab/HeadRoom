@@ -119,6 +119,7 @@ class ofApp : public ofBaseApp{
     // used for viewing the point cloud
     orthoCamera captureCam;
     
+    ofImage capturedImage;
     ofFbo captureFBO;
     
         bool bShowHelp;
