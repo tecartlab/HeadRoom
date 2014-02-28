@@ -24,10 +24,7 @@ class ofApp : public ofBaseApp{
 		void update();
 		void draw();
         void exit();
-    
-    void updatePointCloud();
-    void drawPointCloud();
-    
+        
 		void keyPressed(int key);
 		void keyReleased(int key);
 		void mouseMoved(int x, int y );
@@ -83,11 +80,17 @@ class ofApp : public ofBaseApp{
 
     bool dispRaw;
 
-    ofVboMesh mesh, meshraw;
+    bool bPreviewPointCloud;
+    
+    ofVboMesh previewmesh, capturemesh;
     
     ofVboMesh frustum;
     ofVboMesh sensorBox;
- 
+
+    void updatePointCloud(ofVboMesh & mesh, int step, bool useFrustumCone, bool useVideoColor);
+    void drawPreviewPointCloud();
+    void drawCapturePointCloud();
+
     void createFrustumCone();
     void updateFrustumCone(int & value);
     void updateSensorBox(int & value);
@@ -105,7 +108,6 @@ class ofApp : public ofBaseApp{
         ofxCvContourFinder contourFinder;
         
         bool bThreshWithOpenCV;
-        bool bDrawPointCloud;
         
         int nearThreshold;
         int farThreshold;
@@ -136,7 +138,9 @@ class ofApp : public ofBaseApp{
     ofVec3f planePoint1;
     ofVec3f planePoint2;
     ofVec3f planePoint3;
-    
+
+    ofVec3f planeCenterPoint;
+
     ofSpherePrimitive sphere1;
     ofSpherePrimitive sphere2;
     ofSpherePrimitive sphere3;

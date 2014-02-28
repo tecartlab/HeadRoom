@@ -96,7 +96,7 @@ void ofApp::setup(){
 	ofSetFrameRate(60);
 		
 	// start from the front
-	bDrawPointCloud = false;
+	bPreviewPointCloud = false;
     
     createFrustumCone();
     
@@ -274,7 +274,7 @@ void ofApp::updateCalc(){
        verticalLine = verticalViewPlane.getIntersection(floorPlane);
     
     ofVec3f frustumCenterPoint = floorPlane.getIntersection(centerLine);
-    
+        
     ofVec3f CenterPointXAxis = ofVec3f(frustumCenterPoint).cross(ofVec3f(verticalLine.direction).scale(100));
     
     ofVec3f planeZAxis = ofVec3f(floorPlane.normal).scale(1000);
@@ -313,18 +313,26 @@ void ofApp::updateCalc(){
     
     float kinectRransform_zTranslate = frustumCenterPoint.length();
     
-    ofMatrix4x4 kinectTransform = ofMatrix4x4();
-    kinectTransform.translate(0, 0, kinectRransform_zTranslate);
-
-    kinectTransform.rotate(kinectRransform_xAxisRot, 1, 0, 0);
-    kinectTransform.rotate(kinectRransform_yAxisRot, 0, 1, 0);
+    ofMatrix4x4 zTranMatrix = ofMatrix4x4();
+    zTranMatrix.translate(0, 0, kinectRransform_zTranslate);
+    zTranMatrix.rotate(kinectRransform_xAxisRot, 1, 0, 0);
+    zTranMatrix.rotate(kinectRransform_yAxisRot, 0, 1, 0);
     
+    transformation.set(ofVec3f(kinectRransform_xAxisRot, kinectRransform_yAxisRot, zTranMatrix.getTranslation().z));
+
     //ofLog(OF_LOG_NOTICE, "zpos: " + ofToString(kinectTransform.getTranslation().z));
 
-    
-    transformation.set(ofVec3f(kinectRransform_xAxisRot, kinectRransform_yAxisRot, kinectTransform.getTranslation().z));
-           
-    //ofLog(OF_LOG_NOTICE, "xAxisRot" + ofToString(kinectRransform_xAxisRot));
+    ofMatrix4x4 centerMatrix = ofMatrix4x4();
+    centerMatrix.rotate(kinectRransform_xAxisRot, 1, 0, 0);
+    centerMatrix.rotate(kinectRransform_yAxisRot, 0, 1, 0);
+    centerMatrix.translate(0, 0, zTranMatrix.getTranslation().z);
+
+    planeCenterPoint = centerMatrix.preMult(frustumCenterPoint);
+    //planeCenterPoint.rotate(kinectRransform_xAxisRot, ofVec3f(1, 0, 0));
+
+    //ofLog(OF_LOG_NOTICE, "planeCenterPoint.x" + ofToString(planeCenterPoint.x));
+    //ofLog(OF_LOG_NOTICE, "planeCenterPoint.y" + ofToString(planeCenterPoint.y));
+    //ofLog(OF_LOG_NOTICE, "planeCenterPoint.z" + ofToString(planeCenterPoint.z));
     //ofLog(OF_LOG_NOTICE, "yAxisRot" + ofToString(kinectRransform_yAxisRot));
 
     frustumCenterSphere.setRadius(20);
@@ -391,8 +399,9 @@ void ofApp::update(){
     	
 	// there is a new frame and we are connected
 	if(kinect.isFrameNew()) {
-        if(bDrawPointCloud) {
-            updatePointCloud();
+        updatePointCloud(capturemesh, 1, true, false);
+        if(bPreviewPointCloud) {
+            updatePointCloud(previewmesh, 2, false, true);
         }
 		
         if(bUpdateMeasurment){
@@ -505,7 +514,7 @@ void ofApp::draw(){
         case 4:
             easyCam.begin(viewMain);
             mainGrid.drawPlane(50., 5, false);
-            drawPointCloud();
+            drawPreviewPointCloud();
             easyCam.end();
             break;
             
@@ -517,7 +526,7 @@ void ofApp::draw(){
     if(iMainCamera != 4){ // make sure the camera is drawn only once (so the interaction with the mouse works)
         easyCam.begin(viewGrid[4]);
         mainGrid.drawPlane(50., 5, false);
-        drawPointCloud();
+        drawPreviewPointCloud();
         easyCam.end();
     }
 
@@ -528,7 +537,7 @@ void ofApp::draw(){
         ofDrawBitmapString(help,430,320);
     }
     
-	if(!bDrawPointCloud) {
+	if (false) {
         rgbaMatrixServer.draw(10, 640);
     }
     
@@ -546,7 +555,7 @@ void ofApp::draw(){
 
 }
 
-void ofApp::updatePointCloud() {
+void ofApp::updatePointCloud(ofVboMesh & mesh, int step, bool useFrustumCone, bool useVideoColor) {
     
     int w = 640;
 	int h = 480;
@@ -571,22 +580,29 @@ void ofApp::updatePointCloud() {
     float sensorFieldTop = sensorBoxTop .get();
     float sensorFieldBottom = sensorBoxBottom.get();
     
-    int step = 2;
 	for(int y = 0; y < h; y += step) {
 		for(int x = 0; x < w; x += step) {
+            vertex.z = 0;
             factor = 2 * ref_pix_size * raw[y * w + x] / ref_distance;
- 			if(nearFrustum.get() < raw[y * w + x] && raw[y * w + x] < farFrustum.get()) {
-                minRaw = (minRaw > raw[y * w + x])?raw[y * w + x]:minRaw;
-                maxRaw = (maxRaw < raw[y * w + x])?raw[y * w + x]:maxRaw;
+            if(useFrustumCone){
+                if(nearFrustum.get() < raw[y * w + x] && raw[y * w + x] < farFrustum.get()) {
+                    vertex = ofVec3f((x - DEPTH_X_RES/2) *factor, -(y - DEPTH_Y_RES/2) *factor, -raw[y * w + x]);
+                    vertex = kinectRransform.preMult(vertex);
+                }
+            } else {
                 vertex = ofVec3f((x - DEPTH_X_RES/2) *factor, -(y - DEPTH_Y_RES/2) *factor, -raw[y * w + x]);
                 vertex = kinectRransform.preMult(vertex);
+            }
+            if(vertex.z != 0){
                 if(sensorFieldLeft < vertex.x && vertex.x < sensorFieldRight &&
                    sensorFieldFront < vertex.y && vertex.y < sensorFieldBack &&
                    sensorFieldBottom < vertex.z && vertex.z < sensorFieldTop){
-                    //mesh.addColor(kinect.getColorAt(x,y));
                     mesh.addColor(vertex.z / sensorFieldTop);
                 } else {
-                    mesh.addColor(ofColor::black);
+                    if(useVideoColor)
+                        mesh.addColor(kinect.getColorAt(x,y));
+                    else
+                        mesh.addColor(ofColor::black);
                 }
                 mesh.addVertex(vertex);
 			}
@@ -594,13 +610,15 @@ void ofApp::updatePointCloud() {
 	}
 }
 
-void ofApp::drawPointCloud() {
+void ofApp::drawPreviewPointCloud() {
 	glPointSize(3);
 	ofPushMatrix();
-    // the projected points are 'upside down' and 'backwards'
-	ofScale(0.01, 0.01, 0.01);
 
-    mesh.drawVertices();
+	ofScale(0.01, 0.01, 0.01);
+    ofTranslate(-planeCenterPoint.x, -planeCenterPoint.y, 0);
+    
+
+    previewmesh.drawVertices();
 
     ofSetColor(255, 255, 0);
     sensorBox.draw();
@@ -625,6 +643,14 @@ void ofApp::drawPointCloud() {
 	glDisable(GL_DEPTH_TEST);
 	ofPopMatrix();
     
+}
+
+void ofApp::drawCapturePointCloud() {
+	glPointSize(2);
+	ofPushMatrix();
+	ofScale(0.01, 0.01, 0.01);
+    capturemesh.drawVertices();
+	ofPopMatrix();    
 }
 
 //--------------------------------------------------------------
@@ -653,7 +679,7 @@ void ofApp::keyPressed(int key){
 			break;
 			
 		case'p':
-			bDrawPointCloud = !bDrawPointCloud;
+			bPreviewPointCloud = !bPreviewPointCloud;
             break;
             
         case 'R':
