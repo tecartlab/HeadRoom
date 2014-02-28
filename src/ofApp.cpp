@@ -84,8 +84,8 @@ void ofApp::setup(){
     
     kinect.setCameraTiltAngle(tiltAngle.get());
     
-    captureCam.scale = 0.01;
-    //captureCam.roll(90);
+    
+    captureFBO.allocate(400, 400, GL_RGBA);
     
 	colorImg.allocate(kinect.width, kinect.height);
 	grayImage.allocate(kinect.width, kinect.height);
@@ -406,14 +406,28 @@ void ofApp::update(){
     	
 	// there is a new frame and we are connected
 	if(kinect.isFrameNew()) {
+        if(bUpdateMeasurment){
+            measurementCycle();
+        }
+
         updatePointCloud(capturemesh, 1, true, false);
         if(bPreviewPointCloud) {
             updatePointCloud(previewmesh, 2, false, true);
         }
-		
-        if(bUpdateMeasurment){
-            measurementCycle();
-        }
+    
+        // Cature captureCloud to FBO
+        //////////////////////////////////
+        
+        captureFBO.begin();
+        ofClear(0, 0, 0, 0);
+        captureCam.scale = 0.01;
+        captureCam.begin(ofRectangle(0, 0, 400, 400), sensorBoxLeft.get(), sensorBoxRight.get(), sensorBoxFront.get(),sensorBoxBack.get(), - sensorBoxTop.get(), sensorBoxTop.get());
+        drawCapturePointCloud();
+        captureCam.end();
+        captureFBO.end();
+        
+        //////////////////////////////////
+        
 		// load grayscale depth image from the kinect source
 		grayImage.setFromPixels(kinect.getDepthPixels(), kinect.width, kinect.height);
 		
@@ -492,7 +506,7 @@ void ofApp::draw(){
     //Draw viewport previews
     kinect.drawDepth(viewGrid[0]);
     kinect.draw(viewGrid[1]);
-    grayImage.draw(viewGrid[2]);
+    captureFBO.draw(viewGrid[2]);
     contourFinder.draw(viewGrid[3]);
 
     switch (iMainCamera) {
@@ -514,7 +528,7 @@ void ofApp::draw(){
             kinect.draw(viewMain);
             break;
         case 2:
-            grayImage.draw(viewMain);
+            captureFBO.draw(viewMain);
             break;
         case 3:
             contourFinder.draw(viewMain);
