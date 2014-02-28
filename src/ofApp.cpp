@@ -83,7 +83,10 @@ void ofApp::setup(){
 	//kinect.open("A00362A08602047A");	// open a kinect using it's unique serial #
     
     kinect.setCameraTiltAngle(tiltAngle.get());
-		
+    
+    captureCam.scale = 0.01;
+    //captureCam.roll(90);
+    
 	colorImg.allocate(kinect.width, kinect.height);
 	grayImage.allocate(kinect.width, kinect.height);
 	grayThreshNear.allocate(kinect.width, kinect.height);
@@ -161,6 +164,10 @@ void ofApp::updateSensorBox(int & value){
     
     sensorBox.addVertex(ofPoint(sensorBoxLeft.get(), sensorBoxBack.get(), sensorBoxTop.get()));
     sensorBox.addVertex(ofPoint(sensorBoxLeft.get(), sensorBoxFront.get(), sensorBoxTop.get()));
+    
+    //captureCam.setPosition((sensorBoxLeft.get() + sensorBoxRight.get())/2, (sensorBoxBack.get() + sensorBoxBack.get())/2, sensorBoxTop.get());
+    //captureCam.setPosition(5, 5, 0);
+    //captureCam.
 }
 
 void ofApp::updateFrustumCone(int & value){
@@ -478,6 +485,7 @@ void ofApp::createHelp(){
 
 //--------------------------------------------------------------
 void ofApp::draw(){
+    ofBackground(0);
     
 	ofSetColor(255, 255, 255);
 
@@ -512,10 +520,17 @@ void ofApp::draw(){
             contourFinder.draw(viewMain);
             break;
         case 4:
-            easyCam.begin(viewMain);
+            previewCam.begin(viewMain);
             mainGrid.drawPlane(50., 5, false);
             drawPreviewPointCloud();
-            easyCam.end();
+            previewCam.end();
+            break;
+        case 5:
+            captureCam.scale = 0.01;
+            captureCam.begin(viewMain, sensorBoxLeft.get(), sensorBoxRight.get(), sensorBoxFront.get(),sensorBoxBack.get(), - sensorBoxTop.get(), sensorBoxTop.get());
+            //mainGrid.drawPlane(50., 5, false);
+            drawCapturePointCloud();
+            captureCam.end();
             break;
             
         default:
@@ -524,10 +539,16 @@ void ofApp::draw(){
 
     //Draw opengl viewport previews (pfImages dont like opengl calls before they are drawn
     if(iMainCamera != 4){ // make sure the camera is drawn only once (so the interaction with the mouse works)
-        easyCam.begin(viewGrid[4]);
+        previewCam.begin(viewGrid[4]);
         mainGrid.drawPlane(50., 5, false);
         drawPreviewPointCloud();
-        easyCam.end();
+        previewCam.end();
+    }
+    {   //Capture viewport
+        captureCam.scale = 0.01;
+        captureCam.begin(viewGrid[5], sensorBoxLeft.get(), sensorBoxRight.get(), sensorBoxFront.get(),sensorBoxBack.get(), - sensorBoxTop.get(), sensorBoxTop.get());
+        drawCapturePointCloud();
+        captureCam.end();
     }
 
 	// draw instructions

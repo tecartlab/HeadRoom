@@ -52,3 +52,18 @@ void orthoCamera::begin(ofRectangle rect){
 	//
 	//--
 }
+
+void orthoCamera::begin(ofRectangle rect, float left, float right, float front, float back, float near, float far){
+	ofCamera::begin(rect);
+    
+	//--
+	// Setup projection
+    
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(left * scale, right * scale, front * scale, back * scale, near * scale, far * scale);
+	glMatrixMode(GL_MODELVIEW);
+    
+	//
+	//--
+}

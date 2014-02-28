@@ -9,6 +9,7 @@
 #include "Planef.h"
 #include "Linef.h"
 #include "Grid.h"
+#include "OrthoCamera.h"
 
 #include <ofMatrix4x4.h>
 
@@ -112,9 +113,12 @@ class ofApp : public ofBaseApp{
         int nearThreshold;
         int farThreshold;
             
-        // used for viewing the point cloud
-        ofEasyCam easyCam;
-        
+    // used for viewing the point cloud
+    ofEasyCam previewCam;
+ 
+    // used for viewing the point cloud
+    orthoCamera captureCam;
+    
         bool bShowHelp;
     
 

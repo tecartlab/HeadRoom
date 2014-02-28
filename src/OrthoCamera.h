@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ofMain.h"
-#include "ofAdvCamera.h"
 
 // Ortho camera is a custom
 //	camera we've created in
@@ -9,9 +8,10 @@
 //
 // We inherit from ofCamera
 
-class orthoCamera : public ofAdvCamera {
+class orthoCamera : public ofCamera {
 	public:
 		orthoCamera();
-		void begin(ofRectangle rect = ofGetWindowRect());
+        void begin(ofRectangle rect = ofGetWindowRect());
+        void begin(ofRectangle rect, float left, float right, float front, float back, float near, float far);
 		float scale;
 };
