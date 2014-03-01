@@ -15,6 +15,13 @@
 
 #define N_CAMERAS 6
 
+#define VIEWGRID_WIDTH  105
+#define MENU_WIDTH      200
+#define VIEWPORT_HEIGHT 480
+
+#define KINECT_IMG_WIDTH   640
+#define KINECT_IMG_HEIGHT  480
+
 #define N_MEASURMENT_CYCLES 60
 
 
@@ -132,6 +139,7 @@ class ofApp : public ofBaseApp{
     void updateMatrix();
     void measurementCycle();
 
+    void drawCalibrationPoints();
     ofVec3f calcPlanePoint(ofParameter<ofVec2f> & cpoint, int _size, int _step);
     
     bool bUpdateCalc = false;

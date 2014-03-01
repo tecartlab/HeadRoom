@@ -45,9 +45,9 @@ void ofApp::setup(){
     farFrustum.addListener(this, &ofApp::updateFrustumCone);
     tiltAngle.addListener(this, &ofApp::setKinectTiltAngle);
     
-    gui.add(calibPoint1.set("calib1", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
-    gui.add(calibPoint2.set("calib2", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
-    gui.add(calibPoint3.set("calib3", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
+    gui.add(calibPoint1.set("calibA", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
+    gui.add(calibPoint2.set("calibB", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
+    gui.add(calibPoint3.set("calibC", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
     sensorBoxGuiGroup.setName("sensorField");
     sensorBoxGuiGroup.add(sensorBoxLeft.set("left", -500, 0, -2000));
     sensorBoxGuiGroup.add(sensorBoxRight.set("right", 500, 0, 2000));
@@ -84,8 +84,6 @@ void ofApp::setup(){
     
     kinect.setCameraTiltAngle(tiltAngle.get());
     
-    
-    
     ofFbo::Settings s;
     s.width             = 640;
     s.height			= 480;
@@ -108,7 +106,7 @@ void ofApp::setup(){
 	
 	ofSetFrameRate(60);
 		
-	// start from the front
+	// creating preview point cloud is bogging the system down, so switched off at startup
 	bPreviewPointCloud = false;
     
     createFrustumCone();
@@ -126,13 +124,13 @@ void ofApp::setupViewports(){
 	//--
 	// Define viewports
     
-	float xOffset = 160; //ofGetWidth() / 3;
-	float yOffset = ofGetHeight() / N_CAMERAS;
+	float xOffset = VIEWGRID_WIDTH; //ofGetWidth() / 3;
+	float yOffset = VIEWPORT_HEIGHT / N_CAMERAS;
     
 	viewMain.x = xOffset;
 	viewMain.y = 0;
-	viewMain.width = ofGetWidth() - xOffset - 200; //xOffset * 2;
-	viewMain.height = ofGetHeight();
+	viewMain.width = ofGetWidth() - xOffset - MENU_WIDTH; //xOffset * 2;
+	viewMain.height = VIEWPORT_HEIGHT;
     
 	for(int i = 0; i < N_CAMERAS; i++){
         
@@ -495,31 +493,6 @@ void ofApp::update(){
     
 }
 
-void ofApp::createHelp(){
-    string help = string("accel is: " + ofToString(kinect.getMksAccel().x, 2) + " / ");
-	help += ofToString(kinect.getMksAccel().y, 2) + " / ";
-	help += ofToString(kinect.getMksAccel().z, 2) + "\n";
-	help += "press k to update the calculation\n";
-	help += "press p to start updateing the pointcloud\n";
-	help += "press s to save current settings\n";
-	help += "press l to load last saved settings\n";
-	help += "using opencv threshold = " + ofToString(bThreshWithOpenCV) + " (press spacebar)\n";
-	help += "set near threshold " + ofToString(nearThreshold) + " (press: + -)\n";
-	help += "set far threshold " + ofToString(farThreshold) + " (press: < >) num blobs found " + ofToString(contourFinder.nBlobs) + "\n";
-	help += ", fps: " + ofToString(ofGetFrameRate()) + "\n";
-	help += "press c to close the connection and o to open it again, connection is: " + ofToString(kinect.isConnected()) + "\n";
-	help += "press UP and DOWN to change the tilt angle: " + ofToString(tiltAngle) + " degrees\n";
-	help += "press 0 - 5 to change the viewport\n";
-    help += "Using mouse inputs to navigate (press 'M' to toggle): " + ofToString(cam.getMouseInputEnabled() ? "YES" : "NO");
-	help += "\npress 'h' to show help \n";
-    help += "\n....\n";
-    help += "LEFT MOUSE BUTTON DRAG + TRANSLATION KEY (" + ofToString(cam.getTranslationKey()) + ") PRESSED\n";
-    help += "OR MIDDLE MOUSE BUTTON (if available):\n";
-    help += "move over XY axes (truck and boom).\n";
-    help += "RIGHT MOUSE BUTTON:\n";
-    help += "move over Z axis (dolly)\n";
-}
-
 //--------------------------------------------------------------
 void ofApp::draw(){
     ofBackground(0);
@@ -536,17 +509,7 @@ void ofApp::draw(){
     switch (iMainCamera) {
         case 0:
             kinect.drawDepth(viewMain);
-            
-            glDisable(GL_DEPTH_TEST);
-            ofPushStyle();
-            ofSetColor(255, 0, 0);
-            ofNoFill();
-            ofCircle(calibPoint1.get().x + 150, calibPoint1.get().y, 2);
-            ofCircle(calibPoint2.get().x + 150, calibPoint2.get().y, 2);
-            ofCircle(calibPoint3.get().x + 150, calibPoint3.get().y, 2);
-            ofPopStyle();
-            glEnable(GL_DEPTH_TEST);
-
+            drawCalibrationPoints();
             break;
         case 1:
             kinect.draw(viewMain);
@@ -566,7 +529,7 @@ void ofApp::draw(){
         case 5:
             captureCam.scale = 0.01;
             captureCam.begin(viewMain, sensorBoxLeft.get(), sensorBoxRight.get(), sensorBoxFront.get(),sensorBoxBack.get(), - sensorBoxTop.get(), sensorBoxTop.get());
-            //mainGrid.drawPlane(50., 5, false);
+            mainGrid.drawPlane(50., 5, false);
             drawCapturePointCloud();
             captureCam.end();
             break;
@@ -589,26 +552,30 @@ void ofApp::draw(){
         captureCam.end();
     }
 
+    gui.draw();
+
+    //--
+    
+	glDisable(GL_DEPTH_TEST);
+	ofPushStyle();
+	// Highlight background of selected camera
+	ofSetColor(255, 0, 255, 255);
+    ofNoFill();
+    ofSetLineWidth(3);
+	ofRect(viewGrid[iMainCamera]);
+
 	// draw instructions
 	ofSetColor(255, 255, 255);
     
     if(bShowHelp) {
-        ofDrawBitmapString(help,430,320);
+        ofDrawBitmapString(help, 20 ,VIEWPORT_HEIGHT + 20);
+        //ofLog(OF_LOG_NOTICE, "help printed");
     }
     
 	if (false) {
         rgbaMatrixServer.draw(10, 640);
     }
     
-    gui.draw();
-    
-    //--
-	// Highlight background of selected camera
-    
-	glDisable(GL_DEPTH_TEST);
-	ofPushStyle();
-	ofSetColor(100, 0, 100, 100);
-	ofRect(viewGrid[iMainCamera]);
 	ofPopStyle();
 	glEnable(GL_DEPTH_TEST);
 
@@ -656,7 +623,7 @@ void ofApp::updatePointCloud(ofVboMesh & mesh, int step, bool useFrustumCone, bo
                 if(sensorFieldLeft < vertex.x && vertex.x < sensorFieldRight &&
                    sensorFieldFront < vertex.y && vertex.y < sensorFieldBack &&
                    sensorFieldBottom < vertex.z && vertex.z < sensorFieldTop){
-                    mesh.addColor(vertex.z / sensorFieldTop);
+                    mesh.addColor((vertex.z - sensorFieldBottom) / (sensorFieldTop - sensorFieldBottom));
                 } else {
                     if(useVideoColor)
                         mesh.addColor(kinect.getColorAt(x,y));
@@ -670,13 +637,13 @@ void ofApp::updatePointCloud(ofVboMesh & mesh, int step, bool useFrustumCone, bo
 }
 
 void ofApp::drawPreviewPointCloud() {
-	glPointSize(3);
+	glPointSize(2);
 	ofPushMatrix();
 
 	ofScale(0.01, 0.01, 0.01);
+    //This moves the crossingpoint of the kinect center line and the plane to the center of the stage
     ofTranslate(-planeCenterPoint.x, -planeCenterPoint.y, 0);
     
-
     previewmesh.drawVertices();
 
     ofSetColor(255, 255, 0);
@@ -684,11 +651,9 @@ void ofApp::drawPreviewPointCloud() {
 
 	glEnable(GL_DEPTH_TEST);
     
-
     ofMultMatrix(kinectRransform);
 
     ofSetColor(255, 0, 0);
-    sphere1.enableColors();
     sphere1.draw();
     sphere2.draw();
     sphere3.draw();
@@ -712,6 +677,21 @@ void ofApp::drawCapturePointCloud() {
 	ofPopMatrix();    
 }
 
+void ofApp::drawCalibrationPoints(){
+    glDisable(GL_DEPTH_TEST);
+    ofPushStyle();
+    ofSetColor(255, 0, 0);
+    ofNoFill();
+    ofDrawBitmapString("A", calibPoint1.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH + 5, calibPoint1.get().y -5);
+    ofDrawBitmapString("B", calibPoint2.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH + 5, calibPoint2.get().y -5);
+    ofDrawBitmapString("C", calibPoint3.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH + 5, calibPoint3.get().y -5);
+    ofCircle(calibPoint1.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH, calibPoint1.get().y, 2);
+    ofCircle(calibPoint2.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH, calibPoint2.get().y, 2);
+    ofCircle(calibPoint3.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH, calibPoint3.get().y, 2);
+    ofPopStyle();
+    glEnable(GL_DEPTH_TEST);
+}
+
 //--------------------------------------------------------------
 void ofApp::exit() {
     ofLog(OF_LOG_NOTICE, "exiting application...");
@@ -719,15 +699,30 @@ void ofApp::exit() {
 	kinect.setCameraTiltAngle(0); // zero the tilt on exit
 	kinect.close();
 	
-#ifdef USE_TWO_KINECTS
-	kinect2.close();
-#endif
-
     tiltAngle.removeListener(this, &ofApp::setKinectTiltAngle);
     
     rgbaMatrixServer.exit();
     depthMatrixServer.exit();
     rawMatrixServer.exit();
+}
+
+void ofApp::createHelp(){
+	help = string("fps: " + ofToString(ofGetFrameRate()) + "\n");
+    help += "press k -> to update the calculation\n";
+	help += "press p -> to start updateing the pointcloud\n";
+	help += "press s -> to save current settings\n";
+	help += "press l -> to load last saved settings\n";
+	help += "press 1 - 6 -> to change the viewport\n";
+	help += "press A|B|C + mouse-release -> to change the calibration points in viewport 1\n";
+    
+	help += "press c -> to close the connection, connection is: " + ofToString(kinect.isConnected()) + "\n";
+	help += "press o -> to open the connection it again\n";
+    help += "press m -> Using mouse inputs to navigate: " + ofToString(cam.getMouseInputEnabled() ? "YES" : "NO");
+    /*
+     help += "using opencv threshold = " + ofToString(bThreshWithOpenCV) + " (press spacebar)\n";
+     help += "set near threshold " + ofToString(nearThreshold) + " (press: + -)\n";
+     help += "set far threshold " + ofToString(farThreshold) + " (press: < >) num blobs found " + ofToString(contourFinder.nBlobs) + "\n";
+     */
 }
 
 //--------------------------------------------------------------
@@ -740,6 +735,14 @@ void ofApp::keyPressed(int key){
 		case'p':
 			bPreviewPointCloud = !bPreviewPointCloud;
             break;
+            
+		case 'o':
+			kinect.open();
+			break;
+			
+		case 'c':
+			kinect.close();
+			break;
             
         case 'R':
             break;
@@ -756,13 +759,16 @@ void ofApp::keyPressed(int key){
             gui.loadFromFile("settings.xml");
             break;
 
-		case 'M':
+		case 'm':
 			if(cam.getMouseInputEnabled()) cam.disableMouseInput();
 			else cam.enableMouseInput();
 			break;
             
 		case 'h':
 			bShowHelp = !bShowHelp;
+            if (bShowHelp) {
+                createHelp();
+            }
 			break;
             
 		case '>':
@@ -791,17 +797,8 @@ void ofApp::keyPressed(int key){
 		case 'w':
 			kinect.enableDepthNearValueWhite(!kinect.isDepthNearValueWhite());
 			break;
-			
-		case 'o':
-			kinect.open();
-			break;
-			
-		case 'c':
-			kinect.close();
-			break;
-			
+						
 		case '0':
-            iMainCamera = 0;
 			kinect.setLed(ofxKinect::LED_OFF);
 			break;
             
@@ -866,32 +863,31 @@ void ofApp::mouseDragged(int x, int y, int button){
 
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button){
-	stroke.clear();
+    if(iMainCamera == 0) {
+        if(ofGetKeyPressed('A')){
+            int posX = (x - VIEWGRID_WIDTH) / viewMain.width * KINECT_IMG_WIDTH;
+            int posY = y;
+            if(0 <= posX && posX < KINECT_IMG_WIDTH &&
+               0 <= posY && posY < KINECT_IMG_HEIGHT)
+                calibPoint1.set(ofVec3f(posX, posY));
+        }else if(ofGetKeyPressed('B')){
+            int posX = (x - VIEWGRID_WIDTH) / viewMain.width * KINECT_IMG_WIDTH;
+            int posY = y;
+            if(0 <= posX && posX < KINECT_IMG_WIDTH &&
+               0 <= posY && posY < KINECT_IMG_HEIGHT)
+                calibPoint2.set(ofVec3f(posX, posY));
+        }else if(ofGetKeyPressed('C')){
+            int posX = (x - VIEWGRID_WIDTH) / viewMain.width * KINECT_IMG_WIDTH;
+            int posY = y;
+            if(0 <= posX && posX < KINECT_IMG_WIDTH &&
+               0 <= posY && posY < KINECT_IMG_HEIGHT)
+                calibPoint3.set(ofVec3f(posX, posY));
+        }
+    }
 }
 
 //--------------------------------------------------------------
 void ofApp::mouseReleased(int x, int y, int button){
-    //kinect.getDepthPixels();
-
-    /**
-     
-    char *byteData = (char*)malloc(640 * 480);
-    
-    unsigned char* bytePtr = reinterpret_cast<unsigned char*>(kinect.getDepthPixels());
-    //bytePtr += (640 * 240);
-    
-    memcpy(byteData, bytePtr, 640 * 480);
-    
-	string message= "@%" + ofToString(640);
-	//for(unsigned int i=0; i<stroke.size(); i++){
-	//	message+=ofToString(stroke[i].x)+"|"+ofToString(stroke[i].y)+"[/p]";
-	//}
-	
-    udpConnection.Send(message.c_str(),message.length());
-    for(int i = 0; i < 480; i++)
-        udpConnection.Send(byteData + 640 * i,640);
-
-     **/
 }
 
 //--------------------------------------------------------------
