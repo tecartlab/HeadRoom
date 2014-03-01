@@ -89,7 +89,7 @@ void ofApp::setup(){
     ofFbo::Settings s;
     s.width             = 640;
     s.height			= 480;
-    s.internalformat    = GL_RGBA;
+    s.internalformat    = GL_RGB;
     s.useDepth			= true;
     // and assigning this values to the fbo like this:
     captureFBO.allocate(s);
@@ -530,8 +530,8 @@ void ofApp::draw(){
     kinect.drawDepth(viewGrid[0]);
     kinect.draw(viewGrid[1]);
     captureFBO.draw(viewGrid[2]);
-    colorImg.draw(viewGrid[3]);
     //grayImage.draw(viewGrid[3]);
+    contourFinder.draw(viewGrid[3]);
 
     switch (iMainCamera) {
         case 0:
@@ -555,7 +555,7 @@ void ofApp::draw(){
             captureFBO.draw(viewMain);
             break;
         case 3:
-            grayImage.draw(viewMain);
+            contourFinder.draw(viewMain);
             break;
         case 4:
             previewCam.begin(viewMain);
