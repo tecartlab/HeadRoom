@@ -56,6 +56,9 @@ class ofApp : public ofBaseApp{
 		vector<ofPoint> stroke;
     
 
+    bool bShowVisuals = false;
+
+    
     //////////////////
     //OPENGL CAMERAS//
     //////////////////
@@ -129,23 +132,21 @@ class ofApp : public ofBaseApp{
     ofImage capturedImage;
     ofFbo captureFBO;
     
-    bool bShowHelp;
-    
-    bool bShowCalcData;
-    
-
     ///////////////
     //CALCUALTION//
     ///////////////
     void updateCalc();
     void updateMatrix();
-    void measurementCycle();
+    void measurementCycleRaw();
+    void measurementCycleFine();
 
     void drawCalibrationPoints();
     ofVec3f calcPlanePoint(ofParameter<ofVec2f> & cpoint, int _size, int _step);
     
     bool bUpdateCalc = false;
     bool bUpdateMeasurment = false;
+    bool bUpdateMeasurmentFine = false;
+    
     int cycleCounter = 0;
    
     ofVec3f planePoint1Meas[N_MEASURMENT_CYCLES];
@@ -171,6 +172,8 @@ class ofApp : public ofBaseApp{
 
     string calcdata;
     
+    bool bShowCalcData;
+
     //////////////
     //PROPERTIES//
     //////////////
@@ -204,6 +207,8 @@ class ofApp : public ofBaseApp{
     // HELP //
     //////////
     string help;
+
+    bool bShowHelp = true;
 
     void createHelp();
 

@@ -121,7 +121,7 @@ void ofApp::setup(){
 void ofApp::setupViewports(){
 	//call here whenever we resize the window
  
-    gui.setPosition(ofGetWidth() - 200, 0);
+    gui.setPosition(ofGetWidth() - 200, 20);
     //ofLog(OF_LOG_NOTICE, "ofGetWidth()" + ofToString(ofGetWidth()));
 
 	//--
@@ -241,7 +241,7 @@ void ofApp::createFrustumCone(){
     frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, -(0 - DEPTH_Y_RES/2) *factorFar, -far));
 }
 
-void ofApp::measurementCycle(){
+void ofApp::measurementCycleRaw(){
     if(cycleCounter < N_MEASURMENT_CYCLES){
         planePoint1Meas[cycleCounter] = calcPlanePoint(calibPoint1, 0, 1);
         planePoint2Meas[cycleCounter] = calcPlanePoint(calibPoint2, 0, 1);
@@ -260,6 +260,40 @@ void ofApp::measurementCycle(){
         planePoint2 /= N_MEASURMENT_CYCLES;
         planePoint3 /= N_MEASURMENT_CYCLES;
         bUpdateMeasurment = false;
+        bUpdateMeasurmentFine = true;
+        cycleCounter = 0;
+    }
+}
+
+void ofApp::measurementCycleFine(){
+    if(cycleCounter < N_MEASURMENT_CYCLES){
+        ofVec3f p1meas = calcPlanePoint(calibPoint1, 0, 1);
+        ofVec3f p2meas = calcPlanePoint(calibPoint2, 0, 1);
+        ofVec3f p3meas = calcPlanePoint(calibPoint3, 0, 1);
+        if(planePoint1.z / 1.05 < p1meas.z &&
+           p1meas.z < planePoint1.z * 1.05 &&
+           planePoint2.z / 1.05 < p2meas.z &&
+           p2meas.z < planePoint2.z * 1.05 &&
+           planePoint3.z / 1.05 < p3meas.z &&
+           p3meas.z < planePoint3.z * 1.05){
+            planePoint1Meas[cycleCounter] = p1meas;
+            planePoint2Meas[cycleCounter] = p2meas;
+            planePoint3Meas[cycleCounter] = p3meas;
+            cycleCounter++;
+        }
+    } else {
+        planePoint1 = ofVec3f();
+        planePoint2 = ofVec3f();
+        planePoint3 = ofVec3f();
+        for(int y = 0; y < N_MEASURMENT_CYCLES; y++){
+            planePoint1 += planePoint1Meas[y];
+            planePoint2 += planePoint2Meas[y];
+            planePoint3 += planePoint3Meas[y];
+        }
+        planePoint1 /= N_MEASURMENT_CYCLES;
+        planePoint2 /= N_MEASURMENT_CYCLES;
+        planePoint3 /= N_MEASURMENT_CYCLES;
+        bUpdateMeasurmentFine = false;
         cycleCounter = 0;
         updateCalc();
     }
@@ -426,7 +460,10 @@ void ofApp::update(){
 	// there is a new frame and we are connected
 	if(kinect.isFrameNew()) {
         if(bUpdateMeasurment){
-            measurementCycle();
+            measurementCycleRaw();
+        }
+        if(bUpdateMeasurmentFine){
+            measurementCycleFine();
         }
 
         updatePointCloud(capturemesh, 1, true, false);
@@ -455,7 +492,6 @@ void ofApp::update(){
         capturedImage.setFromPixels(fbopixels);
         
         colorImg.setFromPixels(capturedImage.getPixels(), capturedImage.width, capturedImage.height);
-        //colorImg.setFromPixels(fbopixels);
         
         grayImage.setFromColorImage(colorImg);
         
@@ -487,7 +523,7 @@ void ofApp::update(){
 		
 		// update the cv images
 		grayImage.flagImageChanged();
-         */
+        */
 		
 		// find contours which are between the size of 20 pixels and 1/3 the w*h pixels.
 		// also, find holes is set to true so we will get interior contours as well....
@@ -510,70 +546,75 @@ void ofApp::draw(){
     
 	ofSetColor(255, 255, 255);
 
-    //Draw viewport previews
-    kinect.drawDepth(viewGrid[0]);
-    kinect.draw(viewGrid[1]);
-    captureFBO.draw(viewGrid[2]);
-    //grayImage.draw(viewGrid[3]);
-    contourFinder.draw(viewGrid[3]);
-
-    switch (iMainCamera) {
-        case 0:
-            kinect.drawDepth(viewMain);
-            drawCalibrationPoints();
-            break;
-        case 1:
-            kinect.draw(viewMain);
-            break;
-        case 2:
-            captureFBO.draw(viewMain);
-            break;
-        case 3:
-            contourFinder.draw(viewMain);
-            break;
-        case 4:
-            previewCam.begin(viewMain);
+    if(bShowVisuals){
+        //Draw viewport previews
+        kinect.drawDepth(viewGrid[0]);
+        kinect.draw(viewGrid[1]);
+        captureFBO.draw(viewGrid[2]);
+        //grayImage.draw(viewGrid[3]);
+        contourFinder.draw(viewGrid[3]);
+        
+        switch (iMainCamera) {
+            case 0:
+                kinect.drawDepth(viewMain);
+                drawCalibrationPoints();
+                break;
+            case 1:
+                kinect.draw(viewMain);
+                drawCalibrationPoints();
+                break;
+            case 2:
+                captureFBO.draw(viewMain);
+                break;
+            case 3:
+                contourFinder.draw(viewMain);
+                break;
+            case 4:
+                previewCam.begin(viewMain);
+                mainGrid.drawPlane(50., 5, false);
+                drawPreviewPointCloud();
+                previewCam.end();
+                break;
+            case 5:
+                captureCam.scale = 0.01;
+                captureCam.begin(viewMain, sensorBoxLeft.get(), sensorBoxRight.get(), sensorBoxFront.get(),sensorBoxBack.get(), - sensorBoxTop.get(), sensorBoxTop.get());
+                mainGrid.drawPlane(50., 5, false);
+                drawCapturePointCloud();
+                captureCam.end();
+                break;
+                
+            default:
+                break;
+        }
+        
+        //Draw opengl viewport previews (pfImages dont like opengl calls before they are drawn
+        if(iMainCamera != 4){ // make sure the camera is drawn only once (so the interaction with the mouse works)
+            previewCam.begin(viewGrid[4]);
             mainGrid.drawPlane(50., 5, false);
             drawPreviewPointCloud();
             previewCam.end();
-            break;
-        case 5:
+        }
+        {   //Capture viewport
             captureCam.scale = 0.01;
-            captureCam.begin(viewMain, sensorBoxLeft.get(), sensorBoxRight.get(), sensorBoxFront.get(),sensorBoxBack.get(), - sensorBoxTop.get(), sensorBoxTop.get());
-            mainGrid.drawPlane(50., 5, false);
+            captureCam.begin(viewGrid[5], sensorBoxLeft.get(), sensorBoxRight.get(), sensorBoxFront.get(),sensorBoxBack.get(), - sensorBoxTop.get(), sensorBoxTop.get());
             drawCapturePointCloud();
             captureCam.end();
-            break;
-            
-        default:
-            break;
-    }
+        }
+        gui.draw();
 
-    //Draw opengl viewport previews (pfImages dont like opengl calls before they are drawn
-    if(iMainCamera != 4){ // make sure the camera is drawn only once (so the interaction with the mouse works)
-        previewCam.begin(viewGrid[4]);
-        mainGrid.drawPlane(50., 5, false);
-        drawPreviewPointCloud();
-        previewCam.end();
+        glDisable(GL_DEPTH_TEST);
+        ofPushStyle();
+        // Highlight background of selected camera
+        ofSetColor(255, 0, 255, 255);
+        ofNoFill();
+        ofSetLineWidth(3);
+        ofRect(viewGrid[iMainCamera]);
+    } else {
+        contourFinder.draw(viewMain);
     }
-    {   //Capture viewport
-        captureCam.scale = 0.01;
-        captureCam.begin(viewGrid[5], sensorBoxLeft.get(), sensorBoxRight.get(), sensorBoxFront.get(),sensorBoxBack.get(), - sensorBoxTop.get(), sensorBoxTop.get());
-        drawCapturePointCloud();
-        captureCam.end();
-    }
-
-    gui.draw();
 
     //--
     
-	glDisable(GL_DEPTH_TEST);
-	ofPushStyle();
-	// Highlight background of selected camera
-	ofSetColor(255, 0, 255, 255);
-    ofNoFill();
-    ofSetLineWidth(3);
-	ofRect(viewGrid[iMainCamera]);
 
 	// draw instructions
 	ofSetColor(255, 255, 255);
@@ -588,7 +629,10 @@ void ofApp::draw(){
 	if (false) {
         rgbaMatrixServer.draw(10, 640);
     }
+
+    ofDrawBitmapString("fps: " + ofToString(ofGetFrameRate()), ofGetWidth() - 200, 10);
     
+
 	ofPopStyle();
 	glEnable(GL_DEPTH_TEST);
 
@@ -719,8 +763,9 @@ void ofApp::exit() {
 }
 
 void ofApp::createHelp(){
-	help = string("fps: " + ofToString(ofGetFrameRate()) + "\n");
-    help += "press k -> to update the calculation\n";
+    help = string("press k -> to update the calculation\n");
+    help += "press K -> to show the calculation results \n";
+	help += "press v -> to show visualizations\n";
 	help += "press p -> to start updateing the pointcloud\n";
 	help += "press s -> to save current settings\n";
 	help += "press l -> to load last saved settings\n";
@@ -729,8 +774,9 @@ void ofApp::createHelp(){
     
 	help += "press c -> to close the connection, connection is: " + ofToString(kinect.isConnected()) + "\n";
 	help += "press o -> to open the connection it again\n";
-    help += "press m -> Using mouse inputs to navigate: " + ofToString(cam.getMouseInputEnabled() ? "YES" : "NO\n");
-	help += "Correction Distance Math -> corrected distance = distance * (Base + distance / Divisor)\n";
+    help += "press m -> Using mouse inputs to navigate: " + ofToString(cam.getMouseInputEnabled() ? "YES" : "NO");
+	help += "\n";
+ 	help += "Correction Distance Math -> corrected distance = distance * (Base + distance / Divisor)\n";
 	help += "Correction pixel Site -> corrected pixel size = pixel size * Factor\n";
     /*
      help += "using opencv threshold = " + ofToString(bThreshWithOpenCV) + " (press spacebar)\n";
@@ -750,6 +796,10 @@ void ofApp::keyPressed(int key){
 			bPreviewPointCloud = !bPreviewPointCloud;
             break;
             
+		case'v':
+			bShowVisuals = !bShowVisuals;
+            break;
+            
 		case 'o':
 			kinect.open();
 			break;
@@ -759,7 +809,7 @@ void ofApp::keyPressed(int key){
 			break;
             
         case 'K':
-            bShowCalcData = true;
+            bShowCalcData = !bShowCalcData;
             break;
             
         case 'k':
@@ -878,7 +928,7 @@ void ofApp::mouseDragged(int x, int y, int button){
 
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button){
-    if(iMainCamera == 0) {
+    if(iMainCamera == 0 || iMainCamera == 1) {
         if(ofGetKeyPressed('A')){
             int posX = (x - VIEWGRID_WIDTH) / viewMain.width * KINECT_IMG_WIDTH;
             int posY = y;
