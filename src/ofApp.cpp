@@ -43,7 +43,6 @@ void ofApp::setup(){
 
     nearFrustum.addListener(this, &ofApp::updateFrustumCone);
     farFrustum.addListener(this, &ofApp::updateFrustumCone);
-    tiltAngle.addListener(this, &ofApp::setKinectTiltAngle);
     
     gui.add(calibPoint1.set("calibA", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
     gui.add(calibPoint2.set("calibB", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
@@ -55,12 +54,18 @@ void ofApp::setup(){
     sensorBoxGuiGroup.add(sensorBoxBack.set("back", 2000, 0, 7000));
     sensorBoxGuiGroup.add(sensorBoxTop.set("top", 2200, 0, 3000));
     sensorBoxGuiGroup.add(sensorBoxBottom.set("bottom", 1000, 0, 3000));
+    sensorBoxGuiGroup.add(nearFrustum.set("nearFrustum", 400, 200, 2000));
+    sensorBoxGuiGroup.add(farFrustum.set("farFrustum", 4000, 2000, 6000));
     gui.add(sensorBoxGuiGroup);
-    gui.add(nearFrustum.set("nearFrustum", 400, 200, 2000));
-    gui.add(farFrustum.set("farFrustum", 4000, 2000, 6000));
-    gui.add(tiltAngle.set("tilt", 0, -30, 30));
-    gui.add(transformation.set("matrix rx ry tz", ofVec3f(0, 0, 0), ofVec3f(-90, -90, -6000), ofVec3f(90, 90, 6000)));
     
+    intrinsicGuiGroup.setName("Corrections");
+    intrinsicGuiGroup.add(depthCorrectionBase.set("base", 1.0, 0.9, 1.1));
+    intrinsicGuiGroup.add(depthCorrectionDivisor.set("divisor", 100000, 90000, 110000));
+    intrinsicGuiGroup.add(pixelSizeCorrector.set("pixl factor", 1.0, 0.9, 1.1));
+    gui.add(intrinsicGuiGroup);
+    
+    gui.add(transformation.set("matrix rx ry tz", ofVec3f(0, 0, 0), ofVec3f(-90, -90, -6000), ofVec3f(90, 90, 6000)));
+ 
     gui.loadFromFile("settings.xml");
     
     updateMatrix();
@@ -81,9 +86,7 @@ void ofApp::setup(){
 	kinect.open();		// opens first available kinect
 	//kinect.open(1);	// open a kinect by id, starting with 0 (sorted by serial # lexicographically))
 	//kinect.open("A00362A08602047A");	// open a kinect using it's unique serial #
-    
-    kinect.setCameraTiltAngle(tiltAngle.get());
-    
+        
     ofFbo::Settings s;
     s.width             = 640;
     s.height			= 480;
@@ -238,10 +241,6 @@ void ofApp::createFrustumCone(){
     frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, -(0 - DEPTH_Y_RES/2) *factorFar, -far));
 }
 
-void ofApp::setKinectTiltAngle(int & angle){
-	kinect.setCameraTiltAngle(angle);
-}
-
 void ofApp::measurementCycle(){
     if(cycleCounter < N_MEASURMENT_CYCLES){
         planePoint1Meas[cycleCounter] = calcPlanePoint(calibPoint1, 0, 1);
@@ -324,7 +323,7 @@ void ofApp::updateCalc(){
     geometry.addVertex(frustumCenterPoint + CenterPointRotXtoZAxis);
 
     float kinectRransform_xAxisRot = frustumCenterPoint.angle(ofVec3f(CenterPointRotXtoZAxis).scale(-1.));
-    float kinectRransform_yAxisRot = - CenterPointRotXtoZAxis.angle(planeZAxis);
+    float kinectRransform_yAxisRot = -CenterPointRotXtoZAxis.angle(planeZAxis);
     
     float kinectRransform_zTranslate = frustumCenterPoint.length();
     
@@ -344,6 +343,15 @@ void ofApp::updateCalc(){
 
     planeCenterPoint = centerMatrix.preMult(frustumCenterPoint);
     //planeCenterPoint.rotate(kinectRransform_xAxisRot, ofVec3f(1, 0, 0));
+
+    calcdata = string("distance to plane center point: " + ofToString(frustumCenterPoint.length()) + "\n");
+    calcdata += "distance to A: " + ofToString(planePoint1.length()) + "\n";
+    calcdata += "distance to B: " + ofToString(planePoint2.length()) + "\n";
+    calcdata += "distance to C: " + ofToString(planePoint3.length()) + "\n";
+    calcdata += "distance A to B: " + ofToString(ofVec3f(planePoint1 - planePoint2).length()) + "\n";
+    calcdata += "reference pixel size: " + ofToString(kinect.getZeroPlanePixelSize()) + "\n";
+    calcdata += "reference distance: " + ofToString(kinect.getZeroPlaneDistance()) + "\n";
+
 
     //ofLog(OF_LOG_NOTICE, "planeCenterPoint.x" + ofToString(planeCenterPoint.x));
     //ofLog(OF_LOG_NOTICE, "planeCenterPoint.y" + ofToString(planeCenterPoint.y));
@@ -373,7 +381,7 @@ void ofApp::updateMatrix(){
 ofVec3f ofApp::calcPlanePoint(ofParameter<ofVec2f> & cpoint, int _size, int _step){
     int width = kinect.getWidth();
     int height = kinect.getHeight();
-    double ref_pix_size = kinect.getZeroPlanePixelSize();
+    double ref_pix_size = 2 * kinect.getZeroPlanePixelSize() * pixelSizeCorrector.get();
     double ref_distance = kinect.getZeroPlaneDistance();
     ofShortPixelsRef raw = kinect.getRawDepthPixelsRef();
     
@@ -389,11 +397,14 @@ ofVec3f ofApp::calcPlanePoint(ofParameter<ofVec2f> & cpoint, int _size, int _ste
     
     ofVec3f ppoint;
     
+    float corrDistance;
+    
     for(int y = minY; y <= maxY; y = y + step) {
         for(int x = minX; x <= maxX; x = x + step) {
-            factor = 2 * ref_pix_size * raw[y * width + x] / ref_distance;
+            corrDistance = (float)raw[y * width + x] * (depthCorrectionBase.get() + (float)raw[y * width + x] / depthCorrectionDivisor.get());
+            factor = ref_pix_size * corrDistance / ref_distance;
             if(raw[y * width + x] > 0) {
-                ppoint += ofVec3f((x - DEPTH_X_RES/2) *factor, -(y - DEPTH_Y_RES/2) *factor, -raw[y * width + x]);
+                ppoint += ofVec3f((x - DEPTH_X_RES/2) *factor, -(y - DEPTH_Y_RES/2) *factor, -corrDistance);
                 counter++;
             }
         }
@@ -570,6 +581,8 @@ void ofApp::draw(){
     if(bShowHelp) {
         ofDrawBitmapString(help, 20 ,VIEWPORT_HEIGHT + 20);
         //ofLog(OF_LOG_NOTICE, "help printed");
+    }else if(bShowCalcData){
+        ofDrawBitmapString(calcdata, 20 ,VIEWPORT_HEIGHT + 20);
     }
     
 	if (false) {
@@ -589,10 +602,11 @@ void ofApp::updatePointCloud(ofVboMesh & mesh, int step, bool useFrustumCone, bo
     mesh.clear();
 	mesh.setMode(OF_PRIMITIVE_POINTS);
     
-    double ref_pix_size = kinect.getZeroPlanePixelSize();
+    double ref_pix_size = 2 * kinect.getZeroPlanePixelSize() * pixelSizeCorrector.get();
     double ref_distance = kinect.getZeroPlaneDistance();
     ofShortPixelsRef raw = kinect.getRawDepthPixelsRef();
     double factor = 0;
+    double corrDistance;
     
     int minRaw = 10000;
     int maxRaw = 0;
@@ -609,14 +623,15 @@ void ofApp::updatePointCloud(ofVboMesh & mesh, int step, bool useFrustumCone, bo
 	for(int y = 0; y < h; y += step) {
 		for(int x = 0; x < w; x += step) {
             vertex.z = 0;
-            factor = 2 * ref_pix_size * raw[y * w + x] / ref_distance;
+            corrDistance = (float)raw[y * w + x] * (depthCorrectionBase.get() + (float)raw[y * w + x] / depthCorrectionDivisor.get());
+            factor = ref_pix_size * corrDistance / ref_distance;
             if(useFrustumCone){
-                if(nearFrustum.get() < raw[y * w + x] && raw[y * w + x] < farFrustum.get()) {
-                    vertex = ofVec3f((x - DEPTH_X_RES/2) *factor, -(y - DEPTH_Y_RES/2) *factor, -raw[y * w + x]);
+                if(nearFrustum.get() < corrDistance && corrDistance < farFrustum.get()) {
+                    vertex = ofVec3f((x - DEPTH_X_RES/2) *factor, -(y - DEPTH_Y_RES/2) *factor, -corrDistance);
                     vertex = kinectRransform.preMult(vertex);
                 }
             } else {
-                vertex = ofVec3f((x - DEPTH_X_RES/2) *factor, -(y - DEPTH_Y_RES/2) *factor, -raw[y * w + x]);
+                vertex = ofVec3f((x - DEPTH_X_RES/2) *factor, -(y - DEPTH_Y_RES/2) *factor, -corrDistance);
                 vertex = kinectRransform.preMult(vertex);
             }
             if(vertex.z != 0){
@@ -696,11 +711,8 @@ void ofApp::drawCalibrationPoints(){
 void ofApp::exit() {
     ofLog(OF_LOG_NOTICE, "exiting application...");
 
-	kinect.setCameraTiltAngle(0); // zero the tilt on exit
 	kinect.close();
 	
-    tiltAngle.removeListener(this, &ofApp::setKinectTiltAngle);
-    
     rgbaMatrixServer.exit();
     depthMatrixServer.exit();
     rawMatrixServer.exit();
@@ -717,7 +729,9 @@ void ofApp::createHelp(){
     
 	help += "press c -> to close the connection, connection is: " + ofToString(kinect.isConnected()) + "\n";
 	help += "press o -> to open the connection it again\n";
-    help += "press m -> Using mouse inputs to navigate: " + ofToString(cam.getMouseInputEnabled() ? "YES" : "NO");
+    help += "press m -> Using mouse inputs to navigate: " + ofToString(cam.getMouseInputEnabled() ? "YES" : "NO\n");
+	help += "Correction Distance Math -> corrected distance = distance * (Base + distance / Divisor)\n";
+	help += "Correction pixel Site -> corrected pixel size = pixel size * Factor\n";
     /*
      help += "using opencv threshold = " + ofToString(bThreshWithOpenCV) + " (press spacebar)\n";
      help += "set near threshold " + ofToString(nearThreshold) + " (press: + -)\n";
@@ -744,7 +758,8 @@ void ofApp::keyPressed(int key){
 			kinect.close();
 			break;
             
-        case 'R':
+        case 'K':
+            bShowCalcData = true;
             break;
             
         case 'k':

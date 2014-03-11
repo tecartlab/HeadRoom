@@ -22,7 +22,7 @@
 #define KINECT_IMG_WIDTH   640
 #define KINECT_IMG_HEIGHT  480
 
-#define N_MEASURMENT_CYCLES 60
+#define N_MEASURMENT_CYCLES 10
 
 
 class ofApp : public ofBaseApp{
@@ -94,7 +94,7 @@ class ofApp : public ofBaseApp{
     
     ofVboMesh frustum;
     ofVboMesh sensorBox;
-
+    
     void updatePointCloud(ofVboMesh & mesh, int step, bool useFrustumCone, bool useVideoColor);
     void drawPreviewPointCloud();
     void drawCapturePointCloud();
@@ -107,18 +107,18 @@ class ofApp : public ofBaseApp{
     //COLOR CONTOUR//
     /////////////////
 
-        ofxCvColorImage colorImg;
+    ofxCvColorImage colorImg;
         
-        ofxCvGrayscaleImage grayImage; // grayscale depth image
-        ofxCvGrayscaleImage grayThreshNear; // the near thresholded image
-        ofxCvGrayscaleImage grayThreshFar; // the far thresholded image
+    ofxCvGrayscaleImage grayImage; // grayscale depth image
+    ofxCvGrayscaleImage grayThreshNear; // the near thresholded image
+    ofxCvGrayscaleImage grayThreshFar; // the far thresholded image
         
-        ofxCvContourFinder contourFinder;
+    ofxCvContourFinder contourFinder;
         
-        bool bThreshWithOpenCV;
+    bool bThreshWithOpenCV;
         
-        int nearThreshold;
-        int farThreshold;
+    int nearThreshold;
+    int farThreshold;
             
     // used for viewing the point cloud
     ofEasyCam previewCam;
@@ -129,7 +129,9 @@ class ofApp : public ofBaseApp{
     ofImage capturedImage;
     ofFbo captureFBO;
     
-        bool bShowHelp;
+    bool bShowHelp;
+    
+    bool bShowCalcData;
     
 
     ///////////////
@@ -167,6 +169,7 @@ class ofApp : public ofBaseApp{
         
     ofMatrix4x4 kinectRransform;
 
+    string calcdata;
     
     //////////////
     //PROPERTIES//
@@ -190,10 +193,13 @@ class ofApp : public ofBaseApp{
 
     ofParameter<int> nearFrustum;
     ofParameter<int> farFrustum;
-    ofParameter<int> tiltAngle;
-    
-    void setKinectTiltAngle(int & tiltAngle);
-    
+
+    ofParameterGroup intrinsicGuiGroup;
+
+    ofParameter<float> depthCorrectionBase;
+    ofParameter<float> depthCorrectionDivisor;
+    ofParameter<float> pixelSizeCorrector;
+
     //////////
     // HELP //
     //////////
