@@ -58,6 +58,12 @@ void ofApp::setup(){
     sensorBoxGuiGroup.add(farFrustum.set("farFrustum", 4000, 2000, 6000));
     gui.add(sensorBoxGuiGroup);
     
+    blobGuiGroup.setName("Blobs");
+    blobGuiGroup.add(blobAreaMin.set("AreaMin", 1000, 0, 40000));
+    blobGuiGroup.add(blobAreaMax.set("AreaMax", 6000, 0, 40000));
+    blobGuiGroup.add(countBlob.set("MaxBlobs", 5, 1, 20));
+    gui.add(blobGuiGroup);
+
     intrinsicGuiGroup.setName("Corrections");
     intrinsicGuiGroup.add(depthCorrectionBase.set("base", 1.0, 0.9, 1.1));
     intrinsicGuiGroup.add(depthCorrectionDivisor.set("divisor", 100000, 90000, 110000));
@@ -94,6 +100,8 @@ void ofApp::setup(){
     s.useDepth			= true;
     // and assigning this values to the fbo like this:
     captureFBO.allocate(s);
+    
+    fbopixels.allocate(640, 480, OF_PIXELS_RGB);
 
     capturedImage.allocate(kinect.width, kinect.height, OF_IMAGE_COLOR_ALPHA);
     
@@ -485,49 +493,33 @@ void ofApp::update(){
         
         //////////////////////////////////
         
-		// load grayscale depth image from the kinect source
-        ofPixels fbopixels;
-        fbopixels.allocate(640, 480, OF_PIXELS_RGB);
         captureFBO.readToPixels(fbopixels);
-        capturedImage.setFromPixels(fbopixels);
+
+        colorImg.setFromPixels(fbopixels);
         
-        colorImg.setFromPixels(capturedImage.getPixels(), capturedImage.width, capturedImage.height);
-        
+		// load grayscale captured depth image from the color source
         grayImage.setFromColorImage(colorImg);
         
-        //grayImage.setFromPixels(fbopixels.getPixels(), fbopixels.getWidth(), fbopixels.getHeight());
-		
-        /*
-		// we do two thresholds - one for the far plane and one for the near plane
-		// we then do a cvAnd to get the pixels which are a union of the two thresholds
-		if(bThreshWithOpenCV) {
-			grayThreshNear = grayImage;
-			grayThreshFar = grayImage;
-			grayThreshNear.threshold(nearThreshold, true);
-			grayThreshFar.threshold(farThreshold);
-			cvAnd(grayThreshNear.getCvImage(), grayThreshFar.getCvImage(), grayImage.getCvImage(), NULL);
-		} else {
-			
-			// or we do it ourselves - show people how they can work with the pixels
-			unsigned char * pix = grayImage.getPixels();
-			
-			int numPixels = grayImage.getWidth() * grayImage.getHeight();
-			for(int i = 0; i < numPixels; i++) {
-				if(pix[i] < nearThreshold && pix[i] > farThreshold) {
-					pix[i] = 255;
-				} else {
-					pix[i] = 0;
-				}
-			}
-		}
-		
-		// update the cv images
-		grayImage.flagImageChanged();
-        */
 		
 		// find contours which are between the size of 20 pixels and 1/3 the w*h pixels.
 		// also, find holes is set to true so we will get interior contours as well....
-		contourFinder.findContours(grayImage, 10, (kinect.width*kinect.height)/2, 20, false);
+		contourFinder.findContours(grayImage, blobAreaMin.get(), blobAreaMax.get(), countBlob.get(), false);
+        
+        for (int i = 0; i < contourFinder.nBlobs; i++){
+            //ofRectangle bounds = contourFinder.blobs[i].boundingRect;
+
+            //contourFinder.blobs[i].draw();
+            
+            // draw over the centroid if the blob is a hole
+            ofSetColor(255);
+            if(contourFinder.blobs[i].hole){
+                //contourFinder.blobs[i].boundingRect.getCenter().x + 360,
+            }
+        }
+
+       // for(int i = 0; i < contourFinder.nBlobs; i++){
+            
+       // }
 	}
 	    
     rgbaMatrixServer.update();
@@ -551,7 +543,7 @@ void ofApp::draw(){
         kinect.drawDepth(viewGrid[0]);
         kinect.draw(viewGrid[1]);
         captureFBO.draw(viewGrid[2]);
-        //grayImage.draw(viewGrid[3]);
+        contourFinder.draw(viewGrid[3]);
         contourFinder.draw(viewGrid[3]);
         
         switch (iMainCamera) {
@@ -570,36 +562,41 @@ void ofApp::draw(){
                 contourFinder.draw(viewMain);
                 break;
             case 4:
+                // this is how to get access to them:
+                for (int i = 0; i < contourFinder.nBlobs; i++){
+                    contourFinder.blobs[i].draw(viewMain.x,viewMain.y);
+                    //contourFinder.blobs[i].draw();
+                    
+                    ofDrawBitmapString("blob[" + ofToString(i) + "] w=" + ofToString(contourFinder.blobs[i].boundingRect.width) + " h=" + ofToString(contourFinder.blobs[i].boundingRect.height),
+                                       contourFinder.blobs[i].boundingRect.getCenter().x + viewMain.x,
+                                       contourFinder.blobs[i].boundingRect.getCenter().y + viewMain.y);
+                    
+                    // draw over the centroid if the blob is a hole
+                    ofSetColor(255);
+                    if(contourFinder.blobs[i].hole){
+                    }
+                }
+                break;
+            case 5:
                 previewCam.begin(viewMain);
                 mainGrid.drawPlane(50., 5, false);
                 drawPreviewPointCloud();
                 previewCam.end();
-                break;
-            case 5:
-                captureCam.scale = 0.01;
-                captureCam.begin(viewMain, sensorBoxLeft.get(), sensorBoxRight.get(), sensorBoxFront.get(),sensorBoxBack.get(), - sensorBoxTop.get(), sensorBoxTop.get());
-                mainGrid.drawPlane(50., 5, false);
-                drawCapturePointCloud();
-                captureCam.end();
                 break;
                 
             default:
                 break;
         }
         
-        //Draw opengl viewport previews (pfImages dont like opengl calls before they are drawn
-        if(iMainCamera != 4){ // make sure the camera is drawn only once (so the interaction with the mouse works)
+        //Draw opengl viewport previews (ofImages dont like opengl calls before they are drawn
+        if(iMainCamera != 5){ // make sure the camera is drawn only once (so the interaction with the mouse works)
             previewCam.begin(viewGrid[4]);
             mainGrid.drawPlane(50., 5, false);
             drawPreviewPointCloud();
             previewCam.end();
         }
-        {   //Capture viewport
-            captureCam.scale = 0.01;
-            captureCam.begin(viewGrid[5], sensorBoxLeft.get(), sensorBoxRight.get(), sensorBoxFront.get(),sensorBoxBack.get(), - sensorBoxTop.get(), sensorBoxTop.get());
-            drawCapturePointCloud();
-            captureCam.end();
-        }
+        
+        
         gui.draw();
 
         glDisable(GL_DEPTH_TEST);
@@ -896,16 +893,7 @@ void ofApp::keyPressed(int key){
             iMainCamera = 5;
 			kinect.setLed(ofxKinect::LED_BLINK_YELLOW_RED);
 			break;
-						
-		case OF_KEY_UP:
-			break;
-			
-		case OF_KEY_DOWN:
-			break;
-            
-		case OF_KEY_RIGHT:
-			break;
-            
+						            
 	}
 
 }

@@ -110,6 +110,8 @@ class ofApp : public ofBaseApp{
     //COLOR CONTOUR//
     /////////////////
 
+    ofPixels fbopixels;
+    
     ofxCvColorImage colorImg;
         
     ofxCvGrayscaleImage grayImage; // grayscale depth image
@@ -202,6 +204,12 @@ class ofApp : public ofBaseApp{
     ofParameter<float> depthCorrectionBase;
     ofParameter<float> depthCorrectionDivisor;
     ofParameter<float> pixelSizeCorrector;
+
+    ofParameterGroup blobGuiGroup;
+
+    ofParameter<int> blobAreaMin;
+    ofParameter<int> blobAreaMax;
+    ofParameter<int> countBlob;
 
     //////////
     // HELP //
