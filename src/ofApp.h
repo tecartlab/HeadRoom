@@ -26,7 +26,7 @@
 
 #define N_MAX_BLOBS 20
 
-#define EYE_DIFF_TO_HEADTOP 130 //the eyes are 130 mm below the top of the head
+#define EYE_DIFF_TO_HEADTOP 160 //the eyes are 130 mm below the top of the head
 
 
 class ofApp : public ofBaseApp{
@@ -129,6 +129,9 @@ class ofApp : public ofBaseApp{
     
     ofVec3f blobPos[N_MAX_BLOBS];
     ofVec2f blobSize[N_MAX_BLOBS];
+    
+    ofVec2f headtop[N_MAX_BLOBS];
+    
     ofVec3f blobTopPos[N_MAX_BLOBS];
     ofVec3f blobEyePos[N_MAX_BLOBS];
 

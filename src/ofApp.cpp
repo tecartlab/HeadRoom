@@ -545,7 +545,8 @@ void ofApp::update(){
             blobSize[i] = ofVec3f(((float)bounds.getWidth() / (float)grayImage.width) * (sensorFieldRight - sensorFieldLeft), ((float)bounds.getHeight() / (float)grayImage.height ) * (sensorFieldBack - sensorFieldFront));
             
             // find all the pixels below the eyelevel threshold. this yealds an image with blobs that mark the size of the head at eyelevel.
-            ofVec2f headtop;
+            headtop[i] = ofVec2f();
+            int brighCounter = 0;
             for(int x = bounds.x; x < bounds.x + bounds.width; x++){
                 for(int y = bounds.y; y < bounds.y + bounds.height; y++){
                     pixelBrightness = greyref.getColor(x, y).getBrightness();
@@ -555,10 +556,14 @@ void ofApp::update(){
                         eyeRef.setColor(x, y, black);
                     }
                     if(pixelBrightness == brightness){
-                        headtop += ofVec2f(x, y);
+                        headtop[i] += ofVec2f(x, y);
+                        brighCounter++;
                     }
                 }
             }
+            headtop[i] /= brighCounter;
+            //ofLog(OF_LOG_NOTICE, "headtop["+ofToString(i)+"] : " + ofToString(headtop[i]));
+            
             
         }
         grayEyeLevel.setFromPixels(eyeRef.getPixels(), eyeRef.getWidth(), eyeRef.getHeight());
@@ -625,6 +630,11 @@ void ofApp::draw(){
             case 4:
                 // this is how to get access to them:
                 contourEyeFinder.draw(viewMain);
+                for (int i = 0; i < contourEyeFinder.nBlobs; i++){
+                    ofSetColor(255, 0, 255, 255);
+                    ofFill();
+                    ofCircle(headtop[i].x + viewMain.x, headtop[i].y + viewMain.y, 5);
+                }
                 break;
             case 5:
                 previewCam.begin(viewMain);
