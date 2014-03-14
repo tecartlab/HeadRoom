@@ -24,6 +24,10 @@
 
 #define N_MEASURMENT_CYCLES 10
 
+#define N_MAX_BLOBS 20
+
+#define EYE_DIFF_TO_HEADTOP 130 //the eyes are 130 mm below the top of the head
+
 
 class ofApp : public ofBaseApp{
 
@@ -115,11 +119,19 @@ class ofApp : public ofBaseApp{
     ofxCvColorImage colorImg;
         
     ofxCvGrayscaleImage grayImage; // grayscale depth image
-    ofxCvGrayscaleImage grayThreshNear; // the near thresholded image
+    ofxCvGrayscaleImage grayEyeLevel; // the eyelevel thresholded image
     ofxCvGrayscaleImage grayThreshFar; // the far thresholded image
         
     ofxCvContourFinder contourFinder;
-        
+    ofxCvContourFinder contourEyeFinder;
+
+    int nBlobs; //number of detected blobs
+    
+    ofVec3f blobPos[N_MAX_BLOBS];
+    ofVec2f blobSize[N_MAX_BLOBS];
+    ofVec3f blobTopPos[N_MAX_BLOBS];
+    ofVec3f blobEyePos[N_MAX_BLOBS];
+
     bool bThreshWithOpenCV;
         
     int nearThreshold;

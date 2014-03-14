@@ -61,7 +61,7 @@ void ofApp::setup(){
     blobGuiGroup.setName("Blobs");
     blobGuiGroup.add(blobAreaMin.set("AreaMin", 1000, 0, 40000));
     blobGuiGroup.add(blobAreaMax.set("AreaMax", 6000, 0, 40000));
-    blobGuiGroup.add(countBlob.set("MaxBlobs", 5, 1, 20));
+    blobGuiGroup.add(countBlob.set("MaxBlobs", 5, 1, N_MAX_BLOBS));
     gui.add(blobGuiGroup);
 
     intrinsicGuiGroup.setName("Corrections");
@@ -108,7 +108,7 @@ void ofApp::setup(){
 	colorImg.allocate(kinect.width, kinect.height);
     
 	grayImage.allocate(kinect.width, kinect.height);
-	grayThreshNear.allocate(kinect.width, kinect.height);
+	grayEyeLevel.allocate(kinect.width, kinect.height);
 	grayThreshFar.allocate(kinect.width, kinect.height);
 	
 	nearThreshold = 230;
@@ -501,27 +501,81 @@ void ofApp::update(){
         grayImage.setFromColorImage(colorImg);
         
 		
-		// find contours which are between the size of 20 pixels and 1/3 the w*h pixels.
-		// also, find holes is set to true so we will get interior contours as well....
+		// find contours in the raw grayImage
 		contourFinder.findContours(grayImage, blobAreaMin.get(), blobAreaMax.get(), countBlob.get(), false);
         
+        grayEyeLevel = grayImage;
+        
+        ofPixelsRef eyeRef = grayEyeLevel.getPixelsRef();
+        ofPixelsRef greyref = grayImage.getPixelsRef();
+        ofColor white = ofColor::white;
+        ofColor black = ofColor::black;
+
+        float sensorFieldFront = sensorBoxFront.get();
+        float sensorFieldBack = sensorBoxBack.get();
+        float sensorFieldLeft = sensorBoxLeft.get();
+        float sensorFieldRight = sensorBoxRight.get();
+        float sensorFieldTop = sensorBoxTop .get();
+        float sensorFieldBottom = sensorBoxBottom.get();
+
+        // the eyelevel calculated from the sensorfield
+        int eyeLevel = EYE_DIFF_TO_HEADTOP / (sensorFieldTop - sensorFieldBottom) * 255;
+
+        //ofLog(OF_LOG_NOTICE, "eyref size : " + ofToString(eyeRef.size()));
+
+        nBlobs = contourFinder.nBlobs;
+        
         for (int i = 0; i < contourFinder.nBlobs; i++){
-            //ofRectangle bounds = contourFinder.blobs[i].boundingRect;
-
-            //contourFinder.blobs[i].draw();
-            
-            // draw over the centroid if the blob is a hole
-            ofSetColor(255);
-            if(contourFinder.blobs[i].hole){
-                //contourFinder.blobs[i].boundingRect.getCenter().x + 360,
+            ofRectangle bounds = contourFinder.blobs[i].boundingRect;
+            int pixelBrightness = 0;
+            float brightness = 0;
+           
+            // find the brightest pixel within the blob. this defines the height of the blob
+            for(int x = bounds.x; x < bounds.x + bounds.width; x++){
+                for(int y = bounds.y; y < bounds.y + bounds.height; y++){
+                    pixelBrightness = greyref.getColor(x, y).getBrightness();
+                    brightness = (pixelBrightness > brightness)?pixelBrightness: brightness;
+                }
             }
-        }
-
-       // for(int i = 0; i < contourFinder.nBlobs; i++){
             
-       // }
+            //calculate the blob pos in worldspace
+            blobPos[i] = ofVec3f(((float)bounds.getCenter().x / (float)grayImage.width) * (sensorFieldRight - sensorFieldLeft) + sensorFieldLeft, sensorFieldBack - ((float)bounds.getCenter().y / (float)grayImage.height ) * (sensorFieldBack - sensorFieldFront), (brightness / 255.0) * (sensorFieldTop - sensorFieldBottom) + sensorFieldBottom);
+            
+            //calculate the blob size in worldspace
+            blobSize[i] = ofVec3f(((float)bounds.getWidth() / (float)grayImage.width) * (sensorFieldRight - sensorFieldLeft), ((float)bounds.getHeight() / (float)grayImage.height ) * (sensorFieldBack - sensorFieldFront));
+            
+            // find all the pixels below the eyelevel threshold. this yealds an image with blobs that mark the size of the head at eyelevel.
+            ofVec2f headtop;
+            for(int x = bounds.x; x < bounds.x + bounds.width; x++){
+                for(int y = bounds.y; y < bounds.y + bounds.height; y++){
+                    pixelBrightness = greyref.getColor(x, y).getBrightness();
+                    if(pixelBrightness > (brightness - eyeLevel)){
+                        eyeRef.setColor(x, y, white);
+                    }else{
+                        eyeRef.setColor(x, y, black);
+                    }
+                    if(pixelBrightness == brightness){
+                        headtop += ofVec2f(x, y);
+                    }
+                }
+            }
+            
+        }
+        grayEyeLevel.setFromPixels(eyeRef.getPixels(), eyeRef.getWidth(), eyeRef.getHeight());
+        grayEyeLevel.invert();
+        grayEyeLevel.threshold(20);
+        grayEyeLevel.invert();
+        grayEyeLevel.blurGaussian();
+        
+        //find head shape on eye height contours
+        contourEyeFinder.findContours(grayEyeLevel, blobAreaMin.get()/4, blobAreaMax.get(), countBlob.get(), false);
+        
+       for(int i = 0; i < contourEyeFinder.nBlobs; i++){
+           //contourEyeFinder.blobs[i].pts
+            
+       }
 	}
-	    
+    
     rgbaMatrixServer.update();
 	depthMatrixServer.update();
 	rawMatrixServer.update();
@@ -544,7 +598,7 @@ void ofApp::draw(){
         kinect.draw(viewGrid[1]);
         captureFBO.draw(viewGrid[2]);
         contourFinder.draw(viewGrid[3]);
-        contourFinder.draw(viewGrid[3]);
+        contourEyeFinder.draw(viewGrid[4]);
         
         switch (iMainCamera) {
             case 0:
@@ -560,22 +614,17 @@ void ofApp::draw(){
                 break;
             case 3:
                 contourFinder.draw(viewMain);
+                for (int i = 0; i < contourFinder.nBlobs; i++){
+                    //contourEyeFinder.blobs[i].draw(viewMain.x,viewMain.y);
+                    
+                    ofDrawBitmapString("blob[" + ofToString(i) + "] height=" + ofToString(blobPos[i].z) + " x=" + ofToString(blobPos[i].x) + " y=" + ofToString(blobPos[i].y),
+                                       contourFinder.blobs[i].boundingRect.getCenter().x + viewMain.x,
+                                       contourFinder.blobs[i].boundingRect.getCenter().y + viewMain.y);
+                }
                 break;
             case 4:
                 // this is how to get access to them:
-                for (int i = 0; i < contourFinder.nBlobs; i++){
-                    contourFinder.blobs[i].draw(viewMain.x,viewMain.y);
-                    //contourFinder.blobs[i].draw();
-                    
-                    ofDrawBitmapString("blob[" + ofToString(i) + "] w=" + ofToString(contourFinder.blobs[i].boundingRect.width) + " h=" + ofToString(contourFinder.blobs[i].boundingRect.height),
-                                       contourFinder.blobs[i].boundingRect.getCenter().x + viewMain.x,
-                                       contourFinder.blobs[i].boundingRect.getCenter().y + viewMain.y);
-                    
-                    // draw over the centroid if the blob is a hole
-                    ofSetColor(255);
-                    if(contourFinder.blobs[i].hole){
-                    }
-                }
+                contourEyeFinder.draw(viewMain);
                 break;
             case 5:
                 previewCam.begin(viewMain);
@@ -590,7 +639,7 @@ void ofApp::draw(){
         
         //Draw opengl viewport previews (ofImages dont like opengl calls before they are drawn
         if(iMainCamera != 5){ // make sure the camera is drawn only once (so the interaction with the mouse works)
-            previewCam.begin(viewGrid[4]);
+            previewCam.begin(viewGrid[5]);
             mainGrid.drawPlane(50., 5, false);
             drawPreviewPointCloud();
             previewCam.end();
@@ -726,7 +775,7 @@ void ofApp::drawPreviewPointCloud() {
 }
 
 void ofApp::drawCapturePointCloud() {
-	glPointSize(2);
+	glPointSize(3);
 	ofPushMatrix();
 	ofScale(0.01, 0.01, 0.01);
     capturemesh.drawVertices();
