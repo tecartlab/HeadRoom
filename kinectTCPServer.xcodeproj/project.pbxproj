@@ -20,6 +20,7 @@
 		B56FE57CC35806596D38118C /* ofxSliderGroup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 802251BAF1B35B1D67B32FD0 /* ofxSliderGroup.cpp */; };
 		BBAB23CB13894F3D00AA2426 /* GLUT.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BBAB23BE13894E4700AA2426 /* GLUT.framework */; };
 		D3301F6A0B43BB293ED97C1D /* ofxCvShortImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A4DD23693DFAB8EC05FAA5D /* ofxCvShortImage.cpp */; };
+		DB6C149818D367C30048E83A /* BlockTracker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB6C149718D367C30048E83A /* BlockTracker.cpp */; };
 		DB6C52B818AE3D73008CC794 /* tinyxml.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB6C52B118AE3D73008CC794 /* tinyxml.cpp */; };
 		DB6C52B918AE3D73008CC794 /* tinyxmlerror.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB6C52B318AE3D73008CC794 /* tinyxmlerror.cpp */; };
 		DB6C52BA18AE3D73008CC794 /* tinyxmlparser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB6C52B418AE3D73008CC794 /* tinyxmlparser.cpp */; };
@@ -198,6 +199,8 @@
 		D76A59E7B3601E76351C9BDB /* cvaux.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = cvaux.h; path = ../../../addons/ofxOpenCv/libs/opencv/include/opencv/cvaux.h; sourceTree = SOURCE_ROOT; };
 		D847EBE484F4F500F9CF2549 /* ofxCvImage.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = ofxCvImage.h; path = ../../../addons/ofxOpenCv/src/ofxCvImage.h; sourceTree = SOURCE_ROOT; };
 		D902EB2409214285BCF5F191 /* stream_accessor.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = stream_accessor.hpp; path = ../../../addons/ofxOpenCv/libs/opencv/include/opencv2/gpu/stream_accessor.hpp; sourceTree = SOURCE_ROOT; };
+		DB6C149618D367C30048E83A /* BlobTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BlobTracker.h; sourceTree = "<group>"; };
+		DB6C149718D367C30048E83A /* BlockTracker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BlockTracker.cpp; sourceTree = "<group>"; };
 		DB6C52B118AE3D73008CC794 /* tinyxml.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tinyxml.cpp; sourceTree = "<group>"; };
 		DB6C52B218AE3D73008CC794 /* tinyxml.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinyxml.h; sourceTree = "<group>"; };
 		DB6C52B318AE3D73008CC794 /* tinyxmlerror.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tinyxmlerror.cpp; sourceTree = "<group>"; };
@@ -887,6 +890,8 @@
 				E4B69E1D0A3A1BDC003C02F2 /* main.cpp */,
 				E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */,
 				E4B69E1F0A3A1BDC003C02F2 /* ofApp.h */,
+				DB6C149618D367C30048E83A /* BlobTracker.h */,
+				DB6C149718D367C30048E83A /* BlockTracker.cpp */,
 				DB6C52BF18AEA3B6008CC794 /* Planef.cpp */,
 				DB6C52BE18AEA22F008CC794 /* Planef.h */,
 				DB6C52C118AEA657008CC794 /* Linef.cpp */,
@@ -1030,6 +1035,7 @@
 				DB6C52BA18AE3D73008CC794 /* tinyxmlparser.cpp in Sources */,
 				DB6C52BB18AE3D73008CC794 /* ofxXmlSettings.cpp in Sources */,
 				DB6C52C018AEA3B6008CC794 /* Planef.cpp in Sources */,
+				DB6C149818D367C30048E83A /* BlockTracker.cpp in Sources */,
 				DB6C52C318AEA657008CC794 /* Linef.cpp in Sources */,
 				DBF54CED18AFC8F200D5F8D4 /* Grid.cpp in Sources */,
 				DBFD41B918B36EB6008A0E04 /* audio.c in Sources */,

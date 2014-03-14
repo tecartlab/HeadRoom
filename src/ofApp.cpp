@@ -27,42 +27,26 @@ void ofApp::setup(){
     //////////
     //GUI   //
     //////////
+    
+    blobTracker.setup();
 
-    gui.setup("panel");
+    gui.setup("kinectPanel");
     iMainCamera = 0;
     
     setupViewports();
     createHelp();
     
-    sensorBoxLeft.addListener(this, &ofApp::updateSensorBox);
-    sensorBoxRight.addListener(this, &ofApp::updateSensorBox);
-    sensorBoxFront.addListener(this, &ofApp::updateSensorBox);
-    sensorBoxBack.addListener(this, &ofApp::updateSensorBox);
-    sensorBoxTop.addListener(this, &ofApp::updateSensorBox);
-    sensorBoxBottom.addListener(this, &ofApp::updateSensorBox);
-
     nearFrustum.addListener(this, &ofApp::updateFrustumCone);
     farFrustum.addListener(this, &ofApp::updateFrustumCone);
     
     gui.add(calibPoint1.set("calibA", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
     gui.add(calibPoint2.set("calibB", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
     gui.add(calibPoint3.set("calibC", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
-    sensorBoxGuiGroup.setName("sensorField");
-    sensorBoxGuiGroup.add(sensorBoxLeft.set("left", -500, 0, -2000));
-    sensorBoxGuiGroup.add(sensorBoxRight.set("right", 500, 0, 2000));
-    sensorBoxGuiGroup.add(sensorBoxFront.set("front", 0, 0, 7000));
-    sensorBoxGuiGroup.add(sensorBoxBack.set("back", 2000, 0, 7000));
-    sensorBoxGuiGroup.add(sensorBoxTop.set("top", 2200, 0, 3000));
-    sensorBoxGuiGroup.add(sensorBoxBottom.set("bottom", 1000, 0, 3000));
-    sensorBoxGuiGroup.add(nearFrustum.set("nearFrustum", 400, 200, 2000));
-    sensorBoxGuiGroup.add(farFrustum.set("farFrustum", 4000, 2000, 6000));
-    gui.add(sensorBoxGuiGroup);
     
-    blobGuiGroup.setName("Blobs");
-    blobGuiGroup.add(blobAreaMin.set("AreaMin", 1000, 0, 40000));
-    blobGuiGroup.add(blobAreaMax.set("AreaMax", 6000, 0, 40000));
-    blobGuiGroup.add(countBlob.set("MaxBlobs", 5, 1, N_MAX_BLOBS));
-    gui.add(blobGuiGroup);
+    frustumGuiGroup.setName("frustumField");
+    frustumGuiGroup.add(nearFrustum.set("nearFrustum", 400, 200, 2000));
+    frustumGuiGroup.add(farFrustum.set("farFrustum", 4000, 2000, 6000));
+    gui.add(frustumGuiGroup);
 
     intrinsicGuiGroup.setName("Corrections");
     intrinsicGuiGroup.add(depthCorrectionBase.set("base", 1.0, 0.9, 1.1));
@@ -100,7 +84,7 @@ void ofApp::setup(){
     s.useDepth			= true;
     // and assigning this values to the fbo like this:
     captureFBO.allocate(s);
-    
+        
     fbopixels.allocate(640, 480, OF_PIXELS_RGB);
 
     capturedImage.allocate(kinect.width, kinect.height, OF_IMAGE_COLOR_ALPHA);
@@ -153,40 +137,6 @@ void ofApp::setupViewports(){
     
 	//
 	//--
-}
-
-
-void ofApp::updateSensorBox(int & value){
-    sensorBox.clear();
-    sensorBox.setMode(OF_PRIMITIVE_LINES);
- 
-    sensorBox.addVertex(ofPoint(sensorBoxLeft.get(), sensorBoxFront.get(), sensorBoxBottom.get()));
-    sensorBox.addVertex(ofPoint(sensorBoxRight.get(), sensorBoxFront.get(), sensorBoxBottom.get()));
-
-    sensorBox.addVertex(ofPoint(sensorBoxRight.get(), sensorBoxFront.get(), sensorBoxBottom.get()));
-    sensorBox.addVertex(ofPoint(sensorBoxRight.get(), sensorBoxBack.get(), sensorBoxBottom.get()));
-
-    sensorBox.addVertex(ofPoint(sensorBoxRight.get(), sensorBoxBack.get(), sensorBoxBottom.get()));
-    sensorBox.addVertex(ofPoint(sensorBoxLeft.get(), sensorBoxBack.get(), sensorBoxBottom.get()));
-
-    sensorBox.addVertex(ofPoint(sensorBoxLeft.get(), sensorBoxBack.get(), sensorBoxBottom.get()));
-    sensorBox.addVertex(ofPoint(sensorBoxLeft.get(), sensorBoxFront.get(), sensorBoxBottom.get()));
-    
-    sensorBox.addVertex(ofPoint(sensorBoxLeft.get(), sensorBoxFront.get(), sensorBoxTop.get()));
-    sensorBox.addVertex(ofPoint(sensorBoxRight.get(), sensorBoxFront.get(), sensorBoxTop.get()));
-    
-    sensorBox.addVertex(ofPoint(sensorBoxRight.get(), sensorBoxFront.get(), sensorBoxTop.get()));
-    sensorBox.addVertex(ofPoint(sensorBoxRight.get(), sensorBoxBack.get(), sensorBoxTop.get()));
-    
-    sensorBox.addVertex(ofPoint(sensorBoxRight.get(), sensorBoxBack.get(), sensorBoxTop.get()));
-    sensorBox.addVertex(ofPoint(sensorBoxLeft.get(), sensorBoxBack.get(), sensorBoxTop.get()));
-    
-    sensorBox.addVertex(ofPoint(sensorBoxLeft.get(), sensorBoxBack.get(), sensorBoxTop.get()));
-    sensorBox.addVertex(ofPoint(sensorBoxLeft.get(), sensorBoxFront.get(), sensorBoxTop.get()));
-    
-    //captureCam.setPosition((sensorBoxLeft.get() + sensorBoxRight.get())/2, (sensorBoxBack.get() + sensorBoxBack.get())/2, sensorBoxTop.get());
-    //captureCam.setPosition(5, 5, 0);
-    //captureCam.
 }
 
 void ofApp::updateFrustumCone(int & value){
@@ -629,7 +579,8 @@ void ofApp::draw(){
                 break;
             case 4:
                 // this is how to get access to them:
-                contourEyeFinder.draw(viewMain);
+                blobTracker.draw(viewMain);
+                //contourEyeFinder.draw(viewMain);
                 for (int i = 0; i < contourEyeFinder.nBlobs; i++){
                     ofSetColor(255, 0, 255, 255);
                     ofFill();
