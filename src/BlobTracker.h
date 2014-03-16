@@ -8,6 +8,7 @@
 #pragma once
 
 #include "ofMain.h"
+#include "ofxOpenCv.h"
 #include "ofVec3f.h"
 #include "ofxGui.h"
 #include "ofConstants.h"
@@ -16,12 +17,16 @@
 #include <cmath>
 
 #define N_MAX_BLOBS 20
+#define EYE_DIFF_TO_HEADTOP 160 //the eyes are 130 mm below the top of the head
 
 
 class BlobTracker {
     
 public:
     void setup();
+    void allocate(int width, int height);
+    
+    void update(ofFbo & captureFBO);
 
     void updateSensorBox(int & value);
 

@@ -84,21 +84,9 @@ void ofApp::setup(){
     s.useDepth			= true;
     // and assigning this values to the fbo like this:
     captureFBO.allocate(s);
-        
-    fbopixels.allocate(640, 480, OF_PIXELS_RGB);
 
-    capturedImage.allocate(kinect.width, kinect.height, OF_IMAGE_COLOR_ALPHA);
-    
-	colorImg.allocate(kinect.width, kinect.height);
-    
-	grayImage.allocate(kinect.width, kinect.height);
-	grayEyeLevel.allocate(kinect.width, kinect.height);
-	grayThreshFar.allocate(kinect.width, kinect.height);
-	
-	nearThreshold = 230;
-	farThreshold = 70;
-	bThreshWithOpenCV = true;
-	
+    blobTracker.allocate(kinect.width, kinect.height);
+
 	ofSetFrameRate(60);
 		
 	// creating preview point cloud is bogging the system down, so switched off at startup
@@ -113,7 +101,8 @@ void ofApp::setup(){
 void ofApp::setupViewports(){
 	//call here whenever we resize the window
  
-    gui.setPosition(ofGetWidth() - 200, 20);
+    gui.setPosition(ofGetWidth() - MENU_WIDTH, 20);
+    blobTracker.gui.setPosition(ofGetWidth() - MENU_WIDTH / 2, 20);
     //ofLog(OF_LOG_NOTICE, "ofGetWidth()" + ofToString(ofGetWidth()));
 
 	//--
@@ -436,99 +425,16 @@ void ofApp::update(){
         ofClear(0, 0, 0, 0);
         captureCam.scale = 0.01;
         // FBO capturing 
-        captureCam.begin(ofRectangle(0, 0, 640, 480), sensorBoxLeft.get(), sensorBoxRight.get(), sensorBoxBack.get(), sensorBoxFront.get(), - sensorBoxTop.get(), sensorBoxTop.get());
+        captureCam.begin(ofRectangle(0, 0, 640, 480), blobTracker.sensorBoxLeft.get(), blobTracker.sensorBoxRight.get(), blobTracker.sensorBoxBack.get(), blobTracker.sensorBoxFront.get(), - blobTracker.sensorBoxTop.get(), blobTracker.sensorBoxTop.get());
         drawCapturePointCloud();
         captureCam.end();
         captureFBO.end();
         
         //////////////////////////////////
         
-        captureFBO.readToPixels(fbopixels);
-
-        colorImg.setFromPixels(fbopixels);
-        
-		// load grayscale captured depth image from the color source
-        grayImage.setFromColorImage(colorImg);
-        
-		
-		// find contours in the raw grayImage
-		contourFinder.findContours(grayImage, blobAreaMin.get(), blobAreaMax.get(), countBlob.get(), false);
-        
-        grayEyeLevel = grayImage;
-        
-        ofPixelsRef eyeRef = grayEyeLevel.getPixelsRef();
-        ofPixelsRef greyref = grayImage.getPixelsRef();
-        ofColor white = ofColor::white;
-        ofColor black = ofColor::black;
-
-        float sensorFieldFront = sensorBoxFront.get();
-        float sensorFieldBack = sensorBoxBack.get();
-        float sensorFieldLeft = sensorBoxLeft.get();
-        float sensorFieldRight = sensorBoxRight.get();
-        float sensorFieldTop = sensorBoxTop .get();
-        float sensorFieldBottom = sensorBoxBottom.get();
-
-        // the eyelevel calculated from the sensorfield
-        int eyeLevel = EYE_DIFF_TO_HEADTOP / (sensorFieldTop - sensorFieldBottom) * 255;
-
-        //ofLog(OF_LOG_NOTICE, "eyref size : " + ofToString(eyeRef.size()));
-
-        nBlobs = contourFinder.nBlobs;
-        
-        for (int i = 0; i < contourFinder.nBlobs; i++){
-            ofRectangle bounds = contourFinder.blobs[i].boundingRect;
-            int pixelBrightness = 0;
-            float brightness = 0;
-           
-            // find the brightest pixel within the blob. this defines the height of the blob
-            for(int x = bounds.x; x < bounds.x + bounds.width; x++){
-                for(int y = bounds.y; y < bounds.y + bounds.height; y++){
-                    pixelBrightness = greyref.getColor(x, y).getBrightness();
-                    brightness = (pixelBrightness > brightness)?pixelBrightness: brightness;
-                }
-            }
-            
-            //calculate the blob pos in worldspace
-            blobPos[i] = ofVec3f(((float)bounds.getCenter().x / (float)grayImage.width) * (sensorFieldRight - sensorFieldLeft) + sensorFieldLeft, sensorFieldBack - ((float)bounds.getCenter().y / (float)grayImage.height ) * (sensorFieldBack - sensorFieldFront), (brightness / 255.0) * (sensorFieldTop - sensorFieldBottom) + sensorFieldBottom);
-            
-            //calculate the blob size in worldspace
-            blobSize[i] = ofVec3f(((float)bounds.getWidth() / (float)grayImage.width) * (sensorFieldRight - sensorFieldLeft), ((float)bounds.getHeight() / (float)grayImage.height ) * (sensorFieldBack - sensorFieldFront));
-            
-            // find all the pixels below the eyelevel threshold. this yealds an image with blobs that mark the size of the head at eyelevel.
-            headtop[i] = ofVec2f();
-            int brighCounter = 0;
-            for(int x = bounds.x; x < bounds.x + bounds.width; x++){
-                for(int y = bounds.y; y < bounds.y + bounds.height; y++){
-                    pixelBrightness = greyref.getColor(x, y).getBrightness();
-                    if(pixelBrightness > (brightness - eyeLevel)){
-                        eyeRef.setColor(x, y, white);
-                    }else{
-                        eyeRef.setColor(x, y, black);
-                    }
-                    if(pixelBrightness == brightness){
-                        headtop[i] += ofVec2f(x, y);
-                        brighCounter++;
-                    }
-                }
-            }
-            headtop[i] /= brighCounter;
-            //ofLog(OF_LOG_NOTICE, "headtop["+ofToString(i)+"] : " + ofToString(headtop[i]));
-            
-            
-        }
-        grayEyeLevel.setFromPixels(eyeRef.getPixels(), eyeRef.getWidth(), eyeRef.getHeight());
-        grayEyeLevel.invert();
-        grayEyeLevel.threshold(20);
-        grayEyeLevel.invert();
-        grayEyeLevel.blurGaussian();
-        
-        //find head shape on eye height contours
-        contourEyeFinder.findContours(grayEyeLevel, blobAreaMin.get()/4, blobAreaMax.get(), countBlob.get(), false);
-        
-       for(int i = 0; i < contourEyeFinder.nBlobs; i++){
-           //contourEyeFinder.blobs[i].pts
-            
-       }
+        // BlobTracking on the captured FBO
+        /////////////////////////////////////
+        blobTracker.update(captureFBO);
 	}
     
     rgbaMatrixServer.update();
@@ -552,8 +458,8 @@ void ofApp::draw(){
         kinect.drawDepth(viewGrid[0]);
         kinect.draw(viewGrid[1]);
         captureFBO.draw(viewGrid[2]);
-        contourFinder.draw(viewGrid[3]);
-        contourEyeFinder.draw(viewGrid[4]);
+        blobTracker.contourFinder.draw(viewGrid[3]);
+        blobTracker.contourEyeFinder.draw(viewGrid[4]);
         
         switch (iMainCamera) {
             case 0:
@@ -568,23 +474,23 @@ void ofApp::draw(){
                 captureFBO.draw(viewMain);
                 break;
             case 3:
-                contourFinder.draw(viewMain);
-                for (int i = 0; i < contourFinder.nBlobs; i++){
+                blobTracker.contourFinder.draw(viewMain);
+                for (int i = 0; i < blobTracker.contourFinder.nBlobs; i++){
                     //contourEyeFinder.blobs[i].draw(viewMain.x,viewMain.y);
                     
-                    ofDrawBitmapString("blob[" + ofToString(i) + "] height=" + ofToString(blobPos[i].z) + " x=" + ofToString(blobPos[i].x) + " y=" + ofToString(blobPos[i].y),
-                                       contourFinder.blobs[i].boundingRect.getCenter().x + viewMain.x,
-                                       contourFinder.blobs[i].boundingRect.getCenter().y + viewMain.y);
+                    ofDrawBitmapString("blob[" + ofToString(i) + "] height=" + ofToString(blobTracker.blobPos[i].z) + " x=" + ofToString(blobTracker.blobPos[i].x) + " y=" + ofToString(blobTracker.blobPos[i].y),
+                                       blobTracker.contourFinder.blobs[i].boundingRect.getCenter().x + viewMain.x,
+                                       blobTracker.contourFinder.blobs[i].boundingRect.getCenter().y + viewMain.y);
                 }
                 break;
             case 4:
                 // this is how to get access to them:
-                blobTracker.draw(viewMain);
+                blobTracker.grayEyeLevel.draw(viewMain);
                 //contourEyeFinder.draw(viewMain);
-                for (int i = 0; i < contourEyeFinder.nBlobs; i++){
+                for (int i = 0; i < blobTracker.contourEyeFinder.nBlobs; i++){
                     ofSetColor(255, 0, 255, 255);
                     ofFill();
-                    ofCircle(headtop[i].x + viewMain.x, headtop[i].y + viewMain.y, 5);
+                    ofCircle(blobTracker.headtop[i].x + viewMain.x, blobTracker.headtop[i].y + viewMain.y, 5);
                 }
                 break;
             case 5:
@@ -608,6 +514,7 @@ void ofApp::draw(){
         
         
         gui.draw();
+        blobTracker.gui.draw();
 
         glDisable(GL_DEPTH_TEST);
         ofPushStyle();
@@ -617,7 +524,7 @@ void ofApp::draw(){
         ofSetLineWidth(3);
         ofRect(viewGrid[iMainCamera]);
     } else {
-        contourFinder.draw(viewMain);
+        blobTracker.contourFinder.draw(viewMain);
     }
 
     //--
@@ -664,12 +571,12 @@ void ofApp::updatePointCloud(ofVboMesh & mesh, int step, bool useFrustumCone, bo
     
     ofVec3f vertex;
     
-    float sensorFieldFront = sensorBoxFront.get();
-    float sensorFieldBack = sensorBoxBack.get();
-    float sensorFieldLeft = sensorBoxLeft.get();
-    float sensorFieldRight = sensorBoxRight.get();
-    float sensorFieldTop = sensorBoxTop .get();
-    float sensorFieldBottom = sensorBoxBottom.get();
+    float sensorFieldFront = blobTracker.sensorBoxFront.get();
+    float sensorFieldBack = blobTracker.sensorBoxBack.get();
+    float sensorFieldLeft = blobTracker.sensorBoxLeft.get();
+    float sensorFieldRight = blobTracker.sensorBoxRight.get();
+    float sensorFieldTop = blobTracker.sensorBoxTop .get();
+    float sensorFieldBottom = blobTracker.sensorBoxBottom.get();
     
 	for(int y = 0; y < h; y += step) {
 		for(int x = 0; x < w; x += step) {
@@ -713,7 +620,7 @@ void ofApp::drawPreviewPointCloud() {
     previewmesh.drawVertices();
 
     ofSetColor(255, 255, 0);
-    sensorBox.draw();
+    blobTracker.sensorBox.draw();
 
 	glEnable(GL_DEPTH_TEST);
     
@@ -796,7 +703,6 @@ void ofApp::createHelp(){
 void ofApp::keyPressed(int key){
 	switch (key) {
 		case ' ':
-			bThreshWithOpenCV = !bThreshWithOpenCV;
 			break;
 			
 		case'p':
@@ -825,10 +731,12 @@ void ofApp::keyPressed(int key){
  
         case 's':
             gui.saveToFile("settings.xml");
+            blobTracker.gui.saveToFile("trackings.xml");
             break;
 
         case 'l':
             gui.loadFromFile("settings.xml");
+            blobTracker.gui.loadFromFile("trackings.xml");
             break;
 
 		case 'm':
@@ -845,25 +753,25 @@ void ofApp::keyPressed(int key){
             
 		case '>':
 		case '.':
-			farThreshold ++;
-			if (farThreshold > 255) farThreshold = 255;
+			//farThreshold ++;
+			//if (farThreshold > 255) farThreshold = 255;
 			break;
 			
 		case '<':
 		case ',':
-			farThreshold --;
-			if (farThreshold < 0) farThreshold = 0;
+			//farThreshold --;
+			//if (farThreshold < 0) farThreshold = 0;
 			break;
 			
 		case '+':
 		case '=':
-			nearThreshold ++;
-			if (nearThreshold > 255) nearThreshold = 255;
+			//nearThreshold ++;
+			//if (nearThreshold > 255) nearThreshold = 255;
 			break;
 			
 		case '-':
-			nearThreshold --;
-			if (nearThreshold < 0) nearThreshold = 0;
+			//nearThreshold --;
+			//if (nearThreshold < 0) nearThreshold = 0;
 			break;
 			
 		case 'w':

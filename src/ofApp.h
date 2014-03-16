@@ -2,7 +2,6 @@
 
 #include "ofMain.h"
 #include "ofxNetwork.h"
-#include "ofxOpenCv.h"
 #include "ofxKinect.h"
 #include "ofxGui.h"
 #include "ofxMatrixNetworkServer.h"
@@ -17,17 +16,13 @@
 #define N_CAMERAS 6
 
 #define VIEWGRID_WIDTH  105
-#define MENU_WIDTH      200
+#define MENU_WIDTH      404
 #define VIEWPORT_HEIGHT 480
 
 #define KINECT_IMG_WIDTH   640
 #define KINECT_IMG_HEIGHT  480
 
 #define N_MEASURMENT_CYCLES 10
-
-
-#define EYE_DIFF_TO_HEADTOP 160 //the eyes are 130 mm below the top of the head
-
 
 class ofApp : public ofBaseApp{
 
