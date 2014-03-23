@@ -8,89 +8,53 @@
 #pragma once
 
 #include "ofMain.h"
-#include "ofxOpenCv.h"
-#include "ofVec3f.h"
-#include "ofxGui.h"
 #include "ofConstants.h"
-#include "Linef.h"
+#include "TrackedBlob.h"
 
 #include <cmath>
+#include <vector>
+#include <iterator>
 
-#define N_MAX_BLOBS 20
-#define EYE_DIFF_TO_HEADTOP 160 //the eyes are 130 mm below the top of the head
+//defines after how many frames without update a Blob dies.
+#define N_EMPTYFRAMES 10
 
 
 class BlobTracker {
     
 public:
-    void setup();
-    void allocate(int width, int height);
+    BlobTracker(ofRectangle _rect);
     
-    void update(ofFbo & captureFBO);
+    void nextFrame();
+    bool hasDied();
+    
+    bool finder(ofRectangle _rect);
+    
+    void update(ofRectangle _rect, ofVec3f _bodyCenter, ofVec2f _bodySize, ofVec3f _headTop);
+    void updateHead(ofVec2f _headSize, ofVec3f _eyePoint);
+    
+    void drawBodyBox();
+    void drawHeadTop();
+    void drawHeadSize();
+    void drawEyePosition();
+    
+    ofBoxPrimitive bodyBox;
+    ofSpherePrimitive bodyHeadTop;
+    
+    ofRectangle baseRectangle2d;
+    
+    ofVec3f     bodyCenter;
+    ofVec2f     bodySize;
+    
+    ofVec3f     headTop;
+    ofVec2f     headSize;
+    
+    ofVec3f     eyePoint;
+ 
+    int trackerSize;
+    vector <TrackedBlob> tracker;
 
-    void updateSensorBox(int & value);
-
-    void drawSeonsorBox();
+    int waitForUpdates;
     
-    /////////////////
-    //COLOR CONTOUR//
-    /////////////////
-        
-    ofPixels fbopixels;
-    
-    ofxCvColorImage colorImg;
-    
-    ofxCvGrayscaleImage grayImage; // grayscale depth image
-    ofxCvGrayscaleImage grayEyeLevel; // the eyelevel thresholded image
-    ofxCvGrayscaleImage grayThreshFar; // the far thresholded image
-    
-    ofxCvContourFinder contourFinder;
-    ofxCvContourFinder contourEyeFinder;
-    
-    int nBlobs; //number of detected blobs
-    
-    bool bThreshWithOpenCV;
-    
-    int nearThreshold;
-    int farThreshold;
-    
-    ofVec3f blobPos[N_MAX_BLOBS];
-    ofVec2f blobSize[N_MAX_BLOBS];
-    
-    ofVec2f headtop[N_MAX_BLOBS];
-    
-    ofVec3f blobTopPos[N_MAX_BLOBS];
-    ofVec3f blobEyePos[N_MAX_BLOBS];
-
-
-    //////////////
-    //PROPERTIES//
-    //////////////
-
-    ofxPanel gui;
-    
-    ofParameterGroup sensorBoxGuiGroup;
-    
-    ofParameter<int> sensorBoxLeft;
-    ofParameter<int> sensorBoxRight;
-    ofParameter<int> sensorBoxTop;
-    ofParameter<int> sensorBoxBottom;
-    ofParameter<int> sensorBoxFront;
-    ofParameter<int> sensorBoxBack;
-    ofParameter<int> nearFrustum;
-    ofParameter<int> farFrustum;
-    
-    ofParameterGroup blobGuiGroup;
-    
-    ofParameter<int> blobAreaMin;
-    ofParameter<int> blobAreaMax;
-    ofParameter<int> countBlob;
-
-    ofVboMesh sensorBox;
-   
-    ofVec3f normal;
-    float p;
-
 };
 
 

@@ -20,7 +20,7 @@
 		B56FE57CC35806596D38118C /* ofxSliderGroup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 802251BAF1B35B1D67B32FD0 /* ofxSliderGroup.cpp */; };
 		BBAB23CB13894F3D00AA2426 /* GLUT.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = BBAB23BE13894E4700AA2426 /* GLUT.framework */; };
 		D3301F6A0B43BB293ED97C1D /* ofxCvShortImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8A4DD23693DFAB8EC05FAA5D /* ofxCvShortImage.cpp */; };
-		DB6C149818D367C30048E83A /* BlockTracker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB6C149718D367C30048E83A /* BlockTracker.cpp */; };
+		DB6C149818D367C30048E83A /* BlobFinder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB6C149718D367C30048E83A /* BlobFinder.cpp */; };
 		DB6C52B818AE3D73008CC794 /* tinyxml.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB6C52B118AE3D73008CC794 /* tinyxml.cpp */; };
 		DB6C52B918AE3D73008CC794 /* tinyxmlerror.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB6C52B318AE3D73008CC794 /* tinyxmlerror.cpp */; };
 		DB6C52BA18AE3D73008CC794 /* tinyxmlparser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB6C52B418AE3D73008CC794 /* tinyxmlparser.cpp */; };
@@ -31,6 +31,8 @@
 		DB8E632E18C0F1E800E32BFA /* OrthoCamera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DB8E632C18C0F1E800E32BFA /* OrthoCamera.cpp */; };
 		DBA8C06A18BF816C005B7A11 /* Properties.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DBA8C06818BF816C005B7A11 /* Properties.cpp */; };
 		DBC1C5121893FD1700591956 /* ofxMatrixNetworkServer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DBC1C5101893FD1700591956 /* ofxMatrixNetworkServer.cpp */; };
+		DBE1AAE318DF159E00D8D422 /* TrackedBlob.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DBE1AAE118DF159E00D8D422 /* TrackedBlob.cpp */; };
+		DBE1AAE618DF193700D8D422 /* BlobTracker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DBE1AAE418DF193700D8D422 /* BlobTracker.cpp */; };
 		DBF54CED18AFC8F200D5F8D4 /* Grid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DBF54CEB18AFC8F200D5F8D4 /* Grid.cpp */; };
 		DBFD41B918B36EB6008A0E04 /* audio.c in Sources */ = {isa = PBXBuildFile; fileRef = DBFD414318B36EB6008A0E04 /* audio.c */; };
 		DBFD41BA18B36EB6008A0E04 /* cameras.c in Sources */ = {isa = PBXBuildFile; fileRef = DBFD414418B36EB6008A0E04 /* cameras.c */; };
@@ -199,8 +201,8 @@
 		D76A59E7B3601E76351C9BDB /* cvaux.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = cvaux.h; path = ../../../addons/ofxOpenCv/libs/opencv/include/opencv/cvaux.h; sourceTree = SOURCE_ROOT; };
 		D847EBE484F4F500F9CF2549 /* ofxCvImage.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = ofxCvImage.h; path = ../../../addons/ofxOpenCv/src/ofxCvImage.h; sourceTree = SOURCE_ROOT; };
 		D902EB2409214285BCF5F191 /* stream_accessor.hpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = stream_accessor.hpp; path = ../../../addons/ofxOpenCv/libs/opencv/include/opencv2/gpu/stream_accessor.hpp; sourceTree = SOURCE_ROOT; };
-		DB6C149618D367C30048E83A /* BlobTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BlobTracker.h; sourceTree = "<group>"; };
-		DB6C149718D367C30048E83A /* BlockTracker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BlockTracker.cpp; sourceTree = "<group>"; };
+		DB6C149618D367C30048E83A /* BlobFinder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BlobFinder.h; sourceTree = "<group>"; };
+		DB6C149718D367C30048E83A /* BlobFinder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BlobFinder.cpp; sourceTree = "<group>"; };
 		DB6C52B118AE3D73008CC794 /* tinyxml.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tinyxml.cpp; sourceTree = "<group>"; };
 		DB6C52B218AE3D73008CC794 /* tinyxml.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tinyxml.h; sourceTree = "<group>"; };
 		DB6C52B318AE3D73008CC794 /* tinyxmlerror.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tinyxmlerror.cpp; sourceTree = "<group>"; };
@@ -220,6 +222,10 @@
 		DBA8C06918BF816C005B7A11 /* Properties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Properties.h; sourceTree = "<group>"; };
 		DBC1C5101893FD1700591956 /* ofxMatrixNetworkServer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxMatrixNetworkServer.cpp; sourceTree = "<group>"; };
 		DBC1C5111893FD1700591956 /* ofxMatrixNetworkServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxMatrixNetworkServer.h; sourceTree = "<group>"; };
+		DBE1AAE118DF159E00D8D422 /* TrackedBlob.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TrackedBlob.cpp; sourceTree = "<group>"; };
+		DBE1AAE218DF159E00D8D422 /* TrackedBlob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TrackedBlob.h; sourceTree = "<group>"; };
+		DBE1AAE418DF193700D8D422 /* BlobTracker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BlobTracker.cpp; sourceTree = "<group>"; };
+		DBE1AAE518DF193700D8D422 /* BlobTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BlobTracker.h; sourceTree = "<group>"; };
 		DBF54CEB18AFC8F200D5F8D4 /* Grid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Grid.cpp; sourceTree = "<group>"; };
 		DBF54CEC18AFC8F200D5F8D4 /* Grid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Grid.h; sourceTree = "<group>"; };
 		DBFD40F118B36EB5008A0E04 /* libfreenect-audio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "libfreenect-audio.h"; sourceTree = "<group>"; };
@@ -890,8 +896,12 @@
 				E4B69E1D0A3A1BDC003C02F2 /* main.cpp */,
 				E4B69E1F0A3A1BDC003C02F2 /* ofApp.h */,
 				E4B69E1E0A3A1BDC003C02F2 /* ofApp.cpp */,
-				DB6C149618D367C30048E83A /* BlobTracker.h */,
-				DB6C149718D367C30048E83A /* BlockTracker.cpp */,
+				DB6C149618D367C30048E83A /* BlobFinder.h */,
+				DB6C149718D367C30048E83A /* BlobFinder.cpp */,
+				DBE1AAE518DF193700D8D422 /* BlobTracker.h */,
+				DBE1AAE418DF193700D8D422 /* BlobTracker.cpp */,
+				DBE1AAE218DF159E00D8D422 /* TrackedBlob.h */,
+				DBE1AAE118DF159E00D8D422 /* TrackedBlob.cpp */,
 				DB6C52BF18AEA3B6008CC794 /* Planef.cpp */,
 				DB6C52BE18AEA22F008CC794 /* Planef.h */,
 				DB6C52C118AEA657008CC794 /* Linef.cpp */,
@@ -1026,6 +1036,7 @@
 				169D3C72FDE6C5590A1616F5 /* ofxCvFloatImage.cpp in Sources */,
 				FB09C6B2A1DA0EA217240CB8 /* ofxCvGrayscaleImage.cpp in Sources */,
 				E212C821D1064B92DD953A42 /* ofxCvHaarFinder.cpp in Sources */,
+				DBE1AAE618DF193700D8D422 /* BlobTracker.cpp in Sources */,
 				63020F16C7E8DED980111241 /* ofxCvImage.cpp in Sources */,
 				D3301F6A0B43BB293ED97C1D /* ofxCvShortImage.cpp in Sources */,
 				DBC1C5121893FD1700591956 /* ofxMatrixNetworkServer.cpp in Sources */,
@@ -1035,9 +1046,10 @@
 				DB6C52BA18AE3D73008CC794 /* tinyxmlparser.cpp in Sources */,
 				DB6C52BB18AE3D73008CC794 /* ofxXmlSettings.cpp in Sources */,
 				DB6C52C018AEA3B6008CC794 /* Planef.cpp in Sources */,
-				DB6C149818D367C30048E83A /* BlockTracker.cpp in Sources */,
+				DB6C149818D367C30048E83A /* BlobFinder.cpp in Sources */,
 				DB6C52C318AEA657008CC794 /* Linef.cpp in Sources */,
 				DBF54CED18AFC8F200D5F8D4 /* Grid.cpp in Sources */,
+				DBE1AAE318DF159E00D8D422 /* TrackedBlob.cpp in Sources */,
 				DBFD41B918B36EB6008A0E04 /* audio.c in Sources */,
 				DBFD41BA18B36EB6008A0E04 /* cameras.c in Sources */,
 				DBFD41BB18B36EB6008A0E04 /* core.c in Sources */,

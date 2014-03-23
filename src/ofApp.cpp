@@ -28,7 +28,7 @@ void ofApp::setup(){
     //GUI   //
     //////////
     
-    blobTracker.setup();
+    blobFinder.setup();
 
     gui.setup("kinectPanel");
     iMainCamera = 0;
@@ -85,7 +85,7 @@ void ofApp::setup(){
     // and assigning this values to the fbo like this:
     captureFBO.allocate(s);
 
-    blobTracker.allocate(kinect.width, kinect.height);
+    blobFinder.allocate();
 
 	ofSetFrameRate(60);
 		
@@ -102,7 +102,7 @@ void ofApp::setupViewports(){
 	//call here whenever we resize the window
  
     gui.setPosition(ofGetWidth() - MENU_WIDTH, 20);
-    blobTracker.gui.setPosition(ofGetWidth() - MENU_WIDTH / 2, 20);
+    blobFinder.gui.setPosition(ofGetWidth() - MENU_WIDTH / 2, 20);
     //ofLog(OF_LOG_NOTICE, "ofGetWidth()" + ofToString(ofGetWidth()));
 
 	//--
@@ -425,16 +425,16 @@ void ofApp::update(){
         ofClear(0, 0, 0, 0);
         captureCam.scale = 0.01;
         // FBO capturing 
-        captureCam.begin(ofRectangle(0, 0, 640, 480), blobTracker.sensorBoxLeft.get(), blobTracker.sensorBoxRight.get(), blobTracker.sensorBoxBack.get(), blobTracker.sensorBoxFront.get(), - blobTracker.sensorBoxTop.get(), blobTracker.sensorBoxTop.get());
+        captureCam.begin(ofRectangle(0, 0, 640, 480), blobFinder.sensorBoxLeft.get(), blobFinder.sensorBoxRight.get(), blobFinder.sensorBoxBack.get(), blobFinder.sensorBoxFront.get(), - blobFinder.sensorBoxTop.get(), blobFinder.sensorBoxTop.get());
         drawCapturePointCloud();
         captureCam.end();
         captureFBO.end();
         
         //////////////////////////////////
         
-        // BlobTracking on the captured FBO
+        // BlobFinding on the captured FBO
         /////////////////////////////////////
-        blobTracker.update(captureFBO);
+        blobFinder.update(captureFBO);
 	}
     
     rgbaMatrixServer.update();
@@ -458,8 +458,8 @@ void ofApp::draw(){
         kinect.drawDepth(viewGrid[0]);
         kinect.draw(viewGrid[1]);
         captureFBO.draw(viewGrid[2]);
-        blobTracker.contourFinder.draw(viewGrid[3]);
-        blobTracker.contourEyeFinder.draw(viewGrid[4]);
+        blobFinder.contourFinder.draw(viewGrid[3]);
+        blobFinder.contourEyeFinder.draw(viewGrid[4]);
         
         switch (iMainCamera) {
             case 0:
@@ -474,23 +474,29 @@ void ofApp::draw(){
                 captureFBO.draw(viewMain);
                 break;
             case 3:
-                blobTracker.contourFinder.draw(viewMain);
-                for (int i = 0; i < blobTracker.contourFinder.nBlobs; i++){
+                ofSetColor(255, 0, 0, 255);
+                blobFinder.contourFinder.draw(viewMain);
+
+                ofSetColor(255, 0, 255, 255);
+                blobFinder.drawBodyBlobs(viewMain);
+                
+                for (int i = 0; i < blobFinder.trackedBlobs.size(); i++){
                     //contourEyeFinder.blobs[i].draw(viewMain.x,viewMain.y);
                     
-                    ofDrawBitmapString("blob[" + ofToString(i) + "] height=" + ofToString(blobTracker.blobPos[i].z) + " x=" + ofToString(blobTracker.blobPos[i].x) + " y=" + ofToString(blobTracker.blobPos[i].y),
-                                       blobTracker.contourFinder.blobs[i].boundingRect.getCenter().x + viewMain.x,
-                                       blobTracker.contourFinder.blobs[i].boundingRect.getCenter().y + viewMain.y);
+                    ofDrawBitmapString("blob[" + ofToString(i) + "] height=" + ofToString(blobFinder.trackedBlobs[i].headTop.z) + " x=" + ofToString(blobFinder.trackedBlobs[i].headTop.x) + " y=" + ofToString(blobFinder.trackedBlobs[i].headTop.y),
+                                       blobFinder.contourFinder.blobs[i].boundingRect.getCenter().x + viewMain.x,
+                                       blobFinder.contourFinder.blobs[i].boundingRect.getCenter().y + viewMain.y);
                 }
+                
                 break;
             case 4:
                 // this is how to get access to them:
-                blobTracker.grayEyeLevel.draw(viewMain);
+                blobFinder.grayEyeLevel.draw(viewMain);
                 //contourEyeFinder.draw(viewMain);
-                for (int i = 0; i < blobTracker.contourEyeFinder.nBlobs; i++){
+                for (int i = 0; i < blobFinder.contourEyeFinder.nBlobs; i++){
                     ofSetColor(255, 0, 255, 255);
                     ofFill();
-                    ofCircle(blobTracker.headtop[i].x + viewMain.x, blobTracker.headtop[i].y + viewMain.y, 5);
+                    //ofCircle(blobFinder.headtop[i].x + viewMain.x, blobFinder.headtop[i].y + viewMain.y, 5);
                 }
                 break;
             case 5:
@@ -514,7 +520,7 @@ void ofApp::draw(){
         
         
         gui.draw();
-        blobTracker.gui.draw();
+        blobFinder.gui.draw();
 
         glDisable(GL_DEPTH_TEST);
         ofPushStyle();
@@ -524,7 +530,7 @@ void ofApp::draw(){
         ofSetLineWidth(3);
         ofRect(viewGrid[iMainCamera]);
     } else {
-        blobTracker.contourFinder.draw(viewMain);
+        blobFinder.contourFinder.draw(viewMain);
     }
 
     //--
@@ -571,12 +577,12 @@ void ofApp::updatePointCloud(ofVboMesh & mesh, int step, bool useFrustumCone, bo
     
     ofVec3f vertex;
     
-    float sensorFieldFront = blobTracker.sensorBoxFront.get();
-    float sensorFieldBack = blobTracker.sensorBoxBack.get();
-    float sensorFieldLeft = blobTracker.sensorBoxLeft.get();
-    float sensorFieldRight = blobTracker.sensorBoxRight.get();
-    float sensorFieldTop = blobTracker.sensorBoxTop .get();
-    float sensorFieldBottom = blobTracker.sensorBoxBottom.get();
+    float sensorFieldFront = blobFinder.sensorBoxFront.get();
+    float sensorFieldBack = blobFinder.sensorBoxBack.get();
+    float sensorFieldLeft = blobFinder.sensorBoxLeft.get();
+    float sensorFieldRight = blobFinder.sensorBoxRight.get();
+    float sensorFieldTop = blobFinder.sensorBoxTop .get();
+    float sensorFieldBottom = blobFinder.sensorBoxBottom.get();
     
 	for(int y = 0; y < h; y += step) {
 		for(int x = 0; x < w; x += step) {
@@ -620,11 +626,19 @@ void ofApp::drawPreviewPointCloud() {
     previewmesh.drawVertices();
 
     ofSetColor(255, 255, 0);
-    blobTracker.sensorBox.draw();
+    blobFinder.sensorBox.draw();
+    
+    ofSetColor(255, 100, 255);
+    ofNoFill();
+    blobFinder.drawBodyBlobsBox();
+    blobFinder.drawBodyBlobsHeadTop();
+    
 
 	glEnable(GL_DEPTH_TEST);
     
     ofMultMatrix(kinectRransform);
+
+    ofFill();
 
     ofSetColor(255, 0, 0);
     sphere1.draw();
@@ -636,6 +650,7 @@ void ofApp::drawPreviewPointCloud() {
 
     ofSetColor(0, 0, 255);
     frustum.drawWireframe();
+    
 
 	glDisable(GL_DEPTH_TEST);
 	ofPopMatrix();
@@ -731,12 +746,12 @@ void ofApp::keyPressed(int key){
  
         case 's':
             gui.saveToFile("settings.xml");
-            blobTracker.gui.saveToFile("trackings.xml");
+            blobFinder.gui.saveToFile("trackings.xml");
             break;
 
         case 'l':
             gui.loadFromFile("settings.xml");
-            blobTracker.gui.loadFromFile("trackings.xml");
+            blobFinder.gui.loadFromFile("trackings.xml");
             break;
 
 		case 'm':

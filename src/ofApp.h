@@ -5,7 +5,7 @@
 #include "ofxKinect.h"
 #include "ofxGui.h"
 #include "ofxMatrixNetworkServer.h"
-#include "BlobTracker.h"
+#include "BlobFinder.h"
 #include "Planef.h"
 #include "Linef.h"
 #include "Grid.h"
@@ -107,7 +107,7 @@ class ofApp : public ofBaseApp{
     //COLOR CONTOUR//
     /////////////////
     
-    BlobTracker blobTracker;
+    BlobFinder blobFinder;
             
     // used for viewing the point cloud
     ofEasyCam previewCam;
