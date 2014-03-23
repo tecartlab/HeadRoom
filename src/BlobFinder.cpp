@@ -175,6 +175,7 @@ void BlobFinder::update(ofFbo & captureFBO){
     //removes all the blobs that hasnt had an update for a specific number of frames
     for(int i = 0; i < trackedBlobs.size(); i++){
         if(trackedBlobs[i].hasDied()){
+            ofLog(OF_LOG_NOTICE, "blob[" + ofToString(i) + "]\n has died");
             trackedBlobs[i] = trackedBlobs.back();
             trackedBlobs.pop_back();
             i--;
@@ -187,13 +188,18 @@ void BlobFinder::drawBodyBlobs(ofRectangle _rect){
     float xFactor = _rect.width / captureScreenSize.x;
     float yFactor = 1.f;
     
+    ofNoFill();
     for(int i = 0; i < trackedBlobs.size(); i++){
         ofRect(_rect.x + trackedBlobs[i].baseRectangle2d.x * xFactor, _rect.y + trackedBlobs[i].baseRectangle2d.y * yFactor, trackedBlobs[i].baseRectangle2d.width * xFactor, trackedBlobs[i].baseRectangle2d.height * yFactor);
+        ofDrawBitmapString("blob[" + ofToString(i) + "]\n x = " + ofToString(trackedBlobs[i].headTop.x) + "\n y = " + ofToString(trackedBlobs[i].headTop.y) + "\n z = " + ofToString(trackedBlobs[i].headTop.z),trackedBlobs[i].baseRectangle2d.getCenter().x + _rect.x, trackedBlobs[i].baseRectangle2d.getCenter().y + _rect.y);
+        
     }
 }
 
 void BlobFinder::drawBodyBlobsBox(){
     for(int i = 0; i < trackedBlobs.size(); i++){
+        ofLog(OF_LOG_NOTICE, "blob[" + ofToString(i) + "] box =" + ofToString(trackedBlobs[i].bodyCenter));
+
         trackedBlobs[i].drawBodyBox();
     }
 }

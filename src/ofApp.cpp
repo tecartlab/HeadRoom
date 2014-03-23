@@ -480,15 +480,7 @@ void ofApp::draw(){
                 ofSetColor(255, 0, 255, 255);
                 blobFinder.drawBodyBlobs(viewMain);
                 
-                for (int i = 0; i < blobFinder.trackedBlobs.size(); i++){
-                    //contourEyeFinder.blobs[i].draw(viewMain.x,viewMain.y);
-                    
-                    ofDrawBitmapString("blob[" + ofToString(i) + "] height=" + ofToString(blobFinder.trackedBlobs[i].headTop.z) + " x=" + ofToString(blobFinder.trackedBlobs[i].headTop.x) + " y=" + ofToString(blobFinder.trackedBlobs[i].headTop.y),
-                                       blobFinder.contourFinder.blobs[i].boundingRect.getCenter().x + viewMain.x,
-                                       blobFinder.contourFinder.blobs[i].boundingRect.getCenter().y + viewMain.y);
-                }
-                
-                break;
+               break;
             case 4:
                 // this is how to get access to them:
                 blobFinder.grayEyeLevel.draw(viewMain);

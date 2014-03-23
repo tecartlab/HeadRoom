@@ -62,7 +62,7 @@ void BlobTracker::update(ofRectangle _rect, ofVec3f _bodyCenter, ofVec2f _bodySi
     bodyBox.set(bodySize.x, bodySize.y, bodyCenter.z);
     bodyBox.setPosition(bodyCenter.x, bodyCenter.y, bodyCenter.z / 2);
     
-    bodyHeadTop.setRadius(3);
+    bodyHeadTop.setRadius(10);
     bodyHeadTop.setPosition(headTop.x, headTop.y, headTop.z);
 }
 
