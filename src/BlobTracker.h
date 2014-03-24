@@ -44,6 +44,8 @@ public:
     bool valid;
     
     bool isDead;
+    
+    int sortPos;
 
     ofBoxPrimitive bodyBox;
     ofPlanePrimitive headBlob;

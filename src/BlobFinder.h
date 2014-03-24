@@ -41,7 +41,6 @@ public:
     
     void drawGazePoint();
 
-    int nBlobs;
     vector <BlobTracker> trackedBlobs;
     
     ofVec2f captureScreenSize;

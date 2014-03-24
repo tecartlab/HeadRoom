@@ -79,9 +79,6 @@ void BlobFinder::update(ofFbo & captureFBO){
     grayImage.setFromColorImage(colorImg);
     
     
-    // find contours in the raw grayImage
-    contourFinder.findContours(grayImage, blobAreaMin.get(), blobAreaMax.get(), countBlob.get(), false);
-    
     grayEyeLevel = grayImage;
     
     ofPixelsRef eyeRef = grayEyeLevel.getPixelsRef();
@@ -107,9 +104,10 @@ void BlobFinder::update(ofFbo & captureFBO){
     for(int i = 0; i < trackedBlobs.size(); i++){
         trackedBlobs[i].updateStart();
     }
+  
+    // find contours in the raw grayImage
+    contourFinder.findContours(grayImage, blobAreaMin.get(), blobAreaMax.get(), countBlob.get(), false);
 
-    nBlobs = contourFinder.nBlobs;
-    
     for (int i = 0; i < contourFinder.nBlobs; i++){
         ofRectangle bounds = contourFinder.blobs[i].boundingRect;
         float pixelBrightness = 0;
@@ -123,17 +121,13 @@ void BlobFinder::update(ofFbo & captureFBO){
             }
         }
         
-        //ofLog(OF_LOG_NOTICE, "headtop["+ofToString(i)+" brightness] : " + ofToString(brightness));
-
         //calculate the blob pos in worldspace
         ofVec3f blobPos = ofVec3f(((float)bounds.getCenter().x / captureScreenSize.x) * sensorFieldWidth + sensorFieldLeft, sensorFieldBack - ((float)bounds.getCenter().y / captureScreenSize.y ) * sensorFieldDepth, (brightness / 255.0) * sensorFieldHeigth + sensorFieldBottom);
-
-        //ofLog(OF_LOG_NOTICE, "headtop["+ofToString(i)+" blobPos : " + ofToString(blobPos));
 
         //calculate the blob size in worldspace
         ofVec2f blobSize = ofVec2f(((float)bounds.getWidth() / captureScreenSize.x) * sensorFieldWidth, ((float)bounds.getHeight() / captureScreenSize.y ) * sensorFieldDepth);
         
-        // find all the pixels below the eyelevel threshold. this yealds an image with blobs that mark the size of the head at eyelevel.
+        // find all the pixels down to the eyelevel threshold. this yealds an image with blobs that mark the size of the head at eyelevel.
         ofVec2f headtop2d = ofVec2f();
         int brighCounter = 0;
         for(int x = bounds.x; x < bounds.x + bounds.width; x++){
@@ -154,7 +148,6 @@ void BlobFinder::update(ofFbo & captureFBO){
         
         ofVec3f headTop = ofVec3f((headtop2d.x / captureScreenSize.x) * sensorFieldWidth + sensorFieldLeft, sensorFieldBack - (headtop2d.y / captureScreenSize.y ) * sensorFieldDepth, (brightness / 255.0) * sensorFieldHeigth + sensorFieldBottom);
 
-        
         // try finding a matching trackedBlob
         bool foundBlob = false;
         for(int i = 0; i < trackedBlobs.size(); i++){
@@ -188,24 +181,19 @@ void BlobFinder::update(ofFbo & captureFBO){
     grayEyeLevel.threshold(20);
     grayEyeLevel.invert();
     grayEyeLevel.blurGaussian();
-    
-    //find head shape on eye height contours
-    contourEyeFinder.findContours(grayEyeLevel, blobAreaMin.get()/4, blobAreaMax.get(), countBlob.get(), false);
-    
+
     //ofLog(OF_LOG_NOTICE, "contourEyeFinder nBlobs : " + ofToString(contourEyeFinder.nBlobs));
 
+    //find head shape on eye height contours
+    contourEyeFinder.findContours(grayEyeLevel, blobAreaMin.get()/4, blobAreaMax.get(), countBlob.get(), false);
     for(int i = 0; i < contourEyeFinder.nBlobs; i++){
         ofRectangle bounds = contourEyeFinder.blobs[i].boundingRect;
         for(int bid = 0; bid < trackedBlobs.size(); bid++){
             // find the blob
             if(trackedBlobs[bid].finder(bounds)){
-        
-                //ofLog(OF_LOG_NOTICE, "headtop["+ofToString(i)+" brightness] : " + ofToString(brightness));
                 
                 //calculate the blob pos in worldspace
                 ofVec3f headBlobCenter = ofVec3f(((float)bounds.getCenter().x / captureScreenSize.x) * sensorFieldWidth + sensorFieldLeft, sensorFieldBack - ((float)bounds.getCenter().y / captureScreenSize.y ) * sensorFieldDepth, trackedBlobs[bid].headCenter.z);
-                
-                //ofLog(OF_LOG_NOTICE, "headtop["+ofToString(i)+" blobPos : " + ofToString(blobPos));
                 
                 //calculate the blob size in worldspace
                 ofVec2f headBlobSize = ofVec2f(((float)bounds.getWidth() / captureScreenSize.x) * sensorFieldWidth, ((float)bounds.getHeight() / captureScreenSize.y ) * sensorFieldDepth);
@@ -220,12 +208,13 @@ void BlobFinder::update(ofFbo & captureFBO){
                 
                 for(int v = 0; v < contourEyeFinder.blobs[i].pts.size(); v++){
                     ofVec3f headPoint = ofVec3f(((float)contourEyeFinder.blobs[i].pts[v].x / captureScreenSize.x) * sensorFieldWidth + sensorFieldLeft, sensorFieldBack - ((float)contourEyeFinder.blobs[i].pts[v].y / captureScreenSize.y ) * sensorFieldDepth, trackedBlobs[bid].headCenter.z);
+                    
                     trackedBlobs[bid].countour.push_back(headPoint);
                     
                     ofVec3f gaze2 = trackedBlobs[bid].headCenter - headPoint;
                     
                     float angle = gaze.angle(gaze2);
-                    //ofLog(OF_LOG_NOTICE, "headtop["+ofToString(bid)+"] headPoint : " + ofToString(headPoint));
+                    
                     if(smalestAngle > angle){
                         smalestAngle = angle;
                         eyePoint = trackedBlobs[bid].headCenter - gaze.normalize().scale(gaze2.length() * eyeInset.get());
@@ -237,6 +226,29 @@ void BlobFinder::update(ofFbo & captureFBO){
         }
     }
     
+    //sorts the blobs in regards to the distance of the gazepoint.
+    int sortPos = 0;
+    for(int i = 0; i < trackedBlobs.size(); i++){
+        trackedBlobs[i].sortPos = sortPos++;
+    }
+    for(int i = 0; i < (trackedBlobs.size() - 1); i++){
+        for(int j = 1; j < trackedBlobs.size(); j++){
+            if((trackedBlobs[i].headCenter - gazePoint.get()).length() < (trackedBlobs[j].headCenter - gazePoint.get()).length()){
+                if(trackedBlobs[i].sortPos > trackedBlobs[j].sortPos){
+                    int savepos = trackedBlobs[j].sortPos;
+                    trackedBlobs[j].sortPos = trackedBlobs[i].sortPos;
+                    trackedBlobs[i].sortPos = savepos;
+                }
+            } else {
+                if(trackedBlobs[i].sortPos < trackedBlobs[j].sortPos){
+                    int savepos = trackedBlobs[j].sortPos;
+                    trackedBlobs[j].sortPos = trackedBlobs[i].sortPos;
+                    trackedBlobs[i].sortPos = savepos;
+                }
+            }
+        }
+    }
+
     //updates all alive blobs and removes all the blobs that havent had an update for a specific number of frames or have been killed
     for(int i = 0; i < trackedBlobs.size(); i++){
         if(trackedBlobs[i].isAlive()){
@@ -248,7 +260,6 @@ void BlobFinder::update(ofFbo & captureFBO){
             i--;
         }
     }
-
 }
 
 void BlobFinder::drawBodyBlobs2d(ofRectangle _rect){
@@ -258,7 +269,7 @@ void BlobFinder::drawBodyBlobs2d(ofRectangle _rect){
     ofNoFill();
     for(int i = 0; i < trackedBlobs.size(); i++){
         ofRect(_rect.x + trackedBlobs[i].baseRectangle2d.x * xFactor, _rect.y + trackedBlobs[i].baseRectangle2d.y * yFactor, trackedBlobs[i].baseRectangle2d.width * xFactor, trackedBlobs[i].baseRectangle2d.height * yFactor);
-        ofDrawBitmapString("blob[" + ofToString(i) + "]\n x = " + ofToString(trackedBlobs[i].headTop.x) + "\n y = " + ofToString(trackedBlobs[i].headTop.y) + "\n z = " + ofToString(trackedBlobs[i].headTop.z),trackedBlobs[i].baseRectangle2d.getCenter().x + _rect.x, trackedBlobs[i].baseRectangle2d.getCenter().y + _rect.y);
+        ofDrawBitmapString("blob[" + ofToString(i) + "]\n sort = " + ofToString(trackedBlobs[i].sortPos) + "\n x = " + ofToString(trackedBlobs[i].headTop.x) + "\n y = " + ofToString(trackedBlobs[i].headTop.y) + "\n z = " + ofToString(trackedBlobs[i].headTop.z),trackedBlobs[i].baseRectangle2d.getCenter().x + _rect.x, trackedBlobs[i].baseRectangle2d.getCenter().y + _rect.y);
         
     }
 }
