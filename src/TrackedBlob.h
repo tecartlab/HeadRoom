@@ -18,13 +18,16 @@ class TrackedBlob {
 public:
     TrackedBlob();
     
-    ofVec3f     bodyCenter;
-    ofVec2f     bodySize;
+    ofVec3f     bodyBlobCenter;
+    ofVec2f     bodyBlobSize;
     
     ofVec3f     headTop;
-    ofVec2f     headSize;
+    ofVec3f     headCenter;
+
+    ofVec3f     headBlobCenter;
+    ofVec2f     headBlobSize;
     
-    ofVec3f     eyePoint;
+    ofVec3f     eyeCenter;
     
 };
 

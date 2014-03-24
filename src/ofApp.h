@@ -97,7 +97,7 @@ class ofApp : public ofBaseApp{
     ofVboMesh frustum;
     
     void updatePointCloud(ofVboMesh & mesh, int step, bool useFrustumCone, bool useVideoColor);
-    void drawPreviewPointCloud();
+    void drawPreview();
     void drawCapturePointCloud();
 
     void createFrustumCone();

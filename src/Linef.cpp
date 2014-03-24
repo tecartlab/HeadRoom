@@ -17,3 +17,18 @@ Linef::Linef(){
     origin = ofVec3f();
     direction = ofVec3f(0, 0, -1);
 }
+
+void Linef::originize(){
+    ofVec3f unity = origin.getCrossed(direction);
+    ofVec3f center = unity.getCrossed(direction);
+    center.normalize();
+    center.scale(center.angle(origin) * origin.length());
+    origin = center;
+}
+
+float Linef::getDistance(ofVec3f point){
+    ofVec3f temp = point - origin;
+    temp.cross(direction);
+    return temp.length() / direction.length();
+}
+

@@ -20,6 +20,9 @@ public:
     Linef();
     Linef(ofVec3f origin, ofVec3f pointA);
     
+    void originize();
+    float getDistance(ofVec3f point);
+    
     //ofVec3f getIntersection(Linef line);
 
     ofVec3f origin;

@@ -12,6 +12,7 @@
 #include "ofVec3f.h"
 #include "ofxGui.h"
 #include "ofConstants.h"
+#include "Planef.h"
 #include "Linef.h"
 
 #include "BlobTracker.h"
@@ -19,8 +20,6 @@
 #include <cmath>
 
 #define N_MAX_BLOBS 20
-#define EYE_DIFF_TO_HEADTOP 160 //the eyes are 130 mm below the top of the head
-
 
 class BlobFinder {
     
@@ -33,10 +32,14 @@ public:
     void updateSensorBox(int & value);
     
     void drawSensorBox();
-    void drawBodyBlobs(ofRectangle _rect);
+    void drawBodyBlobs2d(ofRectangle _rect);
 
     void drawBodyBlobsBox();
     void drawBodyBlobsHeadTop();
+    void drawHeadBlobs();
+    void drawEyeCenters();
+    
+    void drawGazePoint();
 
     
     int nBlobs;
@@ -86,6 +89,9 @@ public:
     ofParameter<int> blobAreaMin;
     ofParameter<int> blobAreaMax;
     ofParameter<int> countBlob;
+
+    ofParameter<ofVec3f> gazePoint;
+    ofSpherePrimitive gazePointer;
 
     ofVboMesh sensorBox;
    

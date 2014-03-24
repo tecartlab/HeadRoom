@@ -477,24 +477,22 @@ void ofApp::draw(){
                 ofSetColor(255, 0, 0, 255);
                 blobFinder.contourFinder.draw(viewMain);
 
+                ofNoFill();
                 ofSetColor(255, 0, 255, 255);
-                blobFinder.drawBodyBlobs(viewMain);
+                blobFinder.drawBodyBlobs2d(viewMain);
                 
                break;
             case 4:
-                // this is how to get access to them:
-                blobFinder.grayEyeLevel.draw(viewMain);
-                //contourEyeFinder.draw(viewMain);
-                for (int i = 0; i < blobFinder.contourEyeFinder.nBlobs; i++){
-                    ofSetColor(255, 0, 255, 255);
-                    ofFill();
-                    //ofCircle(blobFinder.headtop[i].x + viewMain.x, blobFinder.headtop[i].y + viewMain.y, 5);
-                }
+                blobFinder.contourEyeFinder.draw(viewMain);
+
+                ofNoFill();
+                ofSetColor(255, 0, 255, 255);
+                blobFinder.drawBodyBlobs2d(viewMain);
                 break;
             case 5:
                 previewCam.begin(viewMain);
                 mainGrid.drawPlane(50., 5, false);
-                drawPreviewPointCloud();
+                drawPreview();
                 previewCam.end();
                 break;
                 
@@ -506,7 +504,7 @@ void ofApp::draw(){
         if(iMainCamera != 5){ // make sure the camera is drawn only once (so the interaction with the mouse works)
             previewCam.begin(viewGrid[5]);
             mainGrid.drawPlane(50., 5, false);
-            drawPreviewPointCloud();
+            drawPreview();
             previewCam.end();
         }
         
@@ -607,24 +605,31 @@ void ofApp::updatePointCloud(ofVboMesh & mesh, int step, bool useFrustumCone, bo
 	}
 }
 
-void ofApp::drawPreviewPointCloud() {
-	glPointSize(2);
+void ofApp::drawPreview() {
+	glPointSize(4);
 	ofPushMatrix();
 
 	ofScale(0.01, 0.01, 0.01);
     //This moves the crossingpoint of the kinect center line and the plane to the center of the stage
     ofTranslate(-planeCenterPoint.x, -planeCenterPoint.y, 0);
-    
-    previewmesh.drawVertices();
+    if(bPreviewPointCloud)
+        previewmesh.drawVertices();
 
     ofSetColor(255, 255, 0);
     blobFinder.sensorBox.draw();
     
-    ofSetColor(255, 100, 255);
     ofNoFill();
+    ofSetColor(255, 100, 255);
     blobFinder.drawBodyBlobsBox();
     blobFinder.drawBodyBlobsHeadTop();
-    
+    ofSetColor(100, 100, 255);
+    blobFinder.drawHeadBlobs();
+    ofSetColor(0, 0, 255);
+    blobFinder.drawEyeCenters();
+
+    ofFill();
+    ofSetColor(255, 100, 100);
+    blobFinder.drawGazePoint();
 
 	glEnable(GL_DEPTH_TEST);
     
