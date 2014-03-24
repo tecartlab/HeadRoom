@@ -36,12 +36,21 @@ void BlobFinder::setup(){
     gui.add(sensorBoxGuiGroup);
     
     blobGuiGroup.setName("Blobs");
-    blobGuiGroup.add(blobAreaMin.set("AreaMin", 1000, 0, 10000));
-    blobGuiGroup.add(blobAreaMax.set("AreaMax", 6000, 0, 10000));
+    blobGuiGroup.add(blobAreaMin.set("AreaMin", 1000, 0, 30000));
+    blobGuiGroup.add(blobAreaMax.set("AreaMax", 6000, 0, 30000));
     blobGuiGroup.add(countBlob.set("MaxBlobs", 5, 1, N_MAX_BLOBS));
     gui.add(blobGuiGroup);
+
+    blobEyeGroup.setName("Gazing");
+    blobEyeGroup.add(gazePoint.set("Gaze Point", ofVec3f(0, 0, 1500), ofVec3f(-2000, 0, 0), ofVec3f(2000, 5000, 3000)));
+    blobEyeGroup.add(eyeLevel.set("EyeLevel", 140, 0, 200));
+    blobEyeGroup.add(eyeInset.set("EyeInset", .8, 0, 1));
+    gui.add(blobEyeGroup);
     
-    gui.add(gazePoint.set("gaze point", ofVec3f(0, 0, 1500), ofVec3f(-2000, 0, 0), ofVec3f(2000, 5000, 3000)));
+    blobSmoothGroup.setName("Smoothing");
+    blobSmoothGroup.add(smoothOffset.set("Offset", 2, 1, 10));
+    blobSmoothGroup.add(smoothFactor.set("Factor",  1., 0., 5.));
+    gui.add(blobSmoothGroup);
 
     gui.loadFromFile("trackings.xml");
 
@@ -90,8 +99,7 @@ void BlobFinder::update(ofFbo & captureFBO){
     float sensorFieldHeigth = sensorFieldTop - sensorFieldBottom;
     float sensorFieldDepth = sensorFieldBack - sensorFieldFront;
     
-    // the eyelevel calculated from the sensorfield
-    int eyeLevel = EYE_DIFF_TO_HEADTOP / (sensorFieldTop - sensorFieldBottom) * 255;
+    int eyeLevelColor = eyeLevel.get() / sensorFieldHeigth * 255;
     
     //ofLog(OF_LOG_NOTICE, "eyref size : " + ofToString(eyeRef.size()));
     
@@ -131,7 +139,7 @@ void BlobFinder::update(ofFbo & captureFBO){
         for(int x = bounds.x; x < bounds.x + bounds.width; x++){
             for(int y = bounds.y; y < bounds.y + bounds.height; y++){
                 pixelBrightness = greyref.getColor(x, y).getBrightness();
-                if(pixelBrightness > (brightness - eyeLevel)){
+                if(pixelBrightness > (brightness - eyeLevelColor)){
                     eyeRef.setColor(x, y, white);
                 }else{
                     eyeRef.setColor(x, y, black);
@@ -162,6 +170,19 @@ void BlobFinder::update(ofFbo & captureFBO){
         }
     }
     
+    //checks for double blobs and kills the lower ones.
+    for(int i = 0; i < (trackedBlobs.size() - 1); i++){
+        for(int j = 1; j < trackedBlobs.size(); j++){
+            if(trackedBlobs[i].isAlive() && trackedBlobs[j].isAlive() && trackedBlobs[i].finder(trackedBlobs[j].baseRectangle2d)){
+                if (trackedBlobs[i].headTop.z > trackedBlobs[j].headTop.z ) {
+                    trackedBlobs[j].kill();
+                } else {
+                    trackedBlobs[i].kill();
+                }
+            }
+        }
+    }
+
     grayEyeLevel.setFromPixels(eyeRef.getPixels(), eyeRef.getWidth(), eyeRef.getHeight());
     grayEyeLevel.invert();
     grayEyeLevel.threshold(20);
@@ -190,7 +211,6 @@ void BlobFinder::update(ofFbo & captureFBO){
                 ofVec2f headBlobSize = ofVec2f(((float)bounds.getWidth() / captureScreenSize.x) * sensorFieldWidth, ((float)bounds.getHeight() / captureScreenSize.y ) * sensorFieldDepth);
             
                 //calculate the gazeVector
-                
                 ofVec3f gaze = trackedBlobs[bid].headCenter - gazePoint.get();
                 
                 float smalestAngle = 180;
@@ -208,20 +228,20 @@ void BlobFinder::update(ofFbo & captureFBO){
                     //ofLog(OF_LOG_NOTICE, "headtop["+ofToString(bid)+"] headPoint : " + ofToString(headPoint));
                     if(smalestAngle > angle){
                         smalestAngle = angle;
-                        eyePoint = headPoint;
+                        eyePoint = trackedBlobs[bid].headCenter - gaze.normalize().scale(gaze2.length() * eyeInset.get());
                     }
                 }
         
-                trackedBlobs[bid].updateHead(headBlobCenter, headBlobSize, eyePoint);
+                trackedBlobs[bid].updateHead(headBlobCenter, headBlobSize, eyePoint, eyeLevel.get());
             }
         }
     }
     
-    
-    //removes all the blobs that hasnt had an update for a specific number of frames
+    //updates all alive blobs and removes all the blobs that havent had an update for a specific number of frames or have been killed
     for(int i = 0; i < trackedBlobs.size(); i++){
-        trackedBlobs[i].updateEnd();
-        if(trackedBlobs[i].hasDied()){
+        if(trackedBlobs[i].isAlive()){
+            trackedBlobs[i].updateEnd(kinectPos, smoothOffset.get(), smoothFactor.get());
+        } else {
             //ofLog(OF_LOG_NOTICE, "blob[" + ofToString(i) + "]\n has died");
             trackedBlobs[i] = trackedBlobs.back();
             trackedBlobs.pop_back();

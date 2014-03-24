@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/BlobFinder.cpp"
-            timestampString = "417368724.559572"
+            timestampString = "417377464.210326"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "259"
-            endingLineNumber = "259">
+            startingLineNumber = "279"
+            endingLineNumber = "279">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

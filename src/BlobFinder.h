@@ -41,11 +41,12 @@ public:
     
     void drawGazePoint();
 
-    
     int nBlobs;
     vector <BlobTracker> trackedBlobs;
     
     ofVec2f captureScreenSize;
+    
+    ofVec3f kinectPos;
     
     /////////////////
     //COLOR CONTOUR//
@@ -90,8 +91,17 @@ public:
     ofParameter<int> blobAreaMax;
     ofParameter<int> countBlob;
 
+    ofParameterGroup blobEyeGroup;
+
+    ofParameter<float> eyeLevel;
+    ofParameter<float> eyeInset;
+
     ofParameter<ofVec3f> gazePoint;
     ofSpherePrimitive gazePointer;
+
+    ofParameterGroup blobSmoothGroup;
+    ofParameter<int> smoothOffset;
+    ofParameter<float> smoothFactor;
 
     ofVboMesh sensorBox;
    

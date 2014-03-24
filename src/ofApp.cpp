@@ -354,8 +354,8 @@ void ofApp::updateMatrix(){
     kinectRransform.rotate(transformation.get().y, 0, 1, 0);
 
     kinectRransform.translate(0, 0, transformation.get().z);
-    //kinectRransform.rotate(ofQuaternion(kinectRransform_xAxisRot, ofVec3f(1, 0, 0), kinectRransform_yAxisRot, ofVec3f(0, 1, 0), 0, ofVec3f(0, 0, 1)));
     
+    blobFinder.kinectPos = ofVec3f(0, 0, transformation.get().z);    
 }
 
 //--------------------------------------------------------------

@@ -17,22 +17,21 @@
 
 //defines after how many frames without update a Blob dies.
 #define N_EMPTYFRAMES 10
-#define EYE_DIFF_TO_HEADTOP 160 //the eyes are 130 mm below the top of the head
-
 
 class BlobTracker {
     
 public:
     BlobTracker(ofRectangle _rect);
     
-    bool hasDied();
+    bool isAlive();
+    void kill();
     
     bool finder(ofRectangle _rect);
     
     void updateStart();
     void updateBody(ofRectangle _rect, ofVec3f _bodyBlobCenter, ofVec2f _bodyBlobSize, ofVec3f _headTop);
-    void updateHead(ofVec3f _headBlobCenter, ofVec2f _headBlobSize, ofVec3f _eyeCenter);
-    void updateEnd();
+    void updateHead(ofVec3f _headBlobCenter, ofVec2f _headBlobSize, ofVec3f _eyeCenter, float _eyelevel);
+    void updateEnd(ofVec3f _kinectPos, int _smoothOffset, float _smoothFactor);
     
     void drawBodyBox();
     void drawHeadTop();
@@ -43,6 +42,8 @@ public:
     bool hasHeadUpdated;
 
     bool valid;
+    
+    bool isDead;
 
     ofBoxPrimitive bodyBox;
     ofPlanePrimitive headBlob;
@@ -52,6 +53,7 @@ public:
     ofSpherePrimitive eyeCenterSphere;
     
     ofRectangle baseRectangle2d;
+    ofRectangle newBaseRectangle2d;
     
     ofVec3f     bodyBlobCenter;
     ofVec2f     bodyBlobSize;
@@ -64,6 +66,8 @@ public:
     ofVec2f     headBlobSize;
     
     ofVec3f     eyeCenter;
+    
+    float       eyeLevel;
  
     int trackerSize;
     vector <TrackedBlob> tracker;
