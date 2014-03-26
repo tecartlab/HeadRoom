@@ -24,7 +24,7 @@ It is also capable to send video and pointcloud data via network.
 
 ## Communication
 
-On startup, kinectServer will send every second a OSC-broadcast-announcement to the broadcast address (of the newtork the machine resides in) to port 43525.
+On startup, kinectServer will send every second a OSC-broadcast-announcement to the broadcast address (of the newtork the machine resides in) to port 43525. The server itself will listen to a different port, indicated inside the broadcast message.
 
 Assuming the IP-address of the kinectServer is 192.168.1.100, it will send the handshake to 192.168.1.255 / 43525.
 
@@ -32,13 +32,13 @@ Assuming the IP-address of the kinectServer is 192.168.1.100, it will send the h
 
 for example
 
-> **/ks/broadcast** A00363A14660053A 0 192.168.1.100 43525
+> **/ks/broadcast** A00363A14660053A 0 192.168.1.100 43522
 
 every client in the network can respond to this broadcast and send a handshake request back to the kinectServer:
 
-> **/ks/handshake/request** \<ClientIP> \<ClientListeningPort>
+> **/ks/handshake** \<ClientIP> \<ClientListeningPort>
 
-upon receiving this request, the server will send in the sequence of  appearance the calibration data and then as a continous stream the tracking data. If the client misses some of the calibration data it has to resend the handshake request.
+upon receiving this request, the server will send in the sequence of  appearance the calibration data and then as a continous stream the tracking data. If the client misses some of the calibration data it has to resend the handshake request. The server expects a new handshake every 12 seconds, after this it will stop sending the stream of tracking data and drop the registration of the client. If no client is registered anymore, the server will start sending the broadcast message again every second.
 
 ##calibration data
 

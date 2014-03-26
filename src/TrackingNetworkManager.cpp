@@ -57,15 +57,75 @@ void TrackingNetworkManager::setup(int _listeningPort, int _broadcastPort, strin
 
 
 //--------------------------------------------------------------
-void TrackingNetworkManager::update(){
-    
+void TrackingNetworkManager::update(BlobFinder & _blobFinder){
+    long currentMillis = ofGetElapsedTimeMillis();
 	//Check if its about time to send a broadcast message
-    if(knownClients.size() > 0 && (ofGetElapsedTimeMillis() - broadCastTimer) > BROADCAST_CLIENT_FREQ){
+    if(knownClients.size() > 0 && (currentMillis - broadCastTimer) > BROADCAST_CLIENT_FREQ){
         sendBroadCastAddress();
-    } else if(knownClients.size() == 0 && (ofGetElapsedTimeMillis() - broadCastTimer) > BROADCAST_NOCLIENT_FREQ){
+        checkTrackingClients(currentMillis);
+    } else if(knownClients.size() == 0 && (currentMillis - broadCastTimer) > BROADCAST_NOCLIENT_FREQ){
         sendBroadCastAddress();
     }
     
+    
+    for(int i = 0; i < _blobFinder.trackedBlobs.size(); i++){
+        if(_blobFinder.streamingBodyBlob.get()){
+            ofxOscMessage bodyBlob;
+            bodyBlob.setAddress("/ks/tracking/bodyblob");
+            bodyBlob.addIntArg(kinectID);
+            bodyBlob.addIntArg(i);
+            bodyBlob.addIntArg(_blobFinder.trackedBlobs[i].sortPos);
+            bodyBlob.addIntArg(_blobFinder.trackedBlobs[i].bodyBlobCenter.x);
+            bodyBlob.addIntArg(_blobFinder.trackedBlobs[i].bodyBlobCenter.y);
+            bodyBlob.addIntArg(_blobFinder.trackedBlobs[i].bodyBlobSize.x);
+            bodyBlob.addIntArg(_blobFinder.trackedBlobs[i].bodyBlobSize.y);
+            bodyBlob.addIntArg(_blobFinder.trackedBlobs[i].bodyBlobCenter.z);
+            
+            sendMessageToTrackingClients(bodyBlob);
+        }
+        if(_blobFinder.streamingHeadBlob.get()){
+            ofxOscMessage headBlob;
+            headBlob.setAddress("/ks/tracking/headblob");
+            headBlob.addIntArg(kinectID);
+            headBlob.addIntArg(i);
+            headBlob.addIntArg(_blobFinder.trackedBlobs[i].sortPos);
+            headBlob.addIntArg(_blobFinder.trackedBlobs[i].headBlobCenter.x);
+            headBlob.addIntArg(_blobFinder.trackedBlobs[i].headBlobCenter.z);
+            headBlob.addIntArg(_blobFinder.trackedBlobs[i].headBlobCenter.z);
+            headBlob.addIntArg(_blobFinder.trackedBlobs[i].headBlobSize.x);
+            headBlob.addIntArg(_blobFinder.trackedBlobs[i].headBlobSize.y);
+            
+            sendMessageToTrackingClients(headBlob);
+        }
+        if(_blobFinder.streamingHead.get()){
+            ofxOscMessage head;
+            head.setAddress("/ks/tracking/head");
+            head.addIntArg(kinectID);
+            head.addIntArg(i);
+            head.addIntArg(_blobFinder.trackedBlobs[i].sortPos);
+            head.addIntArg(_blobFinder.trackedBlobs[i].headTop.x);
+            head.addIntArg(_blobFinder.trackedBlobs[i].headTop.y);
+            head.addIntArg(_blobFinder.trackedBlobs[i].headTop.z);
+            head.addIntArg(_blobFinder.trackedBlobs[i].headCenter.z);
+            
+            sendMessageToTrackingClients(head);
+        }
+        if(_blobFinder.streamingHead.get()){
+            ofxOscMessage eye;
+            eye.setAddress("/ks/tracking/eye");
+            eye.addIntArg(kinectID);
+            eye.addIntArg(i);
+            eye.addIntArg(_blobFinder.trackedBlobs[i].sortPos);
+            eye.addIntArg(_blobFinder.trackedBlobs[i].eyeCenter.x);
+            eye.addIntArg(_blobFinder.trackedBlobs[i].eyeCenter.y);
+            eye.addIntArg(_blobFinder.trackedBlobs[i].eyeCenter.z);
+            eye.addIntArg(_blobFinder.trackedBlobs[i].eyeGaze.x);
+            eye.addIntArg(_blobFinder.trackedBlobs[i].eyeGaze.y);
+            eye.addIntArg(_blobFinder.trackedBlobs[i].eyeGaze.z);
+            
+            sendMessageToTrackingClients(eye);
+        }
+    }
     // OSC receiver queues up new messages, so you need to iterate
 	// through waiting messages to get each incoming message
     
@@ -76,26 +136,19 @@ void TrackingNetworkManager::update(){
 		ofxOscMessage m;
 		serverReceiver.getNextMessage(&m);
 		//Log received message for easier debugging of participants' messages:
-		ofLogVerbose("Server recvd msg " + getOscMsgAsString(m) + " from " + m.getRemoteIp());
+        //ofLog(OF_LOG_NOTICE, "Server recvd msg " + getOscMsgAsString(m) + " from " + m.getRemoteIp());
         
 		// check the address of the incoming message
-		if(m.getAddress() == "/ks/handshake/request"){
+		if(m.getAddress() == "/ks/handshake"){
 			//Identify host of incoming msg
 			string incomingHost = m.getRemoteIp();
 			//See if incoming host is a new one:
 			// get the first argument (we're only sending one) as a string
-			if(m.getNumArgs() > 0){
-				if(m.getArgType(0) == OFXOSC_TYPE_STRING){
-					//reimplemented message display:
-					//If vector has reached max size, delete the first/oldest element
-					if(serverMessages.size() == maxServerMessages){
-						serverMessages.erase(serverMessages.begin());
-					}
-					//Add message text at the end of the vector
-					serverMessages.push_back(m.getArgAsString(0));
-                    
-				}
-			}
+			if(m.getNumArgs() == 2 && m.getArgType(0) == OFXOSC_TYPE_STRING && m.getArgType(1) == OFXOSC_TYPE_INT32){
+                knownClients[getTrackingClientIndex(m.getArgAsString(0), m.getArgAsInt32(1))].update(currentMillis);
+			}else{
+                ofLog(OF_LOG_WARNING, "Server recvd malformed message. Expected: /ks/handshake/request <ClientIP> <ClientListeningPort> | received: " + getOscMsgAsString(m) + " from " + m.getRemoteIp());
+            }
 		}
 		// handle getting random OSC messages here
 		else{
@@ -111,6 +164,38 @@ void TrackingNetworkManager::update(){
 	}
 }
 
+void TrackingNetworkManager::sendMessageToTrackingClients(ofxOscMessage _msg){
+    for(int j = 0; j < knownClients.size(); j++){
+        broadcastSender.setup(knownClients[j].clientDestination, knownClients[j].clientSendPort);
+        broadcastSender.sendMessage(_msg);
+    }
+    //knownClients[j].sendMessage(_msg);
+}
+
+void TrackingNetworkManager::checkTrackingClients(long _currentMillis){
+    for(int i = 0; i < knownClients.size(); i++){
+        if(!knownClients[i].stillAlive(_currentMillis)){
+            ofLog(OF_LOG_NOTICE, "Server removed TrackingClient ip: " + knownClients[i].clientDestination + " port:  " + ofToString(knownClients[i].clientSendPort));
+            knownClients[i] = knownClients.back();
+            knownClients.pop_back();
+            i--;
+        }
+    }
+}
+
+int TrackingNetworkManager::getTrackingClientIndex(string _ip, int _port){
+    for(int i = 0; i < knownClients.size(); i++){
+        if(knownClients[i].clientDestination.find(_ip) != string::npos && knownClients[i].clientSendPort == _port){
+            return i;
+        }
+    }
+    TrackingClient newClient;
+    newClient.setup(_ip, _port);
+    knownClients.push_back(newClient);
+    ofLog(OF_LOG_NOTICE, "Server added new TrackingClient ip: " + _ip + " port:  " + ofToString(_port) + " knownClients:  " + ofToString(knownClients.size()));
+    return knownClients.size() -1;
+}
+
 void TrackingNetworkManager::sendBroadCastAddress(){
     ofxOscMessage broadcast;
     broadcast.setAddress("/ks/broadcast");
@@ -119,6 +204,7 @@ void TrackingNetworkManager::sendBroadCastAddress(){
 	broadcast.addStringArg(serverAddress);
 	broadcast.addIntArg(serverRecvPort);
     
+    broadcastSender.setup(broadcastAddress, broadcastSendPort);
     broadcastSender.sendMessage(broadcast);
     
     broadCastTimer = ofGetElapsedTimeMillis();
@@ -206,3 +292,5 @@ void TrackingNetworkManager::gatherLocalIPs(){
     freeifaddrs(myaddrs);
     return 0;
 }
+
+

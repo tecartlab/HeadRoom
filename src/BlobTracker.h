@@ -69,6 +69,8 @@ public:
     
     ofVec3f     eyeCenter;
     
+    ofVec3f     eyeGaze;
+    
     float       eyeLevel;
  
     int trackerSize;

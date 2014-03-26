@@ -20,10 +20,10 @@ void BlobFinder::setup(){
     gui.setup("Tracking Panel");
     
     streamingGuiGroup.setName("Streaming");
-    streamingGuiGroup.add(streamingBodyBlob.set("body blob", true));
-    streamingGuiGroup.add(streamingHeadBlob.set("body blob", true));
-    streamingGuiGroup.add(streamingHead.set("body blob", true));
-    streamingGuiGroup.add(streamingEye.set("body blob", true));
+    streamingGuiGroup.add(streamingBodyBlob.set("bodyBlob", true));
+    streamingGuiGroup.add(streamingHeadBlob.set("headBlob", true));
+    streamingGuiGroup.add(streamingHead.set("head", true));
+    streamingGuiGroup.add(streamingEye.set("eye", true));
     gui.add(streamingGuiGroup);
     
     sensorBoxLeft.addListener(this, &BlobFinder::updateSensorBox);
@@ -33,7 +33,7 @@ void BlobFinder::setup(){
     sensorBoxTop.addListener(this, &BlobFinder::updateSensorBox);
     sensorBoxBottom.addListener(this, &BlobFinder::updateSensorBox);
     
-    sensorBoxGuiGroup.setName("sensorField");
+    sensorBoxGuiGroup.setName("SensorBox");
     sensorBoxGuiGroup.add(sensorBoxLeft.set("left", -500, 0, -2000));
     sensorBoxGuiGroup.add(sensorBoxRight.set("right", 500, 0, 2000));
     sensorBoxGuiGroup.add(sensorBoxFront.set("front", 0, 0, 7000));
@@ -54,9 +54,9 @@ void BlobFinder::setup(){
     blobEyeGroup.add(eyeInset.set("EyeInset", .8, 0, 1));
     gui.add(blobEyeGroup);
     
-    blobSmoothGroup.setName("Smoothing");
-    blobSmoothGroup.add(smoothOffset.set("Offset", 2, 1, 10));
-    blobSmoothGroup.add(smoothFactor.set("Factor",  1., 0., 5.));
+    blobSmoothGroup.setName("NoiseReduction");
+    blobSmoothGroup.add(smoothOffset.set("MinSamples", 2, 1, 10));
+    blobSmoothGroup.add(smoothFactor.set("DistanceFactor",  1., 0., 5.));
     gui.add(blobSmoothGroup);
 
     gui.loadFromFile("trackings.xml");

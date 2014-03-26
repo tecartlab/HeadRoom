@@ -114,7 +114,11 @@ void BlobTracker::updateEnd(ofVec3f _kinectPos, int _smoothOffset, float _smooth
         headBlobCenter /= tracker.size();
         headBlobSize /= tracker.size();
         eyeCenter /= tracker.size();
+        
+        headCenter = ofVec3f(headTop.x, headTop.y, headBlobCenter.z);
 
+        eyeGaze = (headCenter - eyeCenter).normalize();
+        
         lastUpdateFrame = 0;
         valid = true;
     } else {

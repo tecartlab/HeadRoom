@@ -30,7 +30,7 @@ void ofApp::setup(){
     
     blobFinder.setup();
 
-    gui.setup("kinectPanel");
+    gui.setup("Kinect Panel");
     iMainCamera = 0;
     
     setupViewports();
@@ -445,7 +445,7 @@ void ofApp::update(){
         blobFinder.update(captureFBO);
 	}
     
-    networkMng.update();
+    networkMng.update(blobFinder);
     
     rgbaMatrixServer.update();
 	depthMatrixServer.update();
@@ -706,18 +706,18 @@ void ofApp::createHelp(){
     help = string("press k -> to update the calculation\n");
     help += "press K -> to show the calculation results \n";
 	help += "press v -> to show visualizations\n";
-	help += "press p -> to start updateing the pointcloud\n";
-	help += "press s -> to save current settings\n";
+	help += "press p -> to show pointcloud\n";
+	help += "press s -> to save current settings.\n";
 	help += "press l -> to load last saved settings\n";
 	help += "press 1 - 6 -> to change the viewport\n";
 	help += "press A|B|C + mouse-release -> to change the calibration points in viewport 1\n";
     
 	help += "press c -> to close the connection, connection is: " + ofToString(kinect.isConnected()) + "\n";
 	help += "press o -> to open the connection it again\n";
-    help += "press m -> Using mouse inputs to navigate: " + ofToString(cam.getMouseInputEnabled() ? "YES" : "NO");
-	help += "\n";
+    help += "ATTENTION: Setup-Settings (ServerID and Video) will only apply after restart\n";
+ 	help += "Broadcasting ip: "+networkMng.broadcastAddress+" port: "+ofToString(networkMng.broadcastSendPort)+" serverID: "+ofToString(networkMng.kinectID)+" \n";
  	help += "Correction Distance Math -> corrected distance = distance * (Base + distance / Divisor)\n";
-	help += "Correction pixel Site -> corrected pixel size = pixel size * Factor\n";
+	help += "Correction pixel Site    -> corrected pixel size = pixel size * Factor\n";
     /*
      help += "using opencv threshold = " + ofToString(bThreshWithOpenCV) + " (press spacebar)\n";
      help += "set near threshold " + ofToString(nearThreshold) + " (press: + -)\n";

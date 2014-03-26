@@ -8,10 +8,21 @@
 
 #include "TrackingClient.h"
 
-TrackingClient::TrackingClient(string _destination, int _port){
+TrackingClient::TrackingClient(){
+}
+
+void TrackingClient::setup(string _destination, int _port){
 	//Client side
 	clientDestination = _destination;
 	clientSendPort = _port;
-	clientSender.setup(clientDestination, clientSendPort);
-    
 }
+
+void TrackingClient::update(long currentMillis){
+    aliveUntil = currentMillis;
+}
+
+bool TrackingClient::stillAlive(long currentMillis){
+    return (currentMillis - STAY_ALIVE > aliveUntil)? false: true;
+}
+
+

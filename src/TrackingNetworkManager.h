@@ -12,6 +12,7 @@
 #include "ofConstants.h"
 #include "ofxOsc.h"
 #include "TrackingClient.h"
+#include "BlobFinder.h"
 
 #include <cmath>
 
@@ -34,7 +35,11 @@ public:
     TrackingNetworkManager();
     
     void setup(int _listeningPort, int _broadcastPort, string _kinectSerial, int _kinectID);
-    void update();
+    void update(BlobFinder & _blobFinder);
+    
+    void sendMessageToTrackingClients(ofxOscMessage _msg);
+    void checkTrackingClients(long _currentMillis);
+    int getTrackingClientIndex(string _ip, int _port);
     
     void sendBroadCastAddress();
     
