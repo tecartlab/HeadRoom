@@ -10,6 +10,7 @@
 #include "Linef.h"
 #include "Grid.h"
 #include "OrthoCamera.h"
+#include "TrackingNetworkManager.h"
 
 #include <ofMatrix4x4.h>
 
@@ -23,6 +24,9 @@
 #define KINECT_IMG_HEIGHT  480
 
 #define N_MEASURMENT_CYCLES 10
+
+#define NETWORK_BROADCAST_PORT 43525
+#define NETWORK_LISTENING_PORT 43522
 
 class ofApp : public ofBaseApp{
 
@@ -57,6 +61,11 @@ class ofApp : public ofBaseApp{
 
     bool bShowVisuals = false;
 
+    //////////////////
+    //    NETWORK   //
+    //////////////////
+
+    TrackingNetworkManager networkMng;
     
     //////////////////
     //OPENGL CAMERAS//

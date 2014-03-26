@@ -86,11 +86,11 @@ void ofApp::setup(){
     captureFBO.allocate(s);
 
     blobFinder.allocate();
-
-	ofSetFrameRate(60);
 		
 	// creating preview point cloud is bogging the system down, so switched off at startup
 	bPreviewPointCloud = false;
+    
+    networkMng.setup(NETWORK_LISTENING_PORT, NETWORK_BROADCAST_PORT, kinect.getSerial());
     
     createFrustumCone();
     
@@ -436,6 +436,8 @@ void ofApp::update(){
         /////////////////////////////////////
         blobFinder.update(captureFBO);
 	}
+    
+    networkMng.update();
     
     rgbaMatrixServer.update();
 	depthMatrixServer.update();
