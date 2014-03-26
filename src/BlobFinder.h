@@ -72,9 +72,16 @@ public:
     //////////////
 
     ofxPanel gui;
+
+    ofParameterGroup streamingGuiGroup;
+    
+    ofParameter<bool> streamingBodyBlob;
+    ofParameter<bool> streamingHeadBlob;
+    ofParameter<bool> streamingHead;
+    ofParameter<bool> streamingEye;
     
     ofParameterGroup sensorBoxGuiGroup;
-    
+
     ofParameter<int> sensorBoxLeft;
     ofParameter<int> sensorBoxRight;
     ofParameter<int> sensorBoxTop;

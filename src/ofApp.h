@@ -191,6 +191,10 @@ class ofApp : public ofBaseApp{
     ofParameter<float> depthCorrectionDivisor;
     ofParameter<float> pixelSizeCorrector;
 
+    ofParameterGroup setupGuiGroup;
+    ofParameter<bool> captureVideo;
+    ofParameter<int> kinectServerID;
+
     //////////
     // HELP //
     //////////

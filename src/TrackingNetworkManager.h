@@ -33,9 +33,8 @@ class TrackingNetworkManager {
 public:
     TrackingNetworkManager();
     
-    void setup(int _listeningPort, int _broadcastPort, string _kinectSerial);
+    void setup(int _listeningPort, int _broadcastPort, string _kinectSerial, int _kinectID);
     void update();
-    void setKinectID();
     
     void sendBroadCastAddress();
     

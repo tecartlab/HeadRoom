@@ -24,7 +24,7 @@ It is also capable to send video and pointcloud data via network.
 
 ## Communication
 
-On startup, kinectServer will send every 5 seconds a OSC-broadcast-announcement to the broadcast address (of the newtork the machine resides in) to port 43525.
+On startup, kinectServer will send every second a OSC-broadcast-announcement to the broadcast address (of the newtork the machine resides in) to port 43525.
 
 Assuming the IP-address of the kinectServer is 192.168.1.100, it will send the handshake to 192.168.1.255 / 43525.
 

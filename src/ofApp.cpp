@@ -38,6 +38,11 @@ void ofApp::setup(){
     
     nearFrustum.addListener(this, &ofApp::updateFrustumCone);
     farFrustum.addListener(this, &ofApp::updateFrustumCone);
+
+    setupGuiGroup.setName("Setup on starup");
+    setupGuiGroup.add(kinectServerID.set("serverID", 0, 0, 20));
+    setupGuiGroup.add(captureVideo.set("use video", true));
+    gui.add(setupGuiGroup);
     
     gui.add(calibPoint1.set("calibA", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
     gui.add(calibPoint2.set("calibB", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
@@ -69,9 +74,12 @@ void ofApp::setup(){
 	// enable depth->video image calibration
 	kinect.setRegistration(true);
     
-	kinect.init();
+    if(captureVideo.get())
+        kinect.init();
+    else
+        kinect.init(false, false);// disable video image (faster fps)
+    
 	//kinect.init(true); // shows infrared instead of RGB video image
-	//kinect.init(false, false); // disable video image (faster fps)
 	
 	kinect.open();		// opens first available kinect
 	//kinect.open(1);	// open a kinect by id, starting with 0 (sorted by serial # lexicographically))
@@ -90,7 +98,7 @@ void ofApp::setup(){
 	// creating preview point cloud is bogging the system down, so switched off at startup
 	bPreviewPointCloud = false;
     
-    networkMng.setup(NETWORK_LISTENING_PORT, NETWORK_BROADCAST_PORT, kinect.getSerial());
+    networkMng.setup(NETWORK_LISTENING_PORT, NETWORK_BROADCAST_PORT, kinect.getSerial(), kinectServerID.get());
     
     createFrustumCone();
     
@@ -522,7 +530,11 @@ void ofApp::draw(){
         ofSetLineWidth(3);
         ofRect(viewGrid[iMainCamera]);
     } else {
-        blobFinder.contourFinder.draw(viewMain);
+        blobFinder.contourEyeFinder.draw(viewMain);
+
+        ofNoFill();
+        ofSetColor(255, 0, 255, 255);
+        blobFinder.drawBodyBlobs2d(viewMain);
     }
 
     //--

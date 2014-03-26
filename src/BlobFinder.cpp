@@ -19,6 +19,13 @@ void BlobFinder::setup(){
     
     gui.setup("Tracking Panel");
     
+    streamingGuiGroup.setName("Streaming");
+    streamingGuiGroup.add(streamingBodyBlob.set("body blob", true));
+    streamingGuiGroup.add(streamingHeadBlob.set("body blob", true));
+    streamingGuiGroup.add(streamingHead.set("body blob", true));
+    streamingGuiGroup.add(streamingEye.set("body blob", true));
+    gui.add(streamingGuiGroup);
+    
     sensorBoxLeft.addListener(this, &BlobFinder::updateSensorBox);
     sensorBoxRight.addListener(this, &BlobFinder::updateSensorBox);
     sensorBoxFront.addListener(this, &BlobFinder::updateSensorBox);

@@ -19,9 +19,9 @@ TrackingNetworkManager::TrackingNetworkManager(){
 }
 
 
-void TrackingNetworkManager::setup(int _listeningPort, int _broadcastPort, string _kinectSerial){
+void TrackingNetworkManager::setup(int _listeningPort, int _broadcastPort, string _kinectSerial, int _kinectID){
     kinectSerial = _kinectSerial;
-    
+    kinectID = _kinectID;
     gatherLocalIPs();
 
     //RegularExpression regEx("\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b");
@@ -111,12 +111,11 @@ void TrackingNetworkManager::update(){
 	}
 }
 
-
 void TrackingNetworkManager::sendBroadCastAddress(){
     ofxOscMessage broadcast;
     broadcast.setAddress("/ks/broadcast");
 	broadcast.addStringArg(kinectSerial);
-	broadcast.addIntArg(0);
+	broadcast.addIntArg(kinectID);
 	broadcast.addStringArg(serverAddress);
 	broadcast.addIntArg(serverRecvPort);
     
