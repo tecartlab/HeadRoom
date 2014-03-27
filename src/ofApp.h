@@ -11,6 +11,7 @@
 #include "Grid.h"
 #include "OrthoCamera.h"
 #include "TrackingNetworkManager.h"
+#include "Frustum.h"
 
 #include <ofMatrix4x4.h>
 
@@ -103,7 +104,7 @@ class ofApp : public ofBaseApp{
     
     ofVboMesh previewmesh, capturemesh;
     
-    ofVboMesh frustum;
+    Frustum kinectFrustum;
     
     void updatePointCloud(ofVboMesh & mesh, int step, bool useFrustumCone, bool useVideoColor);
     void drawPreview();

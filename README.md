@@ -28,23 +28,38 @@ On startup, kinectServer will send every second a OSC-broadcast-announcement to 
 
 Assuming the IP-address of the kinectServer is 192.168.1.100, it will send the handshake to 192.168.1.255 / 43525.
 
-> **/ks/broadcast** \<kinectid> \<serverID> \<ServerIP> \<ServerListeningPort>
+> **/ks/server/broadcast** \<kinectid> \<serverID> \<ServerIP> \<ServerListeningPort>
 
 for example
 
-> **/ks/broadcast** A00363A14660053A 0 192.168.1.100 43522
+> **/ks/server/broadcast** A00363A14660053A 0 192.168.1.100 43522
 
 every client in the network can respond to this broadcast and send a handshake request back to the kinectServer:
 
-> **/ks/handshake** \<ClientIP> \<ClientListeningPort>
+> **/ks/request/handshake** \<ClientListeningPort>
 
-upon receiving this request, the server will send in the sequence of  appearance the calibration data and then as a continous stream the tracking data. If the client misses some of the calibration data it has to resend the handshake request. The server expects a new handshake every 12 seconds, after this it will stop sending the stream of tracking data and drop the registration of the client. If no client is registered anymore, the server will start sending the broadcast message again every second.
+upon receiving this request, the server will send the calibration data. If the client misses some of the calibration data it has to resend the handshake request. 
+
+In order to get the trackingdata, the server then needs an update message every 10 seconds.
+
+> **/ks/request/update** \<ClientListeningPort>
+> 
+upon receiving this request, the server will send a continous stream of the tracking data for the next 11 seconds. Since the server will keep on sending its broadcast message every 10 seconds, the clients resend of the update-message can be triggered by the broadcast-message and thus the connection will never drop.
+
+The server will stop sending the stream of tracking data if no update-message is received anymore and drop the registration of the client. 
+
+If no client is registered anymore, the server will again start sending the broadcast message every second.
+
+If the server encounters a problem or stops, it will atempt to broadcast an exit message:
+
+> **/ks/server/broadcast/exit** \<kinectid> \<serverID>
+
 
 ##calibration data
 
 ####transformation
 
-> **/ks/calibration/transformation** \<serverID> \<x-rotate[deg]> \<y-rotate[deg]> \<z-translate[mm]>
+> **/ks/server/calib/trans** \<serverID> \<x-rotate[deg]> \<y-rotate[deg]> \<z-translate[m]>
 > 
 
 with this info the kinect transformation matrix in relation to the floor can be calcualted like this (example code for openframeworks):
@@ -59,7 +74,7 @@ The transformation matrix is mainly used to correctly transform the frustum and 
 ---
 ####kinects frustum:
 
-> **/ks/calibration/frustum** \<serverID> \<left[mm]> \<right[mm]> \<top[mm]> \<bottom[mm]> \<near[mm]> \<far[mm]>
+> **/ks/server/calib/frustum** \<serverID> \<left[m]> \<right[m]> \<bottom[m]> \<top[m]> \<near[m]> \<far[m]>
 > 
 
 the frustum needs to translated by the above transformation matrix to be in the correct space
@@ -67,32 +82,30 @@ the frustum needs to translated by the above transformation matrix to be in the 
 ---
 ####sensorbox:
 
-> **/ks/calibration/sensorbox** \<serverID> \<left(x-axis)[mm]> \<right(x-axis)[mm]> \<near(y-axis)[mm]> \<far(y-axis)[mm]> \<top(z-axis)[mm]> \<bottom(z-axis)[mm]>
+> **/ks/server/calib/sensorbox** \<serverID> \<left(x-axis)[m]> \<right(x-axis)[m]> \<bottom(z-axis)[m]> \<top(z-axis)[m]> \<near(y-axis)[m]> \<far(y-axis)[m]>  
 > 
 
 ##tracking data
 
 ####bodyBlob
 
-> **/ks/tracking/bodyblob** \<serverID> \<blobID> \<sortPos> \<bodyBlobXPos[mm]> \<bodyBlobYPos[mm]> \<bodyBlobWidth(x-axis)[mm]> \<bodyBlobDepth(y-axis)[mm]> \<bodyHeight(z-axis)[mm]>
+> **/ks/server/track/bodyblob** \<serverID> \<frameNo> \<blobID> \<sortPos> \<bodyBlobXPos[m]> \<bodyBlobYPos[m]> \<bodyBlobWidth(x-axis)[m]> \<bodyBlobDepth(y-axis)[m]> \<bodyHeight(z-axis)[m]>
 
 ---
 ####headBlob
 
-> **/ks/tracking/headblob** \<serverID> \<blobID> \<sortPos> \<headBlobXPos[mm]> \<headBlobYPos[mm]> \<headBlobZPos[mm]> \<headBlobWidth(x-axis)[mm]> \<headBlobDepth(y-axis)[mm]>
+> **/ks/server/track/headblob** \<serverID> \<frameNo> \<blobID> \<sortPos> \<headBlobXPos[m]> \<headBlobYPos[m]> \<headBlobZPos[m]> \<headBlobWidth(x-axis)[m]> \<headBlobDepth(y-axis)[m]>
 
 ---
 ####head
 
-> **/ks/tracking/head** \<serverID> \<blobID> \<sortPos> \<headTopXPos[mm]> \<headTopYPos[mm]> \<headTopZPos[mm]> \<headCenterZPos[mm]>
+> **/ks/server/track/head** \<serverID> \<frameNo> \<blobID> \<sortPos> \<headTopXPos[m]> \<headTopYPos[m]> \<headTopZPos[m]> \<headCenterXPos[m] \<headCenterYPos[m] \<headCenterZPos[m]>
 > 
-
-headCenterXPos and -YPos are the same as headTopXPos and -YPos
 
 ---
 ####eye
 
-> **/ks/tracking/eye** \<serverID> \<blobID> \<sortPos> \<eyeXPos[mm]> \<eyeYPos[mm]> \<eyeZPos[mm]> \<eyeGazeX> \<eyeGazeY> \<eyeGazeZ>
+> **/ks/server/track/eye** \<serverID> \<frameNo> \<blobID> \<sortPos> \<eyeXPos[m]> \<eyeYPos[m]> \<eyeZPos[m]> \<eyeGazeX> \<eyeGazeY> \<eyeGazeZ>
 > 
 
 eyeGazeX, Y, Z is a normalized vector. Beware: The gaze is calculated based on a defined gaze-point and not through facial feature tracking. It assumes that each tracked person looks at this gaze-point.

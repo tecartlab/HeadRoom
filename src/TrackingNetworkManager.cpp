@@ -53,11 +53,16 @@ void TrackingNetworkManager::setup(int _listeningPort, int _broadcastPort, strin
     broadcastSender.setup(broadcastAddress, broadcastSendPort);
     
     broadCastTimer = ofGetElapsedTimeMillis();
+    
+    scale = 0.001; // transform mm to m
+    frameNumber = 0;
 }
 
 
 //--------------------------------------------------------------
-void TrackingNetworkManager::update(BlobFinder & _blobFinder){
+void TrackingNetworkManager::update(BlobFinder & _blobFinder, Frustum & _frustum, ofVec3f _trans){
+    frameNumber++;
+    
     long currentMillis = ofGetElapsedTimeMillis();
 	//Check if its about time to send a broadcast message
     if(knownClients.size() > 0 && (currentMillis - broadCastTimer) > BROADCAST_CLIENT_FREQ){
@@ -67,68 +72,11 @@ void TrackingNetworkManager::update(BlobFinder & _blobFinder){
         sendBroadCastAddress();
     }
     
+    //send trackingdata to all connected clients
+    sendTrackingData(_blobFinder);
     
-    for(int i = 0; i < _blobFinder.trackedBlobs.size(); i++){
-        if(_blobFinder.streamingBodyBlob.get()){
-            ofxOscMessage bodyBlob;
-            bodyBlob.setAddress("/ks/tracking/bodyblob");
-            bodyBlob.addIntArg(kinectID);
-            bodyBlob.addIntArg(i);
-            bodyBlob.addIntArg(_blobFinder.trackedBlobs[i].sortPos);
-            bodyBlob.addIntArg(_blobFinder.trackedBlobs[i].bodyBlobCenter.x);
-            bodyBlob.addIntArg(_blobFinder.trackedBlobs[i].bodyBlobCenter.y);
-            bodyBlob.addIntArg(_blobFinder.trackedBlobs[i].bodyBlobSize.x);
-            bodyBlob.addIntArg(_blobFinder.trackedBlobs[i].bodyBlobSize.y);
-            bodyBlob.addIntArg(_blobFinder.trackedBlobs[i].bodyBlobCenter.z);
-            
-            sendMessageToTrackingClients(bodyBlob);
-        }
-        if(_blobFinder.streamingHeadBlob.get()){
-            ofxOscMessage headBlob;
-            headBlob.setAddress("/ks/tracking/headblob");
-            headBlob.addIntArg(kinectID);
-            headBlob.addIntArg(i);
-            headBlob.addIntArg(_blobFinder.trackedBlobs[i].sortPos);
-            headBlob.addIntArg(_blobFinder.trackedBlobs[i].headBlobCenter.x);
-            headBlob.addIntArg(_blobFinder.trackedBlobs[i].headBlobCenter.z);
-            headBlob.addIntArg(_blobFinder.trackedBlobs[i].headBlobCenter.z);
-            headBlob.addIntArg(_blobFinder.trackedBlobs[i].headBlobSize.x);
-            headBlob.addIntArg(_blobFinder.trackedBlobs[i].headBlobSize.y);
-            
-            sendMessageToTrackingClients(headBlob);
-        }
-        if(_blobFinder.streamingHead.get()){
-            ofxOscMessage head;
-            head.setAddress("/ks/tracking/head");
-            head.addIntArg(kinectID);
-            head.addIntArg(i);
-            head.addIntArg(_blobFinder.trackedBlobs[i].sortPos);
-            head.addIntArg(_blobFinder.trackedBlobs[i].headTop.x);
-            head.addIntArg(_blobFinder.trackedBlobs[i].headTop.y);
-            head.addIntArg(_blobFinder.trackedBlobs[i].headTop.z);
-            head.addIntArg(_blobFinder.trackedBlobs[i].headCenter.z);
-            
-            sendMessageToTrackingClients(head);
-        }
-        if(_blobFinder.streamingHead.get()){
-            ofxOscMessage eye;
-            eye.setAddress("/ks/tracking/eye");
-            eye.addIntArg(kinectID);
-            eye.addIntArg(i);
-            eye.addIntArg(_blobFinder.trackedBlobs[i].sortPos);
-            eye.addIntArg(_blobFinder.trackedBlobs[i].eyeCenter.x);
-            eye.addIntArg(_blobFinder.trackedBlobs[i].eyeCenter.y);
-            eye.addIntArg(_blobFinder.trackedBlobs[i].eyeCenter.z);
-            eye.addIntArg(_blobFinder.trackedBlobs[i].eyeGaze.x);
-            eye.addIntArg(_blobFinder.trackedBlobs[i].eyeGaze.y);
-            eye.addIntArg(_blobFinder.trackedBlobs[i].eyeGaze.z);
-            
-            sendMessageToTrackingClients(eye);
-        }
-    }
     // OSC receiver queues up new messages, so you need to iterate
 	// through waiting messages to get each incoming message
-    
     
 	// check for waiting messages
 	while(serverReceiver.hasWaitingMessages()){
@@ -139,15 +87,29 @@ void TrackingNetworkManager::update(BlobFinder & _blobFinder){
         //ofLog(OF_LOG_NOTICE, "Server recvd msg " + getOscMsgAsString(m) + " from " + m.getRemoteIp());
         
 		// check the address of the incoming message
-		if(m.getAddress() == "/ks/handshake"){
+		if(m.getAddress() == "/ks/request/handshake"){
 			//Identify host of incoming msg
 			string incomingHost = m.getRemoteIp();
 			//See if incoming host is a new one:
-			// get the first argument (we're only sending one) as a string
-			if(m.getNumArgs() == 2 && m.getArgType(0) == OFXOSC_TYPE_STRING && m.getArgType(1) == OFXOSC_TYPE_INT32){
-                knownClients[getTrackingClientIndex(m.getArgAsString(0), m.getArgAsInt32(1))].update(currentMillis);
+			// get the first argument (listeningport) as an int
+			if(m.getNumArgs() == 1 && m.getArgType(0) == OFXOSC_TYPE_INT32){
+                knownClients[getTrackingClientIndex(incomingHost, m.getArgAsInt32(0))].update(currentMillis);
+                // Send calib-data
+                sendCalibFrustum(_frustum, incomingHost, m.getArgAsInt32(0));
+                sendCalibSensorBox(_blobFinder, incomingHost, m.getArgAsInt32(0));
+                sendCalibTrans(_trans, incomingHost, m.getArgAsInt32(0));
 			}else{
-                ofLog(OF_LOG_WARNING, "Server recvd malformed message. Expected: /ks/handshake/request <ClientIP> <ClientListeningPort> | received: " + getOscMsgAsString(m) + " from " + m.getRemoteIp());
+                ofLog(OF_LOG_WARNING, "Server recvd malformed message. Expected: /ks/request/handshake <ClientListeningPort> | received: " + getOscMsgAsString(m) + " from " + incomingHost);
+            }
+		} else if(m.getAddress() == "/ks/request/update"){
+			//Identify host of incoming msg
+			string incomingHost = m.getRemoteIp();
+			//See if incoming host is a new one:
+			// get the first argument (listeningport) as an int
+			if(m.getNumArgs() == 1 && m.getArgType(0) == OFXOSC_TYPE_INT32){
+                knownClients[getTrackingClientIndex(incomingHost, m.getArgAsInt32(0))].update(currentMillis);
+			}else{
+                ofLog(OF_LOG_WARNING, "Server recvd malformed message. Expected: /ks/request/update <ClientListeningPort> | received: " + getOscMsgAsString(m) + " from " + incomingHost);
             }
 		}
 		// handle getting random OSC messages here
@@ -164,12 +126,120 @@ void TrackingNetworkManager::update(BlobFinder & _blobFinder){
 	}
 }
 
+void TrackingNetworkManager::sendTrackingData(BlobFinder & _blobFinder){
+    for(int i = 0; i < _blobFinder.trackedBlobs.size(); i++){
+        if(_blobFinder.streamingBodyBlob.get()){
+            ofxOscMessage bodyBlob;
+            bodyBlob.setAddress("/ks/server/track/bodyblob");
+            bodyBlob.addIntArg(kinectID);
+            bodyBlob.addIntArg(frameNumber);
+            bodyBlob.addIntArg(i);
+            bodyBlob.addIntArg(_blobFinder.trackedBlobs[i].sortPos);
+            bodyBlob.addFloatArg(_blobFinder.trackedBlobs[i].bodyBlobCenter.x * scale);
+            bodyBlob.addFloatArg(_blobFinder.trackedBlobs[i].bodyBlobCenter.y * scale);
+            bodyBlob.addFloatArg(_blobFinder.trackedBlobs[i].bodyBlobSize.x * scale);
+            bodyBlob.addFloatArg(_blobFinder.trackedBlobs[i].bodyBlobSize.y * scale);
+            bodyBlob.addFloatArg(_blobFinder.trackedBlobs[i].bodyBlobCenter.z * scale);
+            
+            sendMessageToTrackingClients(bodyBlob);
+        }
+        if(_blobFinder.streamingHeadBlob.get()){
+            ofxOscMessage headBlob;
+            headBlob.setAddress("/ks/server/track/headblob");
+            headBlob.addIntArg(kinectID);
+            headBlob.addIntArg(frameNumber);
+            headBlob.addIntArg(i);
+            headBlob.addIntArg(_blobFinder.trackedBlobs[i].sortPos);
+            headBlob.addFloatArg(_blobFinder.trackedBlobs[i].headBlobCenter.x * scale);
+            headBlob.addFloatArg(_blobFinder.trackedBlobs[i].headBlobCenter.y * scale);
+            headBlob.addFloatArg(_blobFinder.trackedBlobs[i].headBlobCenter.z * scale);
+            headBlob.addFloatArg(_blobFinder.trackedBlobs[i].headBlobSize.x * scale);
+            headBlob.addFloatArg(_blobFinder.trackedBlobs[i].headBlobSize.y * scale);
+            
+            sendMessageToTrackingClients(headBlob);
+        }
+        if(_blobFinder.streamingHead.get()){
+            ofxOscMessage head;
+            head.setAddress("/ks/server/track/head");
+            head.addIntArg(kinectID);
+            head.addIntArg(frameNumber);
+            head.addIntArg(i);
+            head.addIntArg(_blobFinder.trackedBlobs[i].sortPos);
+            head.addFloatArg(_blobFinder.trackedBlobs[i].headTop.x * scale);
+            head.addFloatArg(_blobFinder.trackedBlobs[i].headTop.y * scale);
+            head.addFloatArg(_blobFinder.trackedBlobs[i].headTop.z * scale);
+            head.addFloatArg(_blobFinder.trackedBlobs[i].headCenter.x * scale);
+            head.addFloatArg(_blobFinder.trackedBlobs[i].headCenter.y * scale);
+            head.addFloatArg(_blobFinder.trackedBlobs[i].headCenter.z * scale);
+            
+            sendMessageToTrackingClients(head);
+        }
+        if(_blobFinder.streamingEye.get()){
+            ofxOscMessage eye;
+            eye.setAddress("/ks/server/track/eye");
+            eye.addIntArg(kinectID);
+            eye.addIntArg(frameNumber);
+            eye.addIntArg(i);
+            eye.addIntArg(_blobFinder.trackedBlobs[i].sortPos);
+            eye.addFloatArg(_blobFinder.trackedBlobs[i].eyeCenter.x * scale);
+            eye.addFloatArg(_blobFinder.trackedBlobs[i].eyeCenter.y * scale);
+            eye.addFloatArg(_blobFinder.trackedBlobs[i].eyeCenter.z * scale);
+            eye.addFloatArg(_blobFinder.trackedBlobs[i].eyeGaze.x);
+            eye.addFloatArg(_blobFinder.trackedBlobs[i].eyeGaze.y);
+            eye.addFloatArg(_blobFinder.trackedBlobs[i].eyeGaze.z);
+            
+            sendMessageToTrackingClients(eye);
+        }
+    }
+}
+
+void TrackingNetworkManager::sendCalibFrustum(Frustum & _frustum, string _ip, int _port){
+    ofxOscMessage frustum;
+    frustum.setAddress("/ks/server/calib/frustum");
+    frustum.addIntArg(kinectID);
+    frustum.addFloatArg(_frustum.left * scale);
+    frustum.addFloatArg(_frustum.right * scale);
+    frustum.addFloatArg(_frustum.bottom * scale);
+    frustum.addFloatArg(_frustum.top * scale);
+    frustum.addFloatArg(_frustum.near * scale);
+    frustum.addFloatArg(_frustum.far * scale);
+    
+    broadcastSender.setup(_ip, _port);
+    broadcastSender.sendMessage(frustum);
+}
+
+void TrackingNetworkManager::sendCalibTrans(ofVec3f & _trans, string _ip, int _port){
+    ofxOscMessage trans;
+    trans.setAddress("/ks/server/calib/trans");
+    trans.addIntArg(kinectID);
+    trans.addFloatArg(_trans.x);
+    trans.addFloatArg(_trans.y);
+    trans.addFloatArg(_trans.z * scale);
+    
+    broadcastSender.setup(_ip, _port);
+    broadcastSender.sendMessage(trans);
+}
+
+void TrackingNetworkManager::sendCalibSensorBox(BlobFinder & _blobFinder, string _ip, int _port){
+    ofxOscMessage sensorbox;
+    sensorbox.setAddress("/ks/server/calib/sensorbox");
+    sensorbox.addIntArg(kinectID);
+    sensorbox.addFloatArg(_blobFinder.sensorBoxLeft.get() * scale);
+    sensorbox.addFloatArg(_blobFinder.sensorBoxRight.get() * scale);
+    sensorbox.addFloatArg(_blobFinder.sensorBoxBottom.get() * scale);
+    sensorbox.addFloatArg(_blobFinder.sensorBoxTop.get() * scale);
+    sensorbox.addFloatArg(_blobFinder.sensorBoxFront.get() * scale);
+    sensorbox.addFloatArg(_blobFinder.sensorBoxBack.get() * scale);
+    
+    broadcastSender.setup(_ip, _port);
+    broadcastSender.sendMessage(sensorbox);
+}
+
 void TrackingNetworkManager::sendMessageToTrackingClients(ofxOscMessage _msg){
     for(int j = 0; j < knownClients.size(); j++){
         broadcastSender.setup(knownClients[j].clientDestination, knownClients[j].clientSendPort);
         broadcastSender.sendMessage(_msg);
     }
-    //knownClients[j].sendMessage(_msg);
 }
 
 void TrackingNetworkManager::checkTrackingClients(long _currentMillis){
@@ -189,16 +259,14 @@ int TrackingNetworkManager::getTrackingClientIndex(string _ip, int _port){
             return i;
         }
     }
-    TrackingClient newClient;
-    newClient.setup(_ip, _port);
-    knownClients.push_back(newClient);
+    knownClients.push_back(TrackingClient(_ip, _port));
     ofLog(OF_LOG_NOTICE, "Server added new TrackingClient ip: " + _ip + " port:  " + ofToString(_port) + " knownClients:  " + ofToString(knownClients.size()));
     return knownClients.size() -1;
 }
 
 void TrackingNetworkManager::sendBroadCastAddress(){
     ofxOscMessage broadcast;
-    broadcast.setAddress("/ks/broadcast");
+    broadcast.setAddress("/ks/server/broadcast");
 	broadcast.addStringArg(kinectSerial);
 	broadcast.addIntArg(kinectID);
 	broadcast.addStringArg(serverAddress);

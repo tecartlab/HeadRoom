@@ -8,10 +8,7 @@
 
 #include "TrackingClient.h"
 
-TrackingClient::TrackingClient(){
-}
-
-void TrackingClient::setup(string _destination, int _port){
+TrackingClient::TrackingClient(string _destination, int _port){
 	//Client side
 	clientDestination = _destination;
 	clientSendPort = _port;

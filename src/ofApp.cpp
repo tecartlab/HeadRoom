@@ -100,7 +100,8 @@ void ofApp::setup(){
     
     networkMng.setup(NETWORK_LISTENING_PORT, NETWORK_BROADCAST_PORT, kinect.getSerial(), kinectServerID.get());
     
-    createFrustumCone();
+    int * val;
+    updateFrustumCone(*val);
     
 }
 
@@ -138,62 +139,31 @@ void ofApp::setupViewports(){
 
 void ofApp::updateFrustumCone(int & value){
     if(kinect.isConnected()){
-        createFrustumCone();
+        double ref_pix_size = kinect.getZeroPlanePixelSize();
+        double ref_distance = kinect.getZeroPlaneDistance();
+        ofShortPixelsRef raw = kinect.getRawDepthPixelsRef();
+        
+        kinectFrustum.near = nearFrustum.get();
+        kinectFrustum.far = farFrustum.get();
+        
+        double factorNear = 2 * ref_pix_size * kinectFrustum.near / ref_distance;
+        double factorFar = 2 * ref_pix_size * kinectFrustum.far / ref_distance;
+        
+        //ofVec3f((x - DEPTH_X_RES/2) *factor, (y - DEPTH_Y_RES/2) *factor, raw[y * w + x]));
+        
+        kinectFrustum.left = (0 - DEPTH_X_RES/2) *factorNear;
+        kinectFrustum.right = (640 - DEPTH_X_RES/2) *factorNear;
+        kinectFrustum.top = (0 - DEPTH_Y_RES/2) *factorNear;
+        kinectFrustum.bottom = (480 - DEPTH_Y_RES/2) *factorNear;
+        
+        kinectFrustum.leftFar = (0 - DEPTH_X_RES/2) *factorFar;
+        kinectFrustum.rightFar = (640 - DEPTH_X_RES/2) *factorFar;
+        kinectFrustum.topFar = (0 - DEPTH_Y_RES/2) *factorFar;
+        kinectFrustum.bottomFar = (480 - DEPTH_Y_RES/2) *factorFar;
+        
+        kinectFrustum.update();
+        //createFrustumCone();
     }
-}
-
-void ofApp::createFrustumCone(){
-    double ref_pix_size = kinect.getZeroPlanePixelSize();
-    double ref_distance = kinect.getZeroPlaneDistance();
-    ofShortPixelsRef raw = kinect.getRawDepthPixelsRef();
-    
-    int near = nearFrustum.get();
-    int far = farFrustum.get();
-
-    double factorNear = 2 * ref_pix_size * near / ref_distance;
-    double factorFar = 2 * ref_pix_size * far / ref_distance;
-    
-	//ofVec3f((x - DEPTH_X_RES/2) *factor, (y - DEPTH_Y_RES/2) *factor, raw[y * w + x]));
-
-    frustum.clear();
-    frustum.setMode(OF_PRIMITIVE_LINES);
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, -(0 - DEPTH_Y_RES/2) *factorNear, -near));
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, -(0 - DEPTH_Y_RES/2) *factorFar, -far));
-    
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, -(0 - DEPTH_Y_RES/2) *factorNear, -near));
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, -(0 - DEPTH_Y_RES/2) *factorFar, -far));
-
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, -(480 - DEPTH_Y_RES/2) *factorNear, -near));
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, -(480 - DEPTH_Y_RES/2) *factorFar, -far));
-
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, -(480 - DEPTH_Y_RES/2) *factorNear, -near));
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, -(480 - DEPTH_Y_RES/2) *factorFar, -far));
-
-    
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, -(0 - DEPTH_Y_RES/2) *factorNear, -near));
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, -(0 - DEPTH_Y_RES/2) *factorNear, -near));
-
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, -(0 - DEPTH_Y_RES/2) *factorNear, -near));
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, -(480 - DEPTH_Y_RES/2) *factorNear, -near));
-    
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorNear, -(480 - DEPTH_Y_RES/2) *factorNear, -near));
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, -(480 - DEPTH_Y_RES/2) *factorNear, -near));
-
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, -(480 - DEPTH_Y_RES/2) *factorNear, -near));
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorNear, -(0 - DEPTH_Y_RES/2) *factorNear, -near));
-
-    
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, -(0 - DEPTH_Y_RES/2) *factorFar, -far));
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, -(0 - DEPTH_Y_RES/2) *factorFar, -far));
-    
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, -(0 - DEPTH_Y_RES/2) *factorFar, -far));
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, -(480 - DEPTH_Y_RES/2) *factorFar, -far));
-
-    frustum.addVertex(ofPoint((640 - DEPTH_X_RES/2) *factorFar, -(480 - DEPTH_Y_RES/2) *factorFar, -far));
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, -(480 - DEPTH_Y_RES/2) *factorFar, -far));
-
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, -(480 - DEPTH_Y_RES/2) *factorFar, -far));
-    frustum.addVertex(ofPoint((0 - DEPTH_X_RES/2) *factorFar, -(0 - DEPTH_Y_RES/2) *factorFar, -far));
 }
 
 void ofApp::measurementCycleRaw(){
@@ -445,7 +415,7 @@ void ofApp::update(){
         blobFinder.update(captureFBO);
 	}
     
-    networkMng.update(blobFinder);
+    networkMng.update(blobFinder, kinectFrustum, transformation.get());
     
     rgbaMatrixServer.update();
 	depthMatrixServer.update();
@@ -660,7 +630,7 @@ void ofApp::drawPreview() {
     geometry.draw();
 
     ofSetColor(0, 0, 255);
-    frustum.drawWireframe();
+    kinectFrustum.drawWireframe();
     
 
 	glDisable(GL_DEPTH_TEST);

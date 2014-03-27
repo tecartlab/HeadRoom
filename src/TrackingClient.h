@@ -19,11 +19,8 @@
 class TrackingClient {
     
 public:
-    TrackingClient();
-    void setup(string _destination, int _port);
+    TrackingClient(string _destination, int _port);
    
-    void sendMessage(ofxOscMessage _msg);
-    
     void update(long currentMillis);
     bool stillAlive(long currentMillis);
  

@@ -13,6 +13,7 @@
 #include "ofxOsc.h"
 #include "TrackingClient.h"
 #include "BlobFinder.h"
+#include "Frustum.h"
 
 #include <cmath>
 
@@ -35,8 +36,14 @@ public:
     TrackingNetworkManager();
     
     void setup(int _listeningPort, int _broadcastPort, string _kinectSerial, int _kinectID);
-    void update(BlobFinder & _blobFinder);
-    
+    void update(BlobFinder & _blobFinder, Frustum & _frustum, ofVec3f _trans);
+
+    void sendTrackingData(BlobFinder & _blobFinder);
+
+    void sendCalibFrustum(Frustum & _frustum, string ip, int port);
+    void sendCalibTrans(ofVec3f & _trans, string _ip, int _port);
+    void sendCalibSensorBox(BlobFinder & _blobFinder, string _ip, int _port);
+
     void sendMessageToTrackingClients(ofxOscMessage _msg);
     void checkTrackingClients(long _currentMillis);
     int getTrackingClientIndex(string _ip, int _port);
@@ -50,6 +57,10 @@ public:
     
     string          kinectSerial;
     int             kinectID;
+    
+    float           scale;
+    
+    long             frameNumber;
     
     //----------------------------------------
     // Server side:
