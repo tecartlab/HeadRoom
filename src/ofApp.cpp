@@ -11,7 +11,7 @@ void ofApp::setup(){
 	// we don't want to be running to fast
 	ofSetVerticalSync(true);
 	ofSetFrameRate(60);
-
+    
     //create the socket and set to send to 127.0.0.1:11999
 	//udpConnection.Create();
 	//udpConnection.Connect("127.0.0.1",4653);
@@ -96,6 +96,8 @@ void ofApp::setup(){
  
     setupViewports();
     createHelp();
+    
+    ofSetLogLevel(OF_LOG_NOTICE);
 }
 
 

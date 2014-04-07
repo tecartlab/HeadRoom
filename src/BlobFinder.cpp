@@ -171,7 +171,7 @@ void BlobFinder::update(){
                 }else{
                     eyeRef.setColor(x, y, black);
                 }
-                if(pixelBrightness == brightness){
+                if(pixelBrightness >= brightness - 2){
                     headtop2d += ofVec2f(x, y);
                     brighCounter++;
                 }
