@@ -34,7 +34,7 @@ void BlobTracker::updateStart(){
     hasHeadUpdated = false;
 }
 
-void BlobTracker::updateBody(ofRectangle _rect, ofVec3f _bodyBlobCenter, ofVec2f _bodyBlobSize, ofVec3f _headTop){
+void BlobTracker::updateBody(ofRectangle _rect, ofVec3f _bodyBlobCenter, ofVec2f _bodyBlobSize, ofVec3f _headTop, ofVec3f _headCenter, float _eyelevel){
     if(!hasBodyUpdated){
         newBaseRectangle2d = _rect;
         tracker.insert(tracker.begin(), TrackedBlob());
@@ -42,8 +42,10 @@ void BlobTracker::updateBody(ofRectangle _rect, ofVec3f _bodyBlobCenter, ofVec2f
         tracker[0].bodyBlobCenter = _bodyBlobCenter;
         tracker[0].bodyBlobSize = _bodyBlobSize;
         tracker[0].headTop = _headTop;
+        tracker[0].headCenter = _headCenter;
         
-        headCenter = ofVec3f(headTop.x, headTop.y, headTop.z - eyeLevel);
+        eyeLevel = _eyelevel;
+//       headCenter = ofVec3f(headTop.x, headTop.y, headTop.z - eyeLevel);
     } else {
         // this means the previous blob was split up.
         if(tracker[0].headTop.z < _headTop.z){ //if this new blob is higher then take it
@@ -51,8 +53,11 @@ void BlobTracker::updateBody(ofRectangle _rect, ofVec3f _bodyBlobCenter, ofVec2f
             tracker[0].bodyBlobCenter = _bodyBlobCenter;
             tracker[0].bodyBlobSize = _bodyBlobSize;
             tracker[0].headTop = _headTop;
+            tracker[0].headCenter = _headCenter;
 
-            headCenter = ofVec3f(headTop.x, headTop.y, headTop.z - eyeLevel);
+            eyeLevel = _eyelevel;
+
+//            headCenter = ofVec3f(headTop.x, headTop.y, headTop.z - eyeLevel);
             
             // but keep the old rectangle
             newBaseRectangle2d = baseRectangle2d;
@@ -62,19 +67,23 @@ void BlobTracker::updateBody(ofRectangle _rect, ofVec3f _bodyBlobCenter, ofVec2f
     hasBodyUpdated = true;
 }
 
-void BlobTracker::updateHead(ofVec3f _headBlobCenter, ofVec2f _headBlobSize, ofVec3f _eyeCenter, float _eyelevel){
+ofVec3f BlobTracker::getCurrentHeadCenter(){
+    if(tracker.size() > 0)
+        return tracker[0].headCenter;
+    return headCenter;
+}
+
+void BlobTracker::updateHead(ofVec3f _headBlobCenter, ofVec2f _headBlobSize, ofVec3f _eyeCenter){
     if(!hasHeadUpdated){
         tracker[0].headBlobCenter = _headBlobCenter;
         tracker[0].headBlobSize = _headBlobSize;
         tracker[0].eyeCenter = _eyeCenter;
-        eyeLevel = _eyelevel;
     } else {
         // this means the previous blob was split up.
         if(tracker[0].headBlobCenter.z < _headBlobCenter.z){ //if this new blob is higher then take it
             tracker[0].headBlobCenter = _headBlobCenter;
             tracker[0].headBlobSize = _headBlobSize;
             tracker[0].eyeCenter = _eyeCenter;
-            eyeLevel = _eyelevel;
         }
     }
     
@@ -91,10 +100,10 @@ void BlobTracker::updateEnd(ofVec3f _kinectPos, int _smoothOffset, float _smooth
         
         baseRectangle2d = newBaseRectangle2d;
 
-        
         bodyBlobCenter = ofVec3f();
         bodyBlobSize = ofVec3f();
         headTop = ofVec3f();
+        headCenter = ofVec3f();
         headBlobCenter = ofVec3f();
         headBlobSize = ofVec3f();
         eyeCenter = ofVec3f();
@@ -103,6 +112,7 @@ void BlobTracker::updateEnd(ofVec3f _kinectPos, int _smoothOffset, float _smooth
             bodyBlobCenter += tracker[i].bodyBlobCenter;
             bodyBlobSize += tracker[i].bodyBlobSize;
             headTop += tracker[i].headTop;
+            headCenter += tracker[i].headCenter;
             headBlobCenter += tracker[i].headBlobCenter;
             headBlobSize += tracker[i].headBlobSize;
             eyeCenter += tracker[i].eyeCenter;
@@ -111,11 +121,12 @@ void BlobTracker::updateEnd(ofVec3f _kinectPos, int _smoothOffset, float _smooth
         bodyBlobCenter /= tracker.size();
         bodyBlobSize /= tracker.size();
         headTop /= tracker.size();
+        headCenter /= tracker.size();
         headBlobCenter /= tracker.size();
         headBlobSize /= tracker.size();
         eyeCenter /= tracker.size();
         
-        headCenter = ofVec3f(headTop.x, headTop.y, headBlobCenter.z);
+        //headCenter = ofVec3f(headTop.x, headTop.y, headBlobCenter.z);
 
         eyeGaze = (headCenter - eyeCenter).normalize();
         

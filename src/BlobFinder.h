@@ -14,6 +14,7 @@
 #include "ofConstants.h"
 #include "Planef.h"
 #include "Linef.h"
+#include "OrthoCamera.h"
 
 #include "BlobTracker.h"
 
@@ -27,7 +28,10 @@ public:
     void setup();
     void allocate();
     
-    void update(ofFbo & captureFBO);
+    void captureBegin();
+    void captureEnd();
+    
+    void update();
 
     void updateSensorBox(int & value);
     
@@ -46,7 +50,15 @@ public:
     ofVec2f captureScreenSize;
     
     ofVec3f kinectPos;
+
+    ///////////////////
+    // FBO CAPTURING //
+    ///////////////////
+    orthoCamera captureCam;
     
+    //ofImage capturedImage;
+    ofFbo captureFBO;
+
     /////////////////
     //COLOR CONTOUR//
     /////////////////

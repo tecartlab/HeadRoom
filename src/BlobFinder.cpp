@@ -75,9 +75,34 @@ void BlobFinder::allocate(){
 	nearThreshold = 230;
 	farThreshold = 70;
 	bThreshWithOpenCV = true;
+    
+    ofFbo::Settings s;
+    s.width             = captureScreenSize.x;
+    s.height			= captureScreenSize.y;
+    s.internalformat    = GL_RGB;
+    s.useDepth			= true;
+    // and assigning this values to the fbo like this:
+    captureFBO.allocate(s);
+
 }
 
-void BlobFinder::update(ofFbo & captureFBO){
+void BlobFinder::captureBegin(){
+    captureFBO.begin();
+    ofClear(0, 0, 0, 0);
+    captureCam.scale = 0.01;
+    // FBO capturing
+    captureCam.begin(ofRectangle(0, 0, captureScreenSize.x, captureScreenSize.y), sensorBoxLeft.get(), sensorBoxRight.get(), sensorBoxBack.get(), sensorBoxFront.get(), - sensorBoxTop.get(), sensorBoxTop.get());
+    
+}
+
+void BlobFinder::captureEnd(){
+    captureCam.end();
+    captureFBO.end();
+    
+}
+
+
+void BlobFinder::update(){
     captureFBO.readToPixels(fbopixels);
     
     colorImg.setFromPixels(fbopixels);
@@ -141,6 +166,7 @@ void BlobFinder::update(ofFbo & captureFBO){
             for(int y = bounds.y; y < bounds.y + bounds.height; y++){
                 pixelBrightness = greyref.getColor(x, y).getBrightness();
                 if(pixelBrightness > (brightness - eyeLevelColor)){
+                    //writes the pixels above the eyelevel into the eyeRef image
                     eyeRef.setColor(x, y, white);
                 }else{
                     eyeRef.setColor(x, y, black);
@@ -155,18 +181,20 @@ void BlobFinder::update(ofFbo & captureFBO){
         
         ofVec3f headTop = ofVec3f((headtop2d.x / captureScreenSize.x) * sensorFieldWidth + sensorFieldLeft, sensorFieldBack - (headtop2d.y / captureScreenSize.y ) * sensorFieldDepth, (brightness / 255.0) * sensorFieldHeigth + sensorFieldBottom);
 
+        ofVec3f headCenter = ofVec3f(headTop.x, headTop.y, headTop.z - eyeLevel.get());
+
         // try finding a matching trackedBlob
         bool foundBlob = false;
         for(int i = 0; i < trackedBlobs.size(); i++){
             if(trackedBlobs[i].finder(bounds)){
-                trackedBlobs[i].updateBody(bounds, blobPos, blobSize, headTop);
+                trackedBlobs[i].updateBody(bounds, blobPos, blobSize, headTop, headCenter, eyeLevel.get());
                 foundBlob = true;
             }
         }
         // if none is found, create a new one.
         if(!foundBlob){
             trackedBlobs.insert(trackedBlobs.begin(), BlobTracker(bounds));
-            trackedBlobs[0].updateBody(bounds, blobPos, blobSize, headTop);
+            trackedBlobs[0].updateBody(bounds, blobPos, blobSize, headTop, headCenter, eyeLevel.get());
         }
     }
     
@@ -183,6 +211,7 @@ void BlobFinder::update(ofFbo & captureFBO){
         }
     }
 
+    //preprocesses the eyeRef image
     grayEyeLevel.setFromPixels(eyeRef.getPixels(), eyeRef.getWidth(), eyeRef.getHeight());
     grayEyeLevel.invert();
     grayEyeLevel.threshold(20);
@@ -206,29 +235,32 @@ void BlobFinder::update(ofFbo & captureFBO){
                 ofVec2f headBlobSize = ofVec2f(((float)bounds.getWidth() / captureScreenSize.x) * sensorFieldWidth, ((float)bounds.getHeight() / captureScreenSize.y ) * sensorFieldDepth);
             
                 //calculate the gazeVector
-                ofVec3f gaze = trackedBlobs[bid].headCenter - gazePoint.get();
+                ofVec3f gaze = trackedBlobs[bid].getCurrentHeadCenter() - gazePoint.get();
                 
                 float smalestAngle = 180;
                 ofVec3f eyePoint;
                 
+                //clears the contour storage
                 trackedBlobs[bid].countour.clear();
                 
+                // findes the closest contour point to the eyegave-vector, takes its distance to the headCenter and calculated
+                // the eye - center - point
                 for(int v = 0; v < contourEyeFinder.blobs[i].pts.size(); v++){
                     ofVec3f headPoint = ofVec3f(((float)contourEyeFinder.blobs[i].pts[v].x / captureScreenSize.x) * sensorFieldWidth + sensorFieldLeft, sensorFieldBack - ((float)contourEyeFinder.blobs[i].pts[v].y / captureScreenSize.y ) * sensorFieldDepth, trackedBlobs[bid].headCenter.z);
                     
                     trackedBlobs[bid].countour.push_back(headPoint);
                     
-                    ofVec3f gaze2 = trackedBlobs[bid].headCenter - headPoint;
+                    ofVec3f gaze2 = trackedBlobs[bid].getCurrentHeadCenter() - headPoint;
                     
                     float angle = gaze.angle(gaze2);
                     
                     if(smalestAngle > angle){
                         smalestAngle = angle;
-                        eyePoint = trackedBlobs[bid].headCenter - gaze.normalize().scale(gaze2.length() * eyeInset.get());
+                        eyePoint = trackedBlobs[bid].getCurrentHeadCenter() - gaze.normalize().scale(gaze2.length() * eyeInset.get());
                     }
                 }
         
-                trackedBlobs[bid].updateHead(headBlobCenter, headBlobSize, eyePoint, eyeLevel.get());
+                trackedBlobs[bid].updateHead(headBlobCenter, headBlobSize, eyePoint);
             }
         }
     }

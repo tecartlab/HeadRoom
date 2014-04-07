@@ -29,9 +29,11 @@ public:
     bool finder(ofRectangle _rect);
     
     void updateStart();
-    void updateBody(ofRectangle _rect, ofVec3f _bodyBlobCenter, ofVec2f _bodyBlobSize, ofVec3f _headTop);
-    void updateHead(ofVec3f _headBlobCenter, ofVec2f _headBlobSize, ofVec3f _eyeCenter, float _eyelevel);
+    void updateBody(ofRectangle _rect, ofVec3f _bodyBlobCenter, ofVec2f _bodyBlobSize, ofVec3f _headTop, ofVec3f _headCenter, float _eyelevel);
+    void updateHead(ofVec3f _headBlobCenter, ofVec2f _headBlobSize, ofVec3f _eyeCenter);
     void updateEnd(ofVec3f _kinectPos, int _smoothOffset, float _smoothFactor);
+    
+    ofVec3f getCurrentHeadCenter();
     
     void drawBodyBox();
     void drawHeadTop();

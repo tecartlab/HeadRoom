@@ -9,7 +9,6 @@
 #include "Planef.h"
 #include "Linef.h"
 #include "Grid.h"
-#include "OrthoCamera.h"
 #include "TrackingNetworkManager.h"
 #include "Frustum.h"
 
@@ -26,8 +25,8 @@
 
 #define N_MEASURMENT_CYCLES 10
 
-#define NETWORK_BROADCAST_PORT 43525
-#define NETWORK_LISTENING_PORT 43522
+#define NETWORK_BROADCAST_PORT 43500
+#define NETWORK_LISTENING_PORT 43600
 
 class ofApp : public ofBaseApp{
 
@@ -121,12 +120,6 @@ class ofApp : public ofBaseApp{
             
     // used for viewing the point cloud
     ofEasyCam previewCam;
- 
-    // used for viewing the point cloud
-    orthoCamera captureCam;
-    
-    ofImage capturedImage;
-    ofFbo captureFBO;
     
     ///////////////
     //CALCUALTION//
@@ -195,6 +188,8 @@ class ofApp : public ofBaseApp{
     ofParameterGroup setupGuiGroup;
     ofParameter<bool> captureVideo;
     ofParameter<int> kinectServerID;
+    ofParameter<int> broadcastPort;
+    ofParameter<int> listeningPort;
 
     //////////
     // HELP //

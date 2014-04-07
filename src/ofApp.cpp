@@ -33,13 +33,12 @@ void ofApp::setup(){
     gui.setup("Kinect Panel");
     iMainCamera = 0;
     
-    setupViewports();
-    createHelp();
-    
     nearFrustum.addListener(this, &ofApp::updateFrustumCone);
     farFrustum.addListener(this, &ofApp::updateFrustumCone);
 
     setupGuiGroup.setName("Setup on starup");
+    setupGuiGroup.add(broadcastPort.set("bradcastPort", NETWORK_BROADCAST_PORT, NETWORK_BROADCAST_PORT, NETWORK_BROADCAST_PORT + 20));
+    setupGuiGroup.add(listeningPort.set("listeningPort", NETWORK_LISTENING_PORT, NETWORK_LISTENING_PORT, NETWORK_LISTENING_PORT + 20));
     setupGuiGroup.add(kinectServerID.set("serverID", 0, 0, 20));
     setupGuiGroup.add(captureVideo.set("use video", true));
     gui.add(setupGuiGroup);
@@ -85,24 +84,18 @@ void ofApp::setup(){
 	//kinect.open(1);	// open a kinect by id, starting with 0 (sorted by serial # lexicographically))
 	//kinect.open("A00362A08602047A");	// open a kinect using it's unique serial #
         
-    ofFbo::Settings s;
-    s.width             = 640;
-    s.height			= 480;
-    s.internalformat    = GL_RGB;
-    s.useDepth			= true;
-    // and assigning this values to the fbo like this:
-    captureFBO.allocate(s);
-
     blobFinder.allocate();
 		
 	// creating preview point cloud is bogging the system down, so switched off at startup
 	bPreviewPointCloud = false;
     
-    networkMng.setup(NETWORK_LISTENING_PORT, NETWORK_BROADCAST_PORT, kinect.getSerial(), kinectServerID.get());
+    networkMng.setup(listeningPort.get(), broadcastPort.get(), kinect.getSerial(), kinectServerID.get());
     
     int * val;
     updateFrustumCone(*val);
-    
+ 
+    setupViewports();
+    createHelp();
 }
 
 
@@ -396,23 +389,18 @@ void ofApp::update(){
             updatePointCloud(previewmesh, 2, false, true);
         }
     
+        //////////////////////////////////
         // Cature captureCloud to FBO
         //////////////////////////////////
         
-        captureFBO.begin();
-        ofClear(0, 0, 0, 0);
-        captureCam.scale = 0.01;
-        // FBO capturing 
-        captureCam.begin(ofRectangle(0, 0, 640, 480), blobFinder.sensorBoxLeft.get(), blobFinder.sensorBoxRight.get(), blobFinder.sensorBoxBack.get(), blobFinder.sensorBoxFront.get(), - blobFinder.sensorBoxTop.get(), blobFinder.sensorBoxTop.get());
+        blobFinder.captureBegin();
         drawCapturePointCloud();
-        captureCam.end();
-        captureFBO.end();
+        blobFinder.captureEnd();
         
         //////////////////////////////////
-        
         // BlobFinding on the captured FBO
         /////////////////////////////////////
-        blobFinder.update(captureFBO);
+        blobFinder.update();
 	}
     
     networkMng.update(blobFinder, kinectFrustum, transformation.get());
@@ -437,7 +425,7 @@ void ofApp::draw(){
         //Draw viewport previews
         kinect.drawDepth(viewGrid[0]);
         kinect.draw(viewGrid[1]);
-        captureFBO.draw(viewGrid[2]);
+        blobFinder.captureFBO.draw(viewGrid[2]);
         blobFinder.contourFinder.draw(viewGrid[3]);
         blobFinder.contourEyeFinder.draw(viewGrid[4]);
         
@@ -451,7 +439,7 @@ void ofApp::draw(){
                 drawCalibrationPoints();
                 break;
             case 2:
-                captureFBO.draw(viewMain);
+                blobFinder.captureFBO.draw(viewMain);
                 break;
             case 3:
                 ofSetColor(255, 0, 0, 255);
