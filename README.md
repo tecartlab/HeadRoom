@@ -119,18 +119,16 @@ in order to compile this app on your system, you need to install openframeworks.
 ###openFrameworks
 To grab a copy of openFrameworks for your platform, check the [download page](http://openframeworks.cc/download) on the main site.  
  
-The `master` branch of this repository corresponds to the most recent release, with a few differences:  
-
-1. The release includes a simple openFrameworks project generator.
-2. This GitHub repository contains code and libs for all the platforms, but the releases are done on a per-platform basis.
-3. This GitHub repository has no project files for the different examples. They are generated automatically for each release using a tool in `apps/devApps/projectGenerator/`.
-
 ###kinectServer
 To grab a copy of kinectServer for your platform, check here [download page](http://github.com/maybites).  
  
 The `master` branch of this repository corresponds to the most recent release. This GitHub repository contains code and libs for all the platforms.
 
 drop it into the \<openframeworksfolder>/apps/\<yourappfolder>
+
+you also needs a copy of the openframeworks addon [ofxMatrixNetworkServer](https://github.com/maybites/ofxMatrixNetworkServer)
+
+drop it onto the \<openframeworksfolder>/addons/\<ofxMatrixNetworkServer>
 
 ##How to
 to come...
@@ -150,4 +148,4 @@ created by Martin Froehlich for [beamstreamer.com](http://beamstreamer.com)
 loosely based on a concept by Andrew Sempre and his [performance-space](https://bitbucket.org/tezcatlipoca/performance-space)
 
 ##Licence
-see license.md
+MIT and see license.md
