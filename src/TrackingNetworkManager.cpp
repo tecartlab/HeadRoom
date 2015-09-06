@@ -31,12 +31,12 @@ void TrackingNetworkManager::setup(int _listeningPort, int _broadcastPort, strin
     RegularExpression::Match match;
     
     serverAddress = "127.0.0.1";
-    broadcastAddress = "127.0.0.1";
+    broadcastAddress = "169.254.110.67";
     
     for(int i = 0; i < localIpAddresses.size(); i++){
         if(regEx.match(localIpAddresses[i], match)) {
             serverAddress = localIpAddresses[i];
-            broadcastAddress = serverAddress.substr(0, serverAddress.find_last_of(".") + 1 ) + "255";
+//            broadcastAddress = serverAddress.substr(0, serverAddress.find_last_of(".") + 1 ) + "255";
         }
     }
 

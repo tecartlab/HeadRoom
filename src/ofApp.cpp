@@ -316,6 +316,8 @@ void ofApp::updateCalc(){
     
     bUpdateCalc = false;
     
+ //   ofLog(OF_LOG_NOTICE, "updating... ");
+
     updateMatrix();
 }
 
@@ -399,6 +401,7 @@ void ofApp::update(){
         drawCapturePointCloud();
         blobFinder.captureEnd();
         
+
         //////////////////////////////////
         // BlobFinding on the captured FBO
         /////////////////////////////////////

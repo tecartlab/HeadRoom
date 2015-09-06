@@ -34,9 +34,9 @@ void BlobFinder::setup(){
     sensorBoxBottom.addListener(this, &BlobFinder::updateSensorBox);
     
     sensorBoxGuiGroup.setName("SensorBox");
-    sensorBoxGuiGroup.add(sensorBoxLeft.set("left", -500, 0, -2000));
-    sensorBoxGuiGroup.add(sensorBoxRight.set("right", 500, 0, 2000));
-    sensorBoxGuiGroup.add(sensorBoxFront.set("front", 0, 0, 7000));
+    sensorBoxGuiGroup.add(sensorBoxLeft.set("left", -500, 0, -4000));
+    sensorBoxGuiGroup.add(sensorBoxRight.set("right", 500, 0, 4000));
+    sensorBoxGuiGroup.add(sensorBoxFront.set("front", 0, 0, 10000));
     sensorBoxGuiGroup.add(sensorBoxBack.set("back", 2000, 0, 7000));
     sensorBoxGuiGroup.add(sensorBoxTop.set("top", 2200, 0, 3000));
     sensorBoxGuiGroup.add(sensorBoxBottom.set("bottom", 1000, 0, 3000));
@@ -197,15 +197,19 @@ void BlobFinder::update(){
             trackedBlobs[0].updateBody(bounds, blobPos, blobSize, headTop, headCenter, eyeLevel.get());
         }
     }
-    
+
     //checks for double blobs and kills the lower ones.
-    for(int i = 0; i < (trackedBlobs.size() - 1); i++){
-        for(int j = 1; j < trackedBlobs.size(); j++){
-            if(trackedBlobs[i].isAlive() && trackedBlobs[j].isAlive() && trackedBlobs[i].finder(trackedBlobs[j].baseRectangle2d)){
-                if (trackedBlobs[i].headTop.z > trackedBlobs[j].headTop.z ) {
-                    trackedBlobs[j].kill();
-                } else {
-                    trackedBlobs[i].kill();
+    
+    if( trackedBlobs.size() > 1 )
+    {
+        for(int i = 0; i < (trackedBlobs.size() - 1); i++){
+            for(int j = 1; j < trackedBlobs.size(); j++){
+                if(trackedBlobs[i].isAlive() && trackedBlobs[j].isAlive() && trackedBlobs[i].finder(trackedBlobs[j].baseRectangle2d)){
+                    if (trackedBlobs[i].headTop.z > trackedBlobs[j].headTop.z ) {
+                        trackedBlobs[j].kill();
+                    } else {
+                        trackedBlobs[i].kill();
+                    }
                 }
             }
         }
@@ -219,6 +223,7 @@ void BlobFinder::update(){
     grayEyeLevel.blurGaussian();
 
     //ofLog(OF_LOG_NOTICE, "contourEyeFinder nBlobs : " + ofToString(contourEyeFinder.nBlobs));
+
 
     //find head shape on eye height contours
     contourEyeFinder.findContours(grayEyeLevel, blobAreaMin.get()/4, blobAreaMax.get(), countBlob.get(), false);

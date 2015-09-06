@@ -78,6 +78,7 @@ public:
     string          broadcastAddress;       // IP address we're sending to
     int             broadcastSendPort;      // port we're sending to
 
+
     long            broadCastTimer;
 
 };
