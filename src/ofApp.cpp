@@ -18,9 +18,9 @@ void ofApp::setup(){
 	//udpConnection.SetNonBlocking(true);
 
     //setup the servers to listen
-    rgbaMatrixServer.setup(34101);
-	depthMatrixServer.setup(34102);
-	rawMatrixServer.setup(34103);
+//  rgbaMatrixServer.setup(34101);
+//	depthMatrixServer.setup(34102);
+//	rawMatrixServer.setup(34103);
 
 	//TCP.setMessageDelimiter("\n");
 
@@ -28,9 +28,10 @@ void ofApp::setup(){
     //GUI   //
     //////////
     
-    blobFinder.setup();
-
-    gui.setup("Kinect Panel");
+    panel1 = gui.addPanel();
+    
+    panel1->setName("Kinect Panel");
+    panel1->setPosition(600,20);
     iMainCamera = 0;
     
     nearFrustum.addListener(this, &ofApp::updateFrustumCone);
@@ -41,32 +42,32 @@ void ofApp::setup(){
     setupGuiGroup.add(listeningPort.set("listeningPort", NETWORK_LISTENING_PORT, NETWORK_LISTENING_PORT, NETWORK_LISTENING_PORT + 20));
     setupGuiGroup.add(kinectServerID.set("serverID", 0, 0, 20));
     setupGuiGroup.add(captureVideo.set("use video", true));
-    gui.add(setupGuiGroup);
+    panel1->addGroup(setupGuiGroup);
     
-    gui.add(calibPoint1.set("calibA", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
-    gui.add(calibPoint2.set("calibB", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
-    gui.add(calibPoint3.set("calibC", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
+    panel1->add(calibPoint1.set("calibA", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
+    panel1->add(calibPoint2.set("calibB", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
+    panel1->add(calibPoint3.set("calibC", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
     
     frustumGuiGroup.setName("frustumField");
     frustumGuiGroup.add(nearFrustum.set("nearFrustum", 400, 200, 2000));
     frustumGuiGroup.add(farFrustum.set("farFrustum", 4000, 2000, 6000));
-    gui.add(frustumGuiGroup);
+    panel1->addGroup(frustumGuiGroup);
 
     intrinsicGuiGroup.setName("Corrections");
     intrinsicGuiGroup.add(depthCorrectionBase.set("base", 1.0, 0.9, 1.1));
     intrinsicGuiGroup.add(depthCorrectionDivisor.set("divisor", 100000, 90000, 110000));
     intrinsicGuiGroup.add(pixelSizeCorrector.set("pixl factor", 1.0, 0.9, 1.1));
-    gui.add(intrinsicGuiGroup);
+    panel1->addGroup(intrinsicGuiGroup);
     
-    gui.add(transformation.set("matrix rx ry tz", ofVec3f(0, 0, 0), ofVec3f(-90, -90, -6000), ofVec3f(90, 90, 6000)));
+    panel1->add(transformation.set("matrix rx ry tz", ofVec3f(0, 0, 0), ofVec3f(-90, -90, -6000), ofVec3f(90, 90, 6000)));
  
-    gui.loadFromFile("settings.xml");
+    panel1->loadFromFile("settings.xml");
     
     updateMatrix();
     
-    //////////
-    //KINECT//
-    //////////
+    ////////////////////
+    //KINECT          //
+    ////////////////////
     
     ofSetLogLevel(OF_LOG_VERBOSE);
 	
@@ -83,8 +84,27 @@ void ofApp::setup(){
 	kinect.open();		// opens first available kinect
 	//kinect.open(1);	// open a kinect by id, starting with 0 (sorted by serial # lexicographically))
 	//kinect.open("A00362A08602047A");	// open a kinect using it's unique serial #
-        
+
+    // print the intrinsic IR sensor values
+    if(kinect.isConnected()) {
+        ofLogNotice() << "sensor-emitter dist: " << kinect.getSensorEmitterDistance() << "cm";
+        ofLogNotice() << "sensor-camera dist:  " << kinect.getSensorCameraDistance() << "cm";
+        ofLogNotice() << "zero plane pixel size: " << kinect.getZeroPlanePixelSize() << "mm";
+        ofLogNotice() << "zero plane dist: " << kinect.getZeroPlaneDistance() << "mm";
+        ofLogNotice() << "serial: " << kinect.getSerial();
+    }
+    
+    /////////////////
+    //BLOBFINDER   //
+    /////////////////
+    
+    blobFinder.setup();
+
     blobFinder.allocate();
+
+    
+    /////////////////
+
 		
 	// creating preview point cloud is bogging the system down, so switched off at startup
 	bPreviewPointCloud = false;
@@ -95,6 +115,7 @@ void ofApp::setup(){
     updateFrustumCone(*val);
  
     setupViewports();
+
     createHelp();
     
     ofSetLogLevel(OF_LOG_NOTICE);
@@ -105,8 +126,8 @@ void ofApp::setup(){
 void ofApp::setupViewports(){
 	//call here whenever we resize the window
  
-    gui.setPosition(ofGetWidth() - MENU_WIDTH, 20);
-    blobFinder.gui.setPosition(ofGetWidth() - MENU_WIDTH / 2, 20);
+    panel1->setPosition(ofGetWidth() - MENU_WIDTH, 20);
+    blobFinder.panel1->setPosition(ofGetWidth() - MENU_WIDTH / 2, 20);
     //ofLog(OF_LOG_NOTICE, "ofGetWidth()" + ofToString(ofGetWidth()));
 
 	//--
@@ -136,7 +157,7 @@ void ofApp::updateFrustumCone(int & value){
     if(kinect.isConnected()){
         double ref_pix_size = kinect.getZeroPlanePixelSize();
         double ref_distance = kinect.getZeroPlaneDistance();
-        ofShortPixelsRef raw = kinect.getRawDepthPixelsRef();
+        ofShortPixelsRef raw = kinect.getRawDepthPixels();
         
         kinectFrustum.near = nearFrustum.get();
         kinectFrustum.far = farFrustum.get();
@@ -339,7 +360,7 @@ ofVec3f ofApp::calcPlanePoint(ofParameter<ofVec2f> & cpoint, int _size, int _ste
     int height = kinect.getHeight();
     double ref_pix_size = 2 * kinect.getZeroPlanePixelSize() * pixelSizeCorrector.get();
     double ref_distance = kinect.getZeroPlaneDistance();
-    ofShortPixelsRef raw = kinect.getRawDepthPixelsRef();
+    ofShortPixelsRef raw = kinect.getRawDepthPixels();
     
     int size = _size;
     int step = _step;
@@ -400,23 +421,26 @@ void ofApp::update(){
         blobFinder.captureBegin();
         drawCapturePointCloud();
         blobFinder.captureEnd();
-        
+
 
         //////////////////////////////////
         // BlobFinding on the captured FBO
         /////////////////////////////////////
         blobFinder.update();
 	}
-    
+
     networkMng.update(blobFinder, kinectFrustum, transformation.get());
-    
+
+    /*
+
     rgbaMatrixServer.update();
 	depthMatrixServer.update();
 	rawMatrixServer.update();
 
-    rgbaMatrixServer.sendFrame(kinect.getPixelsRef());
-    depthMatrixServer.sendFrame(kinect.getDepthPixelsRef());
-    rawMatrixServer.sendFrame(kinect.getRawDepthPixelsRef());
+    rgbaMatrixServer.sendFrame(kinect.getPixels());
+    depthMatrixServer.sendFrame(kinect.getDepthPixels());
+    rawMatrixServer.sendFrame(kinect.getRawDepthPixels());
+*/
     
 }
 
@@ -426,13 +450,16 @@ void ofApp::draw(){
     
 	ofSetColor(255, 255, 255);
 
+    //ofLogNotice() << "draw next frame";
     if(bShowVisuals){
         //Draw viewport previews
         kinect.drawDepth(viewGrid[0]);
         kinect.draw(viewGrid[1]);
+
         blobFinder.captureFBO.draw(viewGrid[2]);
         blobFinder.contourFinder.draw(viewGrid[3]);
         blobFinder.contourEyeFinder.draw(viewGrid[4]);
+
         
         switch (iMainCamera) {
             case 0:
@@ -468,7 +495,6 @@ void ofApp::draw(){
                 drawPreview();
                 previewCam.end();
                 break;
-                
             default:
                 break;
         }
@@ -480,10 +506,9 @@ void ofApp::draw(){
             drawPreview();
             previewCam.end();
         }
-        
-        
-        gui.draw();
-        blobFinder.gui.draw();
+
+//        gui.draw();
+//        blobFinder.gui.draw();
 
         glDisable(GL_DEPTH_TEST);
         ofPushStyle();
@@ -493,6 +518,7 @@ void ofApp::draw(){
         ofSetLineWidth(3);
         ofRect(viewGrid[iMainCamera]);
     } else {
+
         blobFinder.contourEyeFinder.draw(viewMain);
 
         ofNoFill();
@@ -514,15 +540,15 @@ void ofApp::draw(){
     }
     
 	if (false) {
-        rgbaMatrixServer.draw(10, 640);
+//        rgbaMatrixServer.draw(10, 640);
     }
 
     ofDrawBitmapString("fps: " + ofToString(ofGetFrameRate()), ofGetWidth() - 200, 10);
-    
 
-	ofPopStyle();
+    ofPopStyle();
+    /*
 	glEnable(GL_DEPTH_TEST);
-
+     */
 }
 
 void ofApp::updatePointCloud(ofVboMesh & mesh, int step, bool useFrustumCone, bool useVideoColor) {
@@ -535,7 +561,7 @@ void ofApp::updatePointCloud(ofVboMesh & mesh, int step, bool useFrustumCone, bo
     
     double ref_pix_size = 2 * kinect.getZeroPlanePixelSize() * pixelSizeCorrector.get();
     double ref_distance = kinect.getZeroPlaneDistance();
-    ofShortPixelsRef raw = kinect.getRawDepthPixelsRef();
+    ofShortPixelsRef raw = kinect.getRawDepthPixels();
     double factor = 0;
     double corrDistance;
     
@@ -719,13 +745,13 @@ void ofApp::keyPressed(int key){
             break;
  
         case 's':
-            gui.saveToFile("settings.xml");
-            blobFinder.gui.saveToFile("trackings.xml");
+            panel1->saveToFile("settings.xml");
+            blobFinder.panel1->saveToFile("trackings.xml");
             break;
 
         case 'l':
-            gui.loadFromFile("settings.xml");
-            blobFinder.gui.loadFromFile("trackings.xml");
+            panel1->loadFromFile("settings.xml");
+            blobFinder.panel1->loadFromFile("trackings.xml");
             break;
 
 		case 'm':

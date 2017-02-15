@@ -17,14 +17,16 @@ void BlobFinder::setup(){
     captureScreenSize = ofVec2f(640, 480);
     gazePointer.setRadius(50);
     
-    gui.setup("Tracking Panel");
+    panel1 = gui.addPanel();
+    
+    panel1->setName("Tracking Panel");
     
     streamingGuiGroup.setName("Streaming");
     streamingGuiGroup.add(streamingBodyBlob.set("bodyBlob", true));
     streamingGuiGroup.add(streamingHeadBlob.set("headBlob", true));
     streamingGuiGroup.add(streamingHead.set("head", true));
     streamingGuiGroup.add(streamingEye.set("eye", true));
-    gui.add(streamingGuiGroup);
+    panel1->addGroup(streamingGuiGroup);
     
     sensorBoxLeft.addListener(this, &BlobFinder::updateSensorBox);
     sensorBoxRight.addListener(this, &BlobFinder::updateSensorBox);
@@ -40,26 +42,26 @@ void BlobFinder::setup(){
     sensorBoxGuiGroup.add(sensorBoxBack.set("back", 2000, 0, 7000));
     sensorBoxGuiGroup.add(sensorBoxTop.set("top", 2200, 0, 3000));
     sensorBoxGuiGroup.add(sensorBoxBottom.set("bottom", 1000, 0, 3000));
-    gui.add(sensorBoxGuiGroup);
+    panel1->addGroup(sensorBoxGuiGroup);
     
     blobGuiGroup.setName("Blobs");
     blobGuiGroup.add(blobAreaMin.set("AreaMin", 1000, 0, 30000));
     blobGuiGroup.add(blobAreaMax.set("AreaMax", 6000, 0, 30000));
     blobGuiGroup.add(countBlob.set("MaxBlobs", 5, 1, N_MAX_BLOBS));
-    gui.add(blobGuiGroup);
+    panel1->addGroup(blobGuiGroup);
 
     blobEyeGroup.setName("Gazing");
     blobEyeGroup.add(gazePoint.set("Gaze Point", ofVec3f(0, 0, 1500), ofVec3f(-2000, 0, 0), ofVec3f(2000, 5000, 3000)));
     blobEyeGroup.add(eyeLevel.set("EyeLevel", 140, 0, 200));
     blobEyeGroup.add(eyeInset.set("EyeInset", .8, 0, 1));
-    gui.add(blobEyeGroup);
+    panel1->addGroup(blobEyeGroup);
     
     blobSmoothGroup.setName("NoiseReduction");
     blobSmoothGroup.add(smoothOffset.set("MinSamples", 2, 1, 10));
     blobSmoothGroup.add(smoothFactor.set("DistanceFactor",  1., 0., 5.));
-    gui.add(blobSmoothGroup);
+    panel1->addGroup(blobSmoothGroup);
 
-    gui.loadFromFile("trackings.xml");
+    panel1->loadFromFile("trackings.xml");
 
 }
 
@@ -113,8 +115,8 @@ void BlobFinder::update(){
     
     grayEyeLevel = grayImage;
     
-    ofPixelsRef eyeRef = grayEyeLevel.getPixelsRef();
-    ofPixelsRef greyref = grayImage.getPixelsRef();
+    ofPixelsRef eyeRef = grayEyeLevel.getPixels();
+    ofPixelsRef greyref = grayImage.getPixels();
     ofColor white = ofColor::white;
     ofColor black = ofColor::black;
     
@@ -269,30 +271,34 @@ void BlobFinder::update(){
             }
         }
     }
-    
+
+
     //sorts the blobs in regards to the distance of the gazepoint.
     int sortPos = 0;
+
     for(int i = 0; i < trackedBlobs.size(); i++){
         trackedBlobs[i].sortPos = sortPos++;
     }
-    for(int i = 0; i < (trackedBlobs.size() - 1); i++){
-        for(int j = 1; j < trackedBlobs.size(); j++){
-            if((trackedBlobs[i].headCenter - gazePoint.get()).length() < (trackedBlobs[j].headCenter - gazePoint.get()).length()){
-                if(trackedBlobs[i].sortPos > trackedBlobs[j].sortPos){
-                    int savepos = trackedBlobs[j].sortPos;
-                    trackedBlobs[j].sortPos = trackedBlobs[i].sortPos;
-                    trackedBlobs[i].sortPos = savepos;
-                }
-            } else {
-                if(trackedBlobs[i].sortPos < trackedBlobs[j].sortPos){
-                    int savepos = trackedBlobs[j].sortPos;
-                    trackedBlobs[j].sortPos = trackedBlobs[i].sortPos;
-                    trackedBlobs[i].sortPos = savepos;
+    if(trackedBlobs.size() > 0){
+        for(int i = 0; i < (trackedBlobs.size() - 1); i++){
+            for(int j = 1; j < trackedBlobs.size(); j++){
+                if((trackedBlobs[i].headCenter - gazePoint.get()).length() < (trackedBlobs[j].headCenter - gazePoint.get()).length()){
+                    if(trackedBlobs[i].sortPos > trackedBlobs[j].sortPos){
+                        int savepos = trackedBlobs[j].sortPos;
+                        trackedBlobs[j].sortPos = trackedBlobs[i].sortPos;
+                        trackedBlobs[i].sortPos = savepos;
+                    }
+                } else {
+                    if(trackedBlobs[i].sortPos < trackedBlobs[j].sortPos){
+                        int savepos = trackedBlobs[j].sortPos;
+                        trackedBlobs[j].sortPos = trackedBlobs[i].sortPos;
+                        trackedBlobs[i].sortPos = savepos;
+                    }
                 }
             }
         }
     }
-
+     
     //updates all alive blobs and removes all the blobs that havent had an update for a specific number of frames or have been killed
     for(int i = 0; i < trackedBlobs.size(); i++){
         if(trackedBlobs[i].isAlive()){
@@ -304,6 +310,7 @@ void BlobFinder::update(){
             i--;
         }
     }
+    
 }
 
 void BlobFinder::drawBodyBlobs2d(ofRectangle _rect){

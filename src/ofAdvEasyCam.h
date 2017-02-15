@@ -33,6 +33,10 @@ public:
 	void mousePressed(ofMouseEventArgs& mouse);
 	void mouseReleased(ofMouseEventArgs& mouse);
 
+    void mouseScrolled(ofMouseEventArgs& mouse);
+    void mouseEntered(ofMouseEventArgs& mouse);
+    void mouseExited(ofMouseEventArgs& mouse);
+
 	// enable or disable mouse input to navigate
 	void enableMouseInput();
 	void disableMouseInput();

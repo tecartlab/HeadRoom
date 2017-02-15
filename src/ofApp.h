@@ -3,7 +3,7 @@
 #include "ofMain.h"
 #include "ofxNetwork.h"
 #include "ofxKinect.h"
-#include "ofxGui.h"
+#include "ofxGuiExtended.h"
 #include "ofxMatrixNetworkServer.h"
 #include "BlobFinder.h"
 #include "Planef.h"
@@ -166,7 +166,9 @@ class ofApp : public ofBaseApp{
     //////////////
     //PROPERTIES//
     //////////////
-    ofxPanel gui;
+    ofxGui gui;
+    
+    ofxGuiPanel *panel1;
     
     ofParameter<ofVec2f> calibPoint1;
     ofParameter<ofVec2f> calibPoint2;

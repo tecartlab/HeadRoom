@@ -17,25 +17,6 @@ ofAdvCamera::ofAdvCamera():ofCamera()
 }
 
 //----------------------------------------
-void ofAdvCamera::setFov(float f) {
-	fov = f;
-}
-
-float ofAdvCamera::getFov(){
-	return fov;
-}
-
-//----------------------------------------
-void ofAdvCamera::setNearClip(float f) {
-	nearClip = f;
-}
-
-//----------------------------------------
-void ofAdvCamera::setFarClip(float f) {
-	farClip = f;
-}
-
-//----------------------------------------
 void ofAdvCamera::setupPerspective(bool vFlip, float fov, float nearDist, float farDist){
 	float viewW = ofGetViewportWidth();
 	float viewH = ofGetViewportHeight();
@@ -92,27 +73,6 @@ void ofAdvCamera::setupFrustum(float left, float right, float top, float bottom,
 
 }
 
-
-//----------------------------------------
-void ofAdvCamera::enableOrtho() {
-	isOrtho = true;
-}
-
-//----------------------------------------
-void ofAdvCamera::disableOrtho() {
-	isOrtho = false;
-}
-
-//----------------------------------------
-bool ofAdvCamera::getOrtho() const {
-	return isOrtho;
-}
-
-//----------------------------------------
-float ofAdvCamera::getImagePlaneDistance(ofRectangle viewport) const {
-	return viewport.height / (2.0f * tanf(PI * fov / 360.0f));
-}
-
 //----------------------------------------
 void ofAdvCamera::begin(ofRectangle viewport) {
 	if(!isActive) ofPushView();
@@ -125,11 +85,11 @@ void ofAdvCamera::begin(ofRectangle viewport) {
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	if(isOrtho) {
+	if(getOrtho()) {
 		//			if(vFlip) glOrtho(0, width, height, 0, nearDist, farDist);
 		//			else
 #ifndef TARGET_OPENGLES
-		glOrtho(0, viewport.width, 0, viewport.height, nearClip, farClip);
+		glOrtho(0, viewport.width, 0, viewport.height, getNearClip(), getFarClip());
 #else
 		ofMatrix4x4 ortho;
 		ortho.makeOrthoMatrix(0, viewport.width, 0, viewport.height, nearClip, farClip);
@@ -137,9 +97,9 @@ void ofAdvCamera::begin(ofRectangle viewport) {
 #endif
 	} else {
         if (useFrustum) {
-            glFrustum(leftF, rightF, bottomF, topF, nearClip, farClip);
+            glFrustum(leftF, rightF, bottomF, topF, getNearClip(), getFarClip());
         }else{
-            gluPerspective(fov, viewport.width/viewport.height, nearClip, farClip);
+            gluPerspective(getFov(), viewport.width/viewport.height, getNearClip(), getFarClip());
         }
 	}
 
@@ -161,9 +121,9 @@ void ofAdvCamera::end() {
 ofMatrix4x4 ofAdvCamera::getProjectionMatrix(ofRectangle viewport) {
 	ofMatrix4x4 matProjection;
     if (useFrustum) {
-        matProjection.makeFrustumMatrix(leftF, rightF, bottomF, topF, nearClip, farClip);
+        matProjection.makeFrustumMatrix(leftF, rightF, bottomF, topF, getNearClip(), getFarClip());
     }else{
-        matProjection.makePerspectiveMatrix(fov, viewport.width/viewport.height, nearClip, farClip);
+        matProjection.makePerspectiveMatrix(getFov(), viewport.width/viewport.height, getNearClip(), getFarClip());
     }
 	return matProjection;
 }

@@ -1,0 +1,44 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "F29457DC2E58A3C077D1E731966FB62B66D3E9F2",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "5C3A8CDA5E958C03C8E8E4C674FD32B019D96FDB" : 9223372036854775807,
+    "2DE9C8846D9375EAACFABA8963120E8E7719BAF5" : 9223372036854775807,
+    "F29457DC2E58A3C077D1E731966FB62B66D3E9F2" : 9223372036854775807,
+    "F3D18339AD64F4428B21F7956CF51587CDBF116B" : 9223372036854775807
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "677D0EF3-30B6-4E51-A088-D78EC6248B15",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "5C3A8CDA5E958C03C8E8E4C674FD32B019D96FDB" : "..\/..\/addons\/ofxGuiExtended",
+    "2DE9C8846D9375EAACFABA8963120E8E7719BAF5" : "..\/..",
+    "F29457DC2E58A3C077D1E731966FB62B66D3E9F2" : "kinectServer\/",
+    "F3D18339AD64F4428B21F7956CF51587CDBF116B" : "..\/..\/addons\/ofxMatrixNetworkServer"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "kinectServer",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "kinectServer.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/openframeworks\/openFrameworks.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "2DE9C8846D9375EAACFABA8963120E8E7719BAF5"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/frauzufall\/ofxGuiExtended.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "5C3A8CDA5E958C03C8E8E4C674FD32B019D96FDB"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/maybites\/of_kinectServer.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "F29457DC2E58A3C077D1E731966FB62B66D3E9F2"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/maybites\/ofxMatrixNetworkServer.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "F3D18339AD64F4428B21F7956CF51587CDBF116B"
+    }
+  ]
+}

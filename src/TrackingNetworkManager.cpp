@@ -84,7 +84,7 @@ void TrackingNetworkManager::update(BlobFinder & _blobFinder, Frustum & _frustum
 		ofxOscMessage m;
 		serverReceiver.getNextMessage(&m);
 		//Log received message for easier debugging of participants' messages:
-        //ofLog(OF_LOG_NOTICE, "Server recvd msg " + getOscMsgAsString(m) + " from " + m.getRemoteIp());
+        ofLog(OF_LOG_NOTICE, "Server recvd msg " + getOscMsgAsString(m) + " from " + m.getRemoteIp());
         
 		// check the address of the incoming message
 		if(m.getAddress() == "/ks/request/handshake"){
@@ -276,7 +276,7 @@ void TrackingNetworkManager::sendBroadCastAddress(){
     broadcastSender.sendMessage(broadcast);
     
     broadCastTimer = ofGetElapsedTimeMillis();
-    //ofLog(OF_LOG_NOTICE, "Sent Broadcastmessage");
+    ofLog(OF_LOG_NOTICE, "Sent Broadcastmessage");
 
 }
 

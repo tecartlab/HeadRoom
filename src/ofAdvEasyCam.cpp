@@ -201,6 +201,24 @@ void ofAdvEasyCam::mouseDragged(ofMouseEventArgs& mouse){
 }
 
 //----------------------------------------
+void ofAdvEasyCam::mouseScrolled(ofMouseEventArgs& mouse){
+    mouseX = mouse.x;
+    mouseY = mouse.y;
+}
+
+//----------------------------------------
+void ofAdvEasyCam::mouseEntered(ofMouseEventArgs& mouse){
+    mouseX = mouse.x;
+    mouseY = mouse.y;
+}
+
+//----------------------------------------
+void ofAdvEasyCam::mouseExited(ofMouseEventArgs& mouse){
+    mouseX = mouse.x;
+    mouseY = mouse.y;
+}
+
+//----------------------------------------
 void ofAdvEasyCam::mouseMoved(ofMouseEventArgs& mouse){
     mouseX = mouse.x;
     mouseY = mouse.y;

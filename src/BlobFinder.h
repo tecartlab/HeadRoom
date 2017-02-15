@@ -10,7 +10,7 @@
 #include "ofMain.h"
 #include "ofxOpenCv.h"
 #include "ofVec3f.h"
-#include "ofxGui.h"
+#include "ofxGuiExtended.h"
 #include "ofConstants.h"
 #include "Planef.h"
 #include "Linef.h"
@@ -83,7 +83,9 @@ public:
     //PROPERTIES//
     //////////////
 
-    ofxPanel gui;
+    ofxGui gui;
+    
+    ofxGuiPanel *panel1;
 
     ofParameterGroup streamingGuiGroup;
     

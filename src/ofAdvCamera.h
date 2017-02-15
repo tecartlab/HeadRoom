@@ -26,28 +26,12 @@
 class ofAdvCamera : public ofCamera {
 public:
 	ofAdvCamera();
-	
-	// projection properties:
-	void setFov(float f);
-	void setNearClip(float f);
-	void setFarClip(float f);
-	
-	float getFov() const { return fov; };
-	float getNearClip() const { return nearClip; };
-	float getFarClip() const { return farClip; };
-	
+		
 	void setupPerspective(bool vFlip = true, float fov = 60, float nearDist = 0, float farDist = 0);
 
 	void setFrustum(float left, float right, float top, float bottom, float nearDist, float farDist);
     void setupFrustum(float left, float right, float top, float bottom, float nearDist, float farDist);
-    
-	void enableOrtho();
-	void disableOrtho();
-	bool getOrtho() const;
-	float getFov();
-	
-	float getImagePlaneDistance(ofRectangle viewport = ofGetCurrentViewport()) const;
-	    
+    	    
 	// set the matrices
 	virtual void begin(ofRectangle viewport = ofGetCurrentViewport());
 	virtual void end();
@@ -64,7 +48,7 @@ public:
 	ofVec3f cameraToWorld(ofVec3f CameraXYZ, ofRectangle viewport = ofGetCurrentViewport());
 
 protected:
-    bool useFrustum;
+    bool useFrustum, isActive;
     float leftF, rightF, topF, bottomF;
 	
 };
