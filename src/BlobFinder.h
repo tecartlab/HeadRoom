@@ -25,7 +25,7 @@
 class BlobFinder {
     
 public:
-    void setup();
+    void setup(ofxGui &gui);
     void allocate();
     
     void captureBegin();
@@ -59,6 +59,7 @@ public:
     //ofImage capturedImage;
     ofFbo captureFBO;
 
+
     /////////////////
     //COLOR CONTOUR//
     /////////////////
@@ -82,17 +83,8 @@ public:
     //////////////
     //PROPERTIES//
     //////////////
-
-    ofxGui gui;
     
-    ofxGuiPanel *panel1;
-
-    ofParameterGroup streamingGuiGroup;
-    
-    ofParameter<bool> streamingBodyBlob;
-    ofParameter<bool> streamingHeadBlob;
-    ofParameter<bool> streamingHead;
-    ofParameter<bool> streamingEye;
+    ofxGuiPanel *panel;
     
     ofParameterGroup sensorBoxGuiGroup;
 

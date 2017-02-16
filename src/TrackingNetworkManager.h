@@ -30,12 +30,15 @@
 #define BROADCAST_NOCLIENT_FREQ     1000
 #define BROADCAST_CLIENT_FREQ       10000
 
+#define NETWORK_BROADCAST_PORT 43500
+#define NETWORK_LISTENING_PORT 43600
+
 class TrackingNetworkManager {
     
 public:
     TrackingNetworkManager();
     
-    void setup(int _listeningPort, int _broadcastPort, string _kinectSerial, int _kinectID);
+    void setup(ofxGui &gui, string _kinectSerial);
     void update(BlobFinder & _blobFinder, Frustum & _frustum, ofVec3f _trans);
 
     void sendTrackingData(BlobFinder & _blobFinder);
@@ -65,8 +68,6 @@ public:
     //----------------------------------------
     // Server side:
     ofxOscReceiver  serverReceiver;         // OSC receiver
-    int             serverRecvPort;         // port we're listening on: must match port from sender!
-    string          serverAddress;
     
     // Message display variables
     vector<string>  serverMessages;         //vector containing the received messages for display
@@ -75,11 +76,33 @@ public:
     vector<TrackingClient> knownClients;    //collected IP's of chat participants
 
     ofxOscSender    broadcastSender;        // broadcastSender object
-    string          broadcastAddress;       // IP address we're sending to
-    int             broadcastSendPort;      // port we're sending to
-
 
     long            broadCastTimer;
+    
+    // GUI
+    ofxGuiPanel *panel;
+    
+    ofxGuiGroup *colorToggles;
+    
+    ofxGuiGroup *broadcastGroup;
+    
+    ofParameter<string> broadcastIP;
+    ofParameter<int> broadcastPort;
+
+    ofxGuiGroup *listeningGroup;
+    
+    ofParameter<string> listeningIP;
+    ofParameter<int> listeningPort;
+
+    ofParameter<int> kinectServerID;
+
+    ofParameterGroup streamingGuiGroup;
+    
+    ofParameter<bool> streamingBodyBlob;
+    ofParameter<bool> streamingHeadBlob;
+    ofParameter<bool> streamingHead;
+    ofParameter<bool> streamingEye;
+
 
 };
 

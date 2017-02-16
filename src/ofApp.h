@@ -4,7 +4,6 @@
 #include "ofxNetwork.h"
 #include "ofxKinect.h"
 #include "ofxGuiExtended.h"
-#include "ofxMatrixNetworkServer.h"
 #include "BlobFinder.h"
 #include "Planef.h"
 #include "Linef.h"
@@ -17,7 +16,7 @@
 #define N_CAMERAS 6
 
 #define VIEWGRID_WIDTH  105
-#define MENU_WIDTH      404
+#define MENU_WIDTH      600
 #define VIEWPORT_HEIGHT 480
 
 #define KINECT_IMG_WIDTH   640
@@ -25,8 +24,8 @@
 
 #define N_MEASURMENT_CYCLES 10
 
-#define NETWORK_BROADCAST_PORT 43500
-#define NETWORK_LISTENING_PORT 43600
+//helpfull links during development:
+// https://github.com/openframeworks/openFrameworks/issues/3817
 
 class ofApp : public ofBaseApp{
 
@@ -45,10 +44,6 @@ class ofApp : public ofBaseApp{
 		void windowResized(int w, int h);
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);		
-
-        ofxMatrixNetworkServer rgbaMatrixServer;
-        ofxMatrixNetworkServer depthMatrixServer;
-        ofxMatrixNetworkServer rawMatrixServer;
 
         vector <string> storeText;
 		
@@ -85,12 +80,18 @@ class ofApp : public ofBaseApp{
     
     grid mainGrid;
     
+    shared_ptr<ofBaseGLRenderer> opengl;
+    shared_ptr<ofCairoRenderer> cairo;
+    ofTexture render;
+    
     //////////
     //KINECT//
     //////////
         
     ofxKinect kinect;
-    
+
+    string kinectSerialID;
+
     ofMatrix4x4 unprojection;
     
     #ifdef USE_TWO_KINECTS
@@ -106,6 +107,7 @@ class ofApp : public ofBaseApp{
     Frustum kinectFrustum;
     
     void updatePointCloud(ofVboMesh & mesh, int step, bool useFrustumCone, bool useVideoColor);
+    void renderPointCloud(int step, bool useFrustumCone);
     void drawPreview();
     void drawCapturePointCloud();
 
@@ -168,7 +170,8 @@ class ofApp : public ofBaseApp{
     //////////////
     ofxGui gui;
     
-    ofxGuiPanel *panel1;
+    ofxGuiPanel *setupCalib;
+    ofxGuiPanel *deviceCalib;
     
     ofParameter<ofVec2f> calibPoint1;
     ofParameter<ofVec2f> calibPoint2;
@@ -187,11 +190,9 @@ class ofApp : public ofBaseApp{
     ofParameter<float> depthCorrectionDivisor;
     ofParameter<float> pixelSizeCorrector;
 
-    ofParameterGroup setupGuiGroup;
+    ofParameter<int> blobGrain;
+
     ofParameter<bool> captureVideo;
-    ofParameter<int> kinectServerID;
-    ofParameter<int> broadcastPort;
-    ofParameter<int> listeningPort;
 
     //////////
     // HELP //

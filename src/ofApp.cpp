@@ -17,74 +17,66 @@ void ofApp::setup(){
 	//udpConnection.Connect("127.0.0.1",4653);
 	//udpConnection.SetNonBlocking(true);
 
-    //setup the servers to listen
-//  rgbaMatrixServer.setup(34101);
-//	depthMatrixServer.setup(34102);
-//	rawMatrixServer.setup(34103);
-
 	//TCP.setMessageDelimiter("\n");
-
-    //////////
-    //GUI   //
-    //////////
     
-    panel1 = gui.addPanel();
-    
-    panel1->setName("Kinect Panel");
-    panel1->setPosition(600,20);
     iMainCamera = 0;
+    
+    /////////////////
+    //BLOBFINDER   //
+    /////////////////
+    
+    blobFinder.setup(gui);
+    
+    blobFinder.allocate();
+
+    ////////////////
+    //GUI   SETUP //
+    ////////////////
+    
+    setupCalib = gui.addPanel();
+    
+    setupCalib->loadTheme("theme/theme_light.json");
+    setupCalib->setName("Kinect Panel");
+    
+    setupCalib->add(captureVideo.set("use video", true));
+    setupCalib->add(blobGrain.set("Grain", 2, 1, 4));
+
+    setupCalib->add(calibPoint1.set("calibA", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
+    setupCalib->add(calibPoint2.set("calibB", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
+    setupCalib->add(calibPoint3.set("calibC", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
     
     nearFrustum.addListener(this, &ofApp::updateFrustumCone);
     farFrustum.addListener(this, &ofApp::updateFrustumCone);
 
-    setupGuiGroup.setName("Setup on starup");
-    setupGuiGroup.add(broadcastPort.set("bradcastPort", NETWORK_BROADCAST_PORT, NETWORK_BROADCAST_PORT, NETWORK_BROADCAST_PORT + 20));
-    setupGuiGroup.add(listeningPort.set("listeningPort", NETWORK_LISTENING_PORT, NETWORK_LISTENING_PORT, NETWORK_LISTENING_PORT + 20));
-    setupGuiGroup.add(kinectServerID.set("serverID", 0, 0, 20));
-    setupGuiGroup.add(captureVideo.set("use video", true));
-    panel1->addGroup(setupGuiGroup);
-    
-    panel1->add(calibPoint1.set("calibA", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
-    panel1->add(calibPoint2.set("calibB", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
-    panel1->add(calibPoint3.set("calibC", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
-    
     frustumGuiGroup.setName("frustumField");
     frustumGuiGroup.add(nearFrustum.set("nearFrustum", 400, 200, 2000));
     frustumGuiGroup.add(farFrustum.set("farFrustum", 4000, 2000, 6000));
-    panel1->addGroup(frustumGuiGroup);
-
-    intrinsicGuiGroup.setName("Corrections");
-    intrinsicGuiGroup.add(depthCorrectionBase.set("base", 1.0, 0.9, 1.1));
-    intrinsicGuiGroup.add(depthCorrectionDivisor.set("divisor", 100000, 90000, 110000));
-    intrinsicGuiGroup.add(pixelSizeCorrector.set("pixl factor", 1.0, 0.9, 1.1));
-    panel1->addGroup(intrinsicGuiGroup);
+    setupCalib->addGroup(frustumGuiGroup);
     
-    panel1->add(transformation.set("matrix rx ry tz", ofVec3f(0, 0, 0), ofVec3f(-90, -90, -6000), ofVec3f(90, 90, 6000)));
+    setupCalib->add(transformation.set("matrix rx ry tz", ofVec3f(0, 0, 0), ofVec3f(-90, -90, -6000), ofVec3f(90, 90, 6000)));
  
-    panel1->loadFromFile("settings.xml");
-    
-    updateMatrix();
-    
+    setupCalib->loadFromFile("settings.xml");
+
     ////////////////////
-    //KINECT          //
+    //KINECT          // -> It needs to be after the GUI SETUP but before GUI DEVICE
     ////////////////////
     
     ofSetLogLevel(OF_LOG_VERBOSE);
-	
-	// enable depth->video image calibration
-	kinect.setRegistration(true);
+    
+    // enable depth->video image calibration
+    kinect.setRegistration(true);
     
     if(captureVideo.get())
         kinect.init();
     else
         kinect.init(false, false);// disable video image (faster fps)
     
-	//kinect.init(true); // shows infrared instead of RGB video image
-	
-	kinect.open();		// opens first available kinect
-	//kinect.open(1);	// open a kinect by id, starting with 0 (sorted by serial # lexicographically))
-	//kinect.open("A00362A08602047A");	// open a kinect using it's unique serial #
-
+    //kinect.init(true); // shows infrared instead of RGB video image
+    
+    kinect.open();		// opens first available kinect
+    //kinect.open(1);	// open a kinect by id, starting with 0 (sorted by serial # lexicographically))
+    //kinect.open("A00362A08602047A");	// open a kinect using it's unique serial #
+    
     // print the intrinsic IR sensor values
     if(kinect.isConnected()) {
         ofLogNotice() << "sensor-emitter dist: " << kinect.getSensorEmitterDistance() << "cm";
@@ -92,15 +84,29 @@ void ofApp::setup(){
         ofLogNotice() << "zero plane pixel size: " << kinect.getZeroPlanePixelSize() << "mm";
         ofLogNotice() << "zero plane dist: " << kinect.getZeroPlaneDistance() << "mm";
         ofLogNotice() << "serial: " << kinect.getSerial();
+        
+        kinectSerialID = kinect.getSerial();
     }
-    
-    /////////////////
-    //BLOBFINDER   //
-    /////////////////
-    
-    blobFinder.setup();
 
-    blobFinder.allocate();
+    ////////////////
+    //GUI   DEVICE //
+    ////////////////
+
+    deviceCalib = gui.addPanel();
+    
+    deviceCalib->loadTheme("theme/theme_light.json");
+    deviceCalib->setName("Kinect Device");
+    deviceCalib->add<ofxGuiLabel>(kinectSerialID);
+
+    intrinsicGuiGroup.setName("Corrections");
+    intrinsicGuiGroup.add(depthCorrectionBase.set("base", 1.0, 0.9, 1.1));
+    intrinsicGuiGroup.add(depthCorrectionDivisor.set("divisor", 100000, 90000, 110000));
+    intrinsicGuiGroup.add(pixelSizeCorrector.set("pixl factor", 1.0, 0.9, 1.1));
+    deviceCalib->addGroup(intrinsicGuiGroup);
+
+    deviceCalib->loadFromFile(kinectSerialID + ".xml");
+
+    updateMatrix();
 
     
     /////////////////
@@ -109,7 +115,7 @@ void ofApp::setup(){
 	// creating preview point cloud is bogging the system down, so switched off at startup
 	bPreviewPointCloud = false;
     
-    networkMng.setup(listeningPort.get(), broadcastPort.get(), kinect.getSerial(), kinectServerID.get());
+    networkMng.setup(gui, kinect.getSerial());
     
     int * val;
     updateFrustumCone(*val);
@@ -117,6 +123,19 @@ void ofApp::setup(){
     setupViewports();
 
     createHelp();
+    
+
+    ////////////////
+    //CAIRO RENDER //
+    ////////////////
+    
+    /*
+
+    opengl = ofGetGLRenderer();
+    cairo = make_shared<ofCairoRenderer>();
+    cairo->setupMemoryOnly(ofCairoRenderer::IMAGE);
+    render.allocate(ofGetWidth() / 5., ofGetHeight() / 5., GL_RGBA);
+     */
     
     ofSetLogLevel(OF_LOG_NOTICE);
 }
@@ -126,8 +145,10 @@ void ofApp::setup(){
 void ofApp::setupViewports(){
 	//call here whenever we resize the window
  
-    panel1->setPosition(ofGetWidth() - MENU_WIDTH, 20);
-    blobFinder.panel1->setPosition(ofGetWidth() - MENU_WIDTH / 2, 20);
+    setupCalib->setPosition(ofGetWidth() - MENU_WIDTH, 20);
+    deviceCalib->setPosition(ofGetWidth() - MENU_WIDTH/3, 20);
+    networkMng.panel->setPosition(ofGetWidth() - MENU_WIDTH/3, 200);
+    blobFinder.panel->setPosition(ofGetWidth() - MENU_WIDTH/3*2, 20);
     //ofLog(OF_LOG_NOTICE, "ofGetWidth()" + ofToString(ofGetWidth()));
 
 	//--
@@ -399,7 +420,6 @@ void ofApp::update(){
 	ofBackground(100, 100, 100);
 	
 	kinect.update();
-    	
 	// there is a new frame and we are connected
 	if(kinect.isFrameNew()) {
         if(bUpdateMeasurment){
@@ -409,14 +429,15 @@ void ofApp::update(){
             measurementCycleFine();
         }
 
-        updatePointCloud(capturemesh, 1, true, false);
+        updatePointCloud(capturemesh, blobGrain.get(), true, false);
         if(bPreviewPointCloud) {
-            updatePointCloud(previewmesh, 2, false, true);
+            updatePointCloud(previewmesh, blobGrain.get() + 1, false, true);
         }
     
         //////////////////////////////////
         // Cature captureCloud to FBO
         //////////////////////////////////
+        
         
         blobFinder.captureBegin();
         drawCapturePointCloud();
@@ -430,24 +451,11 @@ void ofApp::update(){
 	}
 
     networkMng.update(blobFinder, kinectFrustum, transformation.get());
-
-    /*
-
-    rgbaMatrixServer.update();
-	depthMatrixServer.update();
-	rawMatrixServer.update();
-
-    rgbaMatrixServer.sendFrame(kinect.getPixels());
-    depthMatrixServer.sendFrame(kinect.getDepthPixels());
-    rawMatrixServer.sendFrame(kinect.getRawDepthPixels());
-*/
-    
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-    ofBackground(0);
-    
+
 	ofSetColor(255, 255, 255);
 
     //ofLogNotice() << "draw next frame";
@@ -538,17 +546,11 @@ void ofApp::draw(){
     }else if(bShowCalcData){
         ofDrawBitmapString(calcdata, 20 ,VIEWPORT_HEIGHT + 20);
     }
-    
-	if (false) {
-//        rgbaMatrixServer.draw(10, 640);
-    }
 
     ofDrawBitmapString("fps: " + ofToString(ofGetFrameRate()), ofGetWidth() - 200, 10);
 
     ofPopStyle();
-    /*
-	glEnable(GL_DEPTH_TEST);
-     */
+	//glEnable(GL_DEPTH_TEST);
 }
 
 void ofApp::updatePointCloud(ofVboMesh & mesh, int step, bool useFrustumCone, bool useVideoColor) {
@@ -604,7 +606,7 @@ void ofApp::updatePointCloud(ofVboMesh & mesh, int step, bool useFrustumCone, bo
                 }
                 mesh.addVertex(vertex);
 			}
-		}
+  		}
 	}
 }
 
@@ -658,11 +660,13 @@ void ofApp::drawPreview() {
 }
 
 void ofApp::drawCapturePointCloud() {
-	glPointSize(3);
+    glEnable(GL_DEPTH_TEST);
+    glPointSize(blobGrain.get() * 2);
 	ofPushMatrix();
 	ofScale(0.01, 0.01, 0.01);
     capturemesh.drawVertices();
-	ofPopMatrix();    
+	ofPopMatrix();
+    glDisable(GL_DEPTH_TEST);
 }
 
 void ofApp::drawCalibrationPoints(){
@@ -686,9 +690,6 @@ void ofApp::exit() {
 
 	kinect.close();
 	
-    rgbaMatrixServer.exit();
-    depthMatrixServer.exit();
-    rawMatrixServer.exit();
 }
 
 void ofApp::createHelp(){
@@ -704,7 +705,7 @@ void ofApp::createHelp(){
 	help += "press c -> to close the connection, connection is: " + ofToString(kinect.isConnected()) + "\n";
 	help += "press o -> to open the connection it again\n";
     help += "ATTENTION: Setup-Settings (ServerID and Video) will only apply after restart\n";
- 	help += "Broadcasting ip: "+networkMng.broadcastAddress+" port: "+ofToString(networkMng.broadcastSendPort)+" serverID: "+ofToString(networkMng.kinectID)+" \n";
+ 	help += "Broadcasting ip: "+networkMng.broadcastIP.get()+" port: "+ofToString(networkMng.broadcastPort.get())+" serverID: "+ofToString(networkMng.kinectID)+" \n";
  	help += "Correction Distance Math -> corrected distance = distance * (Base + distance / Divisor)\n";
 	help += "Correction pixel Site    -> corrected pixel size = pixel size * Factor\n";
     /*
@@ -745,13 +746,17 @@ void ofApp::keyPressed(int key){
             break;
  
         case 's':
-            panel1->saveToFile("settings.xml");
-            blobFinder.panel1->saveToFile("trackings.xml");
+            setupCalib->saveToFile("settings.xml");
+            blobFinder.panel->saveToFile("trackings.xml");
+            networkMng.panel->saveToFile("broadcast.xml");
+            deviceCalib->saveToFile(kinectSerialID + ".xml");
             break;
 
         case 'l':
-            panel1->loadFromFile("settings.xml");
-            blobFinder.panel1->loadFromFile("trackings.xml");
+            setupCalib->loadFromFile("settings.xml");
+            blobFinder.panel->loadFromFile("trackings.xml");
+            networkMng.panel->loadFromFile("broadcast.xml");
+            deviceCalib->loadFromFile(kinectSerialID + ".xml");
             break;
 
 		case 'm':
@@ -878,6 +883,10 @@ void ofApp::mouseReleased(int x, int y, int button){
 
 //--------------------------------------------------------------
 void ofApp::windowResized(int w, int h){
+    cairo->setupMemoryOnly(ofCairoRenderer::IMAGE,
+                           false, false,
+                           ofRectangle(0, 0, w, h));
+    render.allocate(w, h, GL_RGBA);
     setupViewports();
 }
 

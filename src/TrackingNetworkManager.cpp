@@ -19,45 +19,64 @@ TrackingNetworkManager::TrackingNetworkManager(){
 }
 
 
-void TrackingNetworkManager::setup(int _listeningPort, int _broadcastPort, string _kinectSerial, int _kinectID){
+void TrackingNetworkManager::setup(ofxGui &gui, string _kinectSerial){
     kinectSerial = _kinectSerial;
-    kinectID = _kinectID;
     gatherLocalIPs();
 
     //RegularExpression regEx("\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b");
-
+    
     // regex to find four numbered IP address that does NOT start with 127.d.d.d
     RegularExpression regEx("\\b^(?:(?!127).)+\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b");
     RegularExpression::Match match;
-    
-    serverAddress = "127.0.0.1";
-    broadcastAddress = "169.254.110.67";
+
+    string localAddress = "127.0.0.1";
     
     for(int i = 0; i < localIpAddresses.size(); i++){
         if(regEx.match(localIpAddresses[i], match)) {
-            serverAddress = localIpAddresses[i];
-//            broadcastAddress = serverAddress.substr(0, serverAddress.find_last_of(".") + 1 ) + "255";
+            localAddress = localIpAddresses[i];
+            //            broadcastAddress = serverAddress.substr(0, serverAddress.find_last_of(".") + 1 ) + "255";
         }
     }
 
-    ofLog(OF_LOG_NOTICE, "Choosen Broadcastadress:  " + broadcastAddress);
+    panel = gui.addPanel();
+    
+    
+    panel->loadTheme("theme/theme_light.json");
+    panel->setName("Broadcasting..");
 
-	//Server side
-	//listen for incoming messages on a port; setup OSC receiver with usage:
-	serverRecvPort = _listeningPort;
-	serverReceiver.setup(serverRecvPort);
+    broadcastGroup = panel->addGroup("Broadcast");
+    //panel->add(broadcastLabel.set("Broadcast"));
+    broadcastGroup->add<ofxGuiTextField>(broadcastIP.set("IP","127.0.0.1"));
+    broadcastGroup->add<ofxGuiIntInputField>(broadcastPort.set("Port", NETWORK_BROADCAST_PORT, 0, 65535));
+    
+    listeningGroup = panel->addGroup("Listening");
+    listeningGroup->add<ofxGuiTextField>(listeningIP.set("IP",localAddress));
+    listeningGroup->add<ofxGuiIntInputField>(listeningPort.set("Port", NETWORK_LISTENING_PORT, NETWORK_LISTENING_PORT, NETWORK_LISTENING_PORT + 20));
+
+    
+    streamingGuiGroup.setName("Streaming");
+    streamingGuiGroup.add(streamingBodyBlob.set("bodyBlob", true));
+    streamingGuiGroup.add(streamingHeadBlob.set("headBlob", true));
+    streamingGuiGroup.add(streamingHead.set("head", true));
+    streamingGuiGroup.add(streamingEye.set("eye", true));
+    panel->addGroup(streamingGuiGroup);
+
+    panel->loadFromFile("network.xml");
+    
+
+    //Server side
+    //listen for incoming messages on a port; setup OSC receiver with usage:
+    serverReceiver.setup(listeningPort.get());
+    broadcastSender.setup(broadcastIP.get(), broadcastPort.get());
+    ofLog(OF_LOG_NOTICE, "Choosen BroadcastAddress:  " + broadcastIP.get());
     
 	maxServerMessages = 38;
- 
-    broadcastSendPort = _broadcastPort;
-    broadcastSender.setup(broadcastAddress, broadcastSendPort);
     
     broadCastTimer = ofGetElapsedTimeMillis();
     
     scale = 0.001; // transform mm to m
     frameNumber = 0;
 }
-
 
 //--------------------------------------------------------------
 void TrackingNetworkManager::update(BlobFinder & _blobFinder, Frustum & _frustum, ofVec3f _trans){
@@ -122,13 +141,13 @@ void TrackingNetworkManager::update(BlobFinder & _blobFinder, Frustum & _frustum
 	// after startup, reinit the receivers
 	// must be a timing problem, though - in debug, stepping through, it works.
 	if(ofGetFrameNum() == 60){
-		serverReceiver.setup(serverRecvPort);
+		serverReceiver.setup(listeningPort.get());
 	}
 }
 
 void TrackingNetworkManager::sendTrackingData(BlobFinder & _blobFinder){
     for(int i = 0; i < _blobFinder.trackedBlobs.size(); i++){
-        if(_blobFinder.streamingBodyBlob.get()){
+        if(streamingBodyBlob.get()){
             ofxOscMessage bodyBlob;
             bodyBlob.setAddress("/ks/server/track/bodyblob");
             bodyBlob.addIntArg(kinectID);
@@ -143,7 +162,7 @@ void TrackingNetworkManager::sendTrackingData(BlobFinder & _blobFinder){
             
             sendMessageToTrackingClients(bodyBlob);
         }
-        if(_blobFinder.streamingHeadBlob.get()){
+        if(streamingHeadBlob.get()){
             ofxOscMessage headBlob;
             headBlob.setAddress("/ks/server/track/headblob");
             headBlob.addIntArg(kinectID);
@@ -158,7 +177,7 @@ void TrackingNetworkManager::sendTrackingData(BlobFinder & _blobFinder){
             
             sendMessageToTrackingClients(headBlob);
         }
-        if(_blobFinder.streamingHead.get()){
+        if(streamingHead.get()){
             ofxOscMessage head;
             head.setAddress("/ks/server/track/head");
             head.addIntArg(kinectID);
@@ -174,7 +193,7 @@ void TrackingNetworkManager::sendTrackingData(BlobFinder & _blobFinder){
             
             sendMessageToTrackingClients(head);
         }
-        if(_blobFinder.streamingEye.get()){
+        if(streamingEye.get()){
             ofxOscMessage eye;
             eye.setAddress("/ks/server/track/eye");
             eye.addIntArg(kinectID);
@@ -190,6 +209,13 @@ void TrackingNetworkManager::sendTrackingData(BlobFinder & _blobFinder){
             
             sendMessageToTrackingClients(eye);
         }
+        
+        // send frame number
+        ofxOscMessage frame;
+        frame.setAddress("/ks/server/track/frame");
+        frame.addIntArg(kinectID);
+        frame.addIntArg(frameNumber);
+        sendMessageToTrackingClients(frame);
     }
 }
 
@@ -269,15 +295,14 @@ void TrackingNetworkManager::sendBroadCastAddress(){
     broadcast.setAddress("/ks/server/broadcast");
 	broadcast.addStringArg(kinectSerial);
 	broadcast.addIntArg(kinectID);
-	broadcast.addStringArg(serverAddress);
-	broadcast.addIntArg(serverRecvPort);
+	broadcast.addStringArg(listeningIP.get());
+	broadcast.addIntArg(listeningPort.get());
     
-    broadcastSender.setup(broadcastAddress, broadcastSendPort);
+    broadcastSender.setup(broadcastIP.get(), broadcastPort.get());
     broadcastSender.sendMessage(broadcast);
     
     broadCastTimer = ofGetElapsedTimeMillis();
-    ofLog(OF_LOG_NOTICE, "Sent Broadcastmessage");
-
+    //ofLog(OF_LOG_NOTICE, "Sent Broadcastmessage");
 }
 
 //--------------------------------------------------------------

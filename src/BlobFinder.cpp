@@ -8,7 +8,7 @@
 
 #include "BlobFinder.h"
 
-void BlobFinder::setup(){
+void BlobFinder::setup(ofxGui &gui){
 
     //////////
     //GUI   //
@@ -17,17 +17,16 @@ void BlobFinder::setup(){
     captureScreenSize = ofVec2f(640, 480);
     gazePointer.setRadius(50);
     
-    panel1 = gui.addPanel();
+    panel = gui.addPanel();
     
-    panel1->setName("Tracking Panel");
-    
-    streamingGuiGroup.setName("Streaming");
-    streamingGuiGroup.add(streamingBodyBlob.set("bodyBlob", true));
-    streamingGuiGroup.add(streamingHeadBlob.set("headBlob", true));
-    streamingGuiGroup.add(streamingHead.set("head", true));
-    streamingGuiGroup.add(streamingEye.set("eye", true));
-    panel1->addGroup(streamingGuiGroup);
-    
+    panel->loadTheme("theme/theme_light.json");
+    panel->setName("Tracking...");
+
+    blobSmoothGroup.setName("NoiseReduction");
+    blobSmoothGroup.add(smoothOffset.set("MinSamples", 2, 1, 10));
+    blobSmoothGroup.add(smoothFactor.set("DistanceFac.",  1., 0., 5.));
+    panel->addGroup(blobSmoothGroup);
+
     sensorBoxLeft.addListener(this, &BlobFinder::updateSensorBox);
     sensorBoxRight.addListener(this, &BlobFinder::updateSensorBox);
     sensorBoxFront.addListener(this, &BlobFinder::updateSensorBox);
@@ -42,26 +41,21 @@ void BlobFinder::setup(){
     sensorBoxGuiGroup.add(sensorBoxBack.set("back", 2000, 0, 7000));
     sensorBoxGuiGroup.add(sensorBoxTop.set("top", 2200, 0, 3000));
     sensorBoxGuiGroup.add(sensorBoxBottom.set("bottom", 1000, 0, 3000));
-    panel1->addGroup(sensorBoxGuiGroup);
+    panel->addGroup(sensorBoxGuiGroup);
     
     blobGuiGroup.setName("Blobs");
     blobGuiGroup.add(blobAreaMin.set("AreaMin", 1000, 0, 30000));
     blobGuiGroup.add(blobAreaMax.set("AreaMax", 6000, 0, 30000));
     blobGuiGroup.add(countBlob.set("MaxBlobs", 5, 1, N_MAX_BLOBS));
-    panel1->addGroup(blobGuiGroup);
+    panel->addGroup(blobGuiGroup);
 
     blobEyeGroup.setName("Gazing");
     blobEyeGroup.add(gazePoint.set("Gaze Point", ofVec3f(0, 0, 1500), ofVec3f(-2000, 0, 0), ofVec3f(2000, 5000, 3000)));
     blobEyeGroup.add(eyeLevel.set("EyeLevel", 140, 0, 200));
     blobEyeGroup.add(eyeInset.set("EyeInset", .8, 0, 1));
-    panel1->addGroup(blobEyeGroup);
+    panel->addGroup(blobEyeGroup);
     
-    blobSmoothGroup.setName("NoiseReduction");
-    blobSmoothGroup.add(smoothOffset.set("MinSamples", 2, 1, 10));
-    blobSmoothGroup.add(smoothFactor.set("DistanceFactor",  1., 0., 5.));
-    panel1->addGroup(blobSmoothGroup);
-
-    panel1->loadFromFile("trackings.xml");
+    panel->loadFromFile("trackings.xml");
 
 }
 
@@ -111,7 +105,6 @@ void BlobFinder::update(){
     
     // load grayscale captured depth image from the color source
     grayImage.setFromColorImage(colorImg);
-    
     
     grayEyeLevel = grayImage;
     

@@ -12,15 +12,13 @@ It is based on openFrameworks and libfreenect, should run on OSX (tested), Windo
 
 kinectServer runs as an application on a dedicated computer with one attached kinect device. The machine needs to be powerfull enough to do all the tracking analysis necessary. 
 
-It has built in functionality to do a simple but powerfull calibration of the kinect-camera. It is very simple to tell the camera how it is located towards a floor, ceilling or a wall.
-
 It is built for a accurate tracking of bodies. The tracker can send the bodies position and heigth, head-toptip-position, head-center-position, eye-center-position and gaze direction.
+
+It has a simple but powerfull calibration functionality. This makes it very easy to tell how the kinect is located towards a floor, ceilling or a wall.
 
 All data is in a metric cartesian coordinatesystem referenced from a floor.
 
 The results are sent as UDP and/or TCP data over the network to a requesting client.
-
-It is also capable to send video and pointcloud data via network.
 
 ## Communication
 
@@ -87,6 +85,7 @@ the frustum needs to translated by the above transformation matrix to be in the 
 
 ##tracking data
 
+
 ####bodyBlob
 
 > **/ks/server/track/bodyblob** \<serverID> \<frameNo> \<blobID> \<sortPos> \<bodyBlobXPos[m]> \<bodyBlobYPos[m]> \<bodyBlobWidth(x-axis)[m]> \<bodyBlobDepth(y-axis)[m]> \<bodyHeight(z-axis)[m]>
@@ -111,6 +110,13 @@ the frustum needs to translated by the above transformation matrix to be in the 
 eyeGazeX, Y, Z is a normalized vector. Beware: The gaze is calculated based on a defined gaze-point and not through facial feature tracking. It assumes that each tracked person looks at this gaze-point.
 
 ---
+####frame
+
+> **/ks/server/track/frame** \<serverID> \<frameNo>
+
+the frame message is sent each time after the other messages
+
+---
 
 ##Download and installation
 
@@ -126,15 +132,20 @@ The `master` branch of this repository corresponds to the most recent release. T
 
 drop it into the \<openframeworksfolder>/apps/\<yourappfolder>
 
-you also needs a copy of the openframeworks addon [ofxMatrixNetworkServer](https://github.com/maybites/ofxMatrixNetworkServer)
+you also need a copy of the openframeworks addon [ofxGuiExtended](https://github.com/frauzufall/ofxGuiExtended.git)
 
-drop it onto the \<openframeworksfolder>/addons/\<ofxMatrixNetworkServer>
+drop it onto the \<openframeworksfolder>/addons/\<ofxGuiExtended>
 
 ##How to
 to come...
 
 ##Version
 kinectServer uses [Semantic Versioning](http://semver.org/), 
+
+Version 0.0.2
+- switch to ofxGuiExtended
+- redesign of GUI structure
+- removal of MatrixServer
 
 Version 0.0.1		
 - initial release
