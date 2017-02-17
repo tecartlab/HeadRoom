@@ -112,7 +112,7 @@ void BlobFinder::update(){
     ofPixelsRef greyref = grayImage.getPixels();
     ofColor white = ofColor::white;
     ofColor black = ofColor::black;
-    
+        
     float sensorFieldFront = sensorBoxFront.get();
     float sensorFieldBack = sensorBoxBack.get();
     float sensorFieldLeft = sensorBoxLeft.get();
@@ -211,11 +211,12 @@ void BlobFinder::update(){
     }
 
     //preprocesses the eyeRef image
-    grayEyeLevel.setFromPixels(eyeRef.getPixels(), eyeRef.getWidth(), eyeRef.getHeight());
+    //grayEyeLevel.setFromPixels(eyeRef.getPixels(), eyeRef.getWidth(), eyeRef.getHeight());
     grayEyeLevel.invert();
     grayEyeLevel.threshold(20);
     grayEyeLevel.invert();
     grayEyeLevel.blurGaussian();
+
 
     //ofLog(OF_LOG_NOTICE, "contourEyeFinder nBlobs : " + ofToString(contourEyeFinder.nBlobs));
 

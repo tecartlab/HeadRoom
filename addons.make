@@ -1,6 +1,5 @@
 ofxGuiExtended
 ofxKinect
-ofxMatrixNetworkServer
 ofxNetwork
 ofxOpenCv
 ofxOsc

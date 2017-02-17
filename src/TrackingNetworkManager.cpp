@@ -61,7 +61,7 @@ void TrackingNetworkManager::setup(ofxGui &gui, string _kinectSerial){
     streamingGuiGroup.add(streamingEye.set("eye", true));
     panel->addGroup(streamingGuiGroup);
 
-    panel->loadFromFile("network.xml");
+    panel->loadFromFile("broadcast.xml");
     
 
     //Server side

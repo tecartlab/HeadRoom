@@ -50,6 +50,10 @@ public:
     ofVec2f captureScreenSize;
     
     ofVec3f kinectPos;
+    
+    ofPixels greyRef_store1;
+    ofPixels greyRef_store2;
+    ofPixels greyRef_store3;
 
     ///////////////////
     // FBO CAPTURING //
@@ -71,7 +75,7 @@ public:
     ofxCvGrayscaleImage grayImage; // grayscale depth image
     ofxCvGrayscaleImage grayEyeLevel; // the eyelevel thresholded image
     ofxCvGrayscaleImage grayThreshFar; // the far thresholded image
-    
+ 
     ofxCvContourFinder contourFinder;
     ofxCvContourFinder contourEyeFinder;
     
