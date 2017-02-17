@@ -6315,109 +6315,6 @@
 				<key>sourceTree</key>
 				<string>SOURCE_ROOT</string>
 			</dict>
-			<key>6C28E6044C0036AA0AD457C0</key>
-			<dict>
-				<key>explicitFileType</key>
-				<string>sourcecode.c.h</string>
-				<key>fileEncoding</key>
-				<string>30</string>
-				<key>isa</key>
-				<string>PBXFileReference</string>
-				<key>name</key>
-				<string>ofxMatrixNetworkServer.h</string>
-				<key>path</key>
-				<string>../../../addons/ofxMatrixNetworkServer/src/ofxMatrixNetworkServer.h</string>
-				<key>sourceTree</key>
-				<string>SOURCE_ROOT</string>
-			</dict>
-			<key>CA2452B59550AB335BF72758</key>
-			<dict>
-				<key>fileRef</key>
-				<string>3E425579A9DCE04D58C10D20</string>
-				<key>isa</key>
-				<string>PBXBuildFile</string>
-			</dict>
-			<key>3E425579A9DCE04D58C10D20</key>
-			<dict>
-				<key>explicitFileType</key>
-				<string>sourcecode.cpp.cpp</string>
-				<key>fileEncoding</key>
-				<string>30</string>
-				<key>isa</key>
-				<string>PBXFileReference</string>
-				<key>name</key>
-				<string>ofxMatrixNetworkServer.cpp</string>
-				<key>path</key>
-				<string>../../../addons/ofxMatrixNetworkServer/src/ofxMatrixNetworkServer.cpp</string>
-				<key>sourceTree</key>
-				<string>SOURCE_ROOT</string>
-			</dict>
-			<key>FD6F6BA3E6CAA0656A7F8155</key>
-			<dict>
-				<key>explicitFileType</key>
-				<string>sourcecode.c.h</string>
-				<key>fileEncoding</key>
-				<string>30</string>
-				<key>isa</key>
-				<string>PBXFileReference</string>
-				<key>name</key>
-				<string>ofxKinectNetworkServer.h</string>
-				<key>path</key>
-				<string>../../../addons/ofxMatrixNetworkServer/src/ofxKinectNetworkServer.h</string>
-				<key>sourceTree</key>
-				<string>SOURCE_ROOT</string>
-			</dict>
-			<key>A68E4AA727B904BEEC0F3855</key>
-			<dict>
-				<key>children</key>
-				<array>
-					<string>1965C19DAC2C3BD27D2BE262</string>
-					<string>FD6F6BA3E6CAA0656A7F8155</string>
-					<string>3E425579A9DCE04D58C10D20</string>
-					<string>6C28E6044C0036AA0AD457C0</string>
-				</array>
-				<key>isa</key>
-				<string>PBXGroup</string>
-				<key>name</key>
-				<string>src</string>
-				<key>sourceTree</key>
-				<string>&lt;group&gt;</string>
-			</dict>
-			<key>D02C20370F7337AD485CE0D9</key>
-			<dict>
-				<key>children</key>
-				<array>
-					<string>A68E4AA727B904BEEC0F3855</string>
-				</array>
-				<key>isa</key>
-				<string>PBXGroup</string>
-				<key>name</key>
-				<string>ofxMatrixNetworkServer</string>
-				<key>sourceTree</key>
-				<string>&lt;group&gt;</string>
-			</dict>
-			<key>DA8DD64901128657B5AE91BC</key>
-			<dict>
-				<key>fileRef</key>
-				<string>1965C19DAC2C3BD27D2BE262</string>
-				<key>isa</key>
-				<string>PBXBuildFile</string>
-			</dict>
-			<key>1965C19DAC2C3BD27D2BE262</key>
-			<dict>
-				<key>explicitFileType</key>
-				<string>sourcecode.cpp.cpp</string>
-				<key>fileEncoding</key>
-				<string>30</string>
-				<key>isa</key>
-				<string>PBXFileReference</string>
-				<key>name</key>
-				<string>ofxKinectNetworkServer.cpp</string>
-				<key>path</key>
-				<string>../../../addons/ofxMatrixNetworkServer/src/ofxKinectNetworkServer.cpp</string>
-				<key>sourceTree</key>
-				<string>SOURCE_ROOT</string>
-			</dict>
 			<key>2C171637C399A50881F147E9</key>
 			<dict>
 				<key>children</key>
@@ -8815,7 +8712,6 @@ fi
 						<string>../../../addons/ofxKinect/libs/libusb-win32</string>
 						<string>../../../addons/ofxKinect/src</string>
 						<string>../../../addons/ofxKinect/src/extra</string>
-						<string>../../../addons/ofxMatrixNetworkServer/src</string>
 						<string>../../../addons/ofxNetwork/src</string>
 						<string>../../../addons/ofxOpenCv/libs</string>
 						<string>../../../addons/ofxOpenCv/libs/opencv</string>
@@ -8954,7 +8850,6 @@ fi
 						<string>../../../addons/ofxKinect/libs/libusb-win32</string>
 						<string>../../../addons/ofxKinect/src</string>
 						<string>../../../addons/ofxKinect/src/extra</string>
-						<string>../../../addons/ofxMatrixNetworkServer/src</string>
 						<string>../../../addons/ofxNetwork/src</string>
 						<string>../../../addons/ofxOpenCv/libs</string>
 						<string>../../../addons/ofxOpenCv/libs/opencv</string>
@@ -9040,7 +8935,6 @@ fi
 				<array>
 					<string>DFCCF8BDC58AFA44D27F9F11</string>
 					<string>9683228C705CA3FF4F2EA945</string>
-					<string>D02C20370F7337AD485CE0D9</string>
 					<string>18240ECCE4076FB0833A8578</string>
 					<string>A0B90D3B0ADB9C1716816714</string>
 					<string>E6053AB7FEC63D5F83825B88</string>
@@ -9235,7 +9129,6 @@ fi
 						<string>../../../addons/ofxKinect/libs/libusb-win32</string>
 						<string>../../../addons/ofxKinect/src</string>
 						<string>../../../addons/ofxKinect/src/extra</string>
-						<string>../../../addons/ofxMatrixNetworkServer/src</string>
 						<string>../../../addons/ofxNetwork/src</string>
 						<string>../../../addons/ofxOpenCv/libs</string>
 						<string>../../../addons/ofxOpenCv/libs/opencv</string>
@@ -9372,7 +9265,6 @@ fi
 						<string>../../../addons/ofxKinect/libs/libusb-win32</string>
 						<string>../../../addons/ofxKinect/src</string>
 						<string>../../../addons/ofxKinect/src/extra</string>
-						<string>../../../addons/ofxMatrixNetworkServer/src</string>
 						<string>../../../addons/ofxNetwork/src</string>
 						<string>../../../addons/ofxOpenCv/libs</string>
 						<string>../../../addons/ofxOpenCv/libs/opencv</string>
@@ -9522,8 +9414,6 @@ fi
 					<string>D31F5C1B140C59B2AF1533A8</string>
 					<string>49BEEB2DFA5319D55AA6899F</string>
 					<string>255A7B680DC81E543C875794</string>
-					<string>DA8DD64901128657B5AE91BC</string>
-					<string>CA2452B59550AB335BF72758</string>
 					<string>960D20B191346612D5C05A6A</string>
 					<string>125506CD3E5F428AAFE5CC65</string>
 					<string>66CA411C5A9664E27326BF36</string>
@@ -9592,7 +9482,7 @@ fi
 				<key>isa</key>
 				<string>PBXNativeTarget</string>
 				<key>name</key>
-				<string>kinectServer</string>
+				<string>HeadRoom</string>
 				<key>productName</key>
 				<string>myOFApp</string>
 				<key>productReference</key>
@@ -9609,7 +9499,7 @@ fi
 				<key>isa</key>
 				<string>PBXFileReference</string>
 				<key>path</key>
-				<string>kinectServerDebug.app</string>
+				<string>HeadRoomDebug.app</string>
 				<key>sourceTree</key>
 				<string>BUILT_PRODUCTS_DIR</string>
 			</dict>
@@ -9672,7 +9562,6 @@ fi
 						<string>../../../addons/ofxKinect/libs/libusb-win32</string>
 						<string>../../../addons/ofxKinect/src</string>
 						<string>../../../addons/ofxKinect/src/extra</string>
-						<string>../../../addons/ofxMatrixNetworkServer/src</string>
 						<string>../../../addons/ofxNetwork/src</string>
 						<string>../../../addons/ofxOpenCv/libs</string>
 						<string>../../../addons/ofxOpenCv/libs/opencv</string>
@@ -9794,7 +9683,6 @@ fi
 						<string>../../../addons/ofxKinect/libs/libusb-win32</string>
 						<string>../../../addons/ofxKinect/src</string>
 						<string>../../../addons/ofxKinect/src/extra</string>
-						<string>../../../addons/ofxMatrixNetworkServer/src</string>
 						<string>../../../addons/ofxNetwork/src</string>
 						<string>../../../addons/ofxOpenCv/libs</string>
 						<string>../../../addons/ofxOpenCv/libs/opencv</string>
