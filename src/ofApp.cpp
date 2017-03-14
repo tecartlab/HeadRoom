@@ -273,23 +273,48 @@ void ofApp::updateCalc(){
     sphere3.setRadius(25);
 
     
-    Planef floorPlane = Planef(planePoint1, planePoint2, planePoint3);
-    Linef centerLine = Linef(ofVec3f(0, 0, 0), ofVec3f(0, 0, -1));
+    Planef REL_floorPlane = Planef(planePoint1, planePoint2, planePoint3);
     
-    Planef verticalViewPlane = Planef(ofVec3f(0, 0, 0), ofVec3f(0, 0, -1), ofVec3f(0, 1, -1));
-    Planef horizontalViewPlane = Planef(ofVec3f(0, 0, 0), ofVec3f(0, 0, -1), ofVec3f(1, 0, -1));
+    Linef KINECT_Z_axis = Linef(ofVec3f(0, 0, 0), ofVec3f(0, 0, -1));
     
-    Linef verticalLine;
-    if(verticalViewPlane.intersects(floorPlane))
-       verticalLine = verticalViewPlane.getIntersection(floorPlane);
+    //Y-Z plane
+    Planef KINECT_vertical_Plane = Planef(ofVec3f(0, 0, 0), ofVec3f(0, 0, -1), ofVec3f(0, 1, -1));
+    //X-Z plane
+    Planef KINECT_horizontal_Plane = Planef(ofVec3f(0, 0, 0), ofVec3f(0, 0, -1), ofVec3f(1, 0, -1));
     
-    ofVec3f frustumCenterPoint = floorPlane.getIntersection(centerLine);
-        
-    ofVec3f CenterPointXAxis = ofVec3f(frustumCenterPoint).cross(ofVec3f(verticalLine.direction).scale(100));
+    Linef ABS_Y_Axis;
+    if(KINECT_vertical_Plane.intersects(REL_floorPlane))
+       ABS_Y_Axis = KINECT_vertical_Plane.getIntersection(REL_floorPlane);
     
-    ofVec3f planeZAxis = ofVec3f(floorPlane.normal).scale(1000);
+    ofVec3f ABS_frustumCenterPoint = REL_floorPlane.getIntersection(KINECT_Z_axis);
     
-    ofVec3f CenterPointRotXtoZAxis = ofVec3f(CenterPointXAxis).cross(ofVec3f(verticalLine.direction).scale(100));
+    ofVec3f ABS_Z_Axis = ofVec3f(REL_floorPlane.normal).scale(1000);
+    ofVec3f ABS_X_Axis = ofVec3f(ABS_Y_Axis.direction).cross(ABS_Z_Axis);
+    
+    ofVec3f HELPER_X_Axis = ofVec3f(ABS_frustumCenterPoint).cross(ofVec3f(ABS_Y_Axis.direction).scale(100));
+    ofVec3f HELPER_Z_Axis = ofVec3f(HELPER_X_Axis).cross(ofVec3f(ABS_Y_Axis.direction).scale(100));
+
+    float kinectRransform_xAxisRot = ABS_frustumCenterPoint.angle(ofVec3f(HELPER_Z_Axis).scale(-1.));
+    float kinectRransform_yAxisRot = HELPER_X_Axis.angle(ABS_X_Axis);
+    
+    float kinectRransform_zTranslate = ABS_frustumCenterPoint.length();
+
+    ofMatrix4x4 zTranMatrix = ofMatrix4x4();
+    zTranMatrix.translate(0, 0, kinectRransform_zTranslate);
+    zTranMatrix.rotate(kinectRransform_xAxisRot, 1, 0, 0);
+    zTranMatrix.rotate(kinectRransform_yAxisRot, 0, 1, 0);
+    
+    transformation.set(ofVec3f(kinectRransform_xAxisRot, kinectRransform_yAxisRot, zTranMatrix.getTranslation().z));
+    
+    //ofLog(OF_LOG_NOTICE, "zpos: " + ofToString(kinectTransform.getTranslation().z));
+    
+    ofMatrix4x4 centerMatrix = ofMatrix4x4();
+    centerMatrix.rotate(kinectRransform_xAxisRot, 1, 0, 0);
+    centerMatrix.rotate(kinectRransform_yAxisRot, 0, 1, 0);
+    centerMatrix.translate(0, 0, zTranMatrix.getTranslation().z);
+    
+    planeCenterPoint = centerMatrix.preMult(ABS_frustumCenterPoint);
+    //planeCenterPoint.rotate(kinectRransform_xAxisRot, ofVec3f(1, 0, 0));
 
 
     geometry.clear();
@@ -297,50 +322,34 @@ void ofApp::updateCalc(){
     geometry.addColor(ofColor::blueSteel);
     geometry.addVertex(ofVec3f(0, 0, 0));
     geometry.addColor(ofColor::blueSteel);
-    geometry.addVertex(frustumCenterPoint);
-    geometry.addColor(ofColor::greenYellow);
-    geometry.addVertex(frustumCenterPoint);
-    geometry.addColor(ofColor::greenYellow);
-    geometry.addVertex(frustumCenterPoint + ofVec3f(verticalLine.direction).scale(1000));
+    geometry.addVertex(ABS_frustumCenterPoint);
+    
+    geometry.addColor(ofColor::green);
+    geometry.addVertex(ABS_frustumCenterPoint);
+    geometry.addColor(ofColor::green);
+    geometry.addVertex(ABS_frustumCenterPoint + ofVec3f(ABS_Y_Axis.direction).scale(1000));
     
     geometry.addColor(ofColor::red);
-    geometry.addVertex(frustumCenterPoint);
+    geometry.addVertex(ABS_frustumCenterPoint);
     geometry.addColor(ofColor::red);
-    geometry.addVertex(frustumCenterPoint + CenterPointXAxis);
+    geometry.addVertex(ABS_frustumCenterPoint + ABS_X_Axis);
     
     geometry.addColor(ofColor::blue);
-    geometry.addVertex(frustumCenterPoint);
+    geometry.addVertex(ABS_frustumCenterPoint);
     geometry.addColor(ofColor::blue);
-    geometry.addVertex(frustumCenterPoint + planeZAxis);
+    geometry.addVertex(ABS_frustumCenterPoint + ABS_Z_Axis);
 
     geometry.addColor(ofColor::blueViolet);
-    geometry.addVertex(frustumCenterPoint);
+    geometry.addVertex(ABS_frustumCenterPoint);
     geometry.addColor(ofColor::blueViolet);
-    geometry.addVertex(frustumCenterPoint + CenterPointRotXtoZAxis);
+    geometry.addVertex(ABS_frustumCenterPoint + HELPER_X_Axis);
 
-    float kinectRransform_xAxisRot = frustumCenterPoint.angle(ofVec3f(CenterPointRotXtoZAxis).scale(-1.));
-    float kinectRransform_yAxisRot = -CenterPointRotXtoZAxis.angle(planeZAxis);
+    geometry.addColor(ofColor::greenYellow);
+    geometry.addVertex(ABS_frustumCenterPoint);
+    geometry.addColor(ofColor::greenYellow);
+    geometry.addVertex(ABS_frustumCenterPoint + ofVec3f(HELPER_Z_Axis).scale(1000));
     
-    float kinectRransform_zTranslate = frustumCenterPoint.length();
-    
-    ofMatrix4x4 zTranMatrix = ofMatrix4x4();
-    zTranMatrix.translate(0, 0, kinectRransform_zTranslate);
-    zTranMatrix.rotate(kinectRransform_xAxisRot, 1, 0, 0);
-    zTranMatrix.rotate(kinectRransform_yAxisRot, 0, 1, 0);
-    
-    transformation.set(ofVec3f(kinectRransform_xAxisRot, kinectRransform_yAxisRot, zTranMatrix.getTranslation().z));
-
-    //ofLog(OF_LOG_NOTICE, "zpos: " + ofToString(kinectTransform.getTranslation().z));
-
-    ofMatrix4x4 centerMatrix = ofMatrix4x4();
-    centerMatrix.rotate(kinectRransform_xAxisRot, 1, 0, 0);
-    centerMatrix.rotate(kinectRransform_yAxisRot, 0, 1, 0);
-    centerMatrix.translate(0, 0, zTranMatrix.getTranslation().z);
-
-    planeCenterPoint = centerMatrix.preMult(frustumCenterPoint);
-    //planeCenterPoint.rotate(kinectRransform_xAxisRot, ofVec3f(1, 0, 0));
-
-    calcdata = string("distance to plane center point: " + ofToString(frustumCenterPoint.length()) + "\n");
+    calcdata = string("distance to plane center point: " + ofToString(ABS_frustumCenterPoint.length()) + "\n");
     calcdata += "distance to A: " + ofToString(planePoint1.length()) + "\n";
     calcdata += "distance to B: " + ofToString(planePoint2.length()) + "\n";
     calcdata += "distance to C: " + ofToString(planePoint3.length()) + "\n";
