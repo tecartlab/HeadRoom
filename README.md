@@ -1,16 +1,16 @@
-# kinectServer
+# HeadRoom
 
 by Martin Fröhlich
 
 ## Overview
 
-**kinectServer**, the missing kinect network solution for *interaction space developers*.
+**HeadRoom**, the missing kinect network solution for *interaction space developers*.
 
 It is based on openFrameworks and libfreenect, should run on OSX (tested), Windows and Linux.
 
 ### Functionality
 
-kinectServer runs as an application on a dedicated computer with one attached kinect device. The machine needs to be powerfull enough to do all the tracking analysis necessary. 
+HeadRoom runs as an application on a dedicated computer with one attached kinect device. The machine needs to be powerfull enough to do all the tracking analysis necessary. 
 
 It is built for a accurate tracking of bodies. The tracker can send the bodies position and heigth, head-toptip-position, head-center-position, eye-center-position and gaze direction.
 
@@ -22,7 +22,7 @@ The results are sent as UDP and/or TCP data over the network to a requesting cli
 
 ## Communication
 
-On startup, kinectServer will send every second a OSC-broadcast-announcement to the broadcast address (of the newtork the machine resides in) to port 43525. The server itself will listen to a different port, indicated inside the broadcast message.
+On startup, HeadRoom will send every second a OSC-broadcast-announcement to the broadcast address (of the newtork the machine resides in) to port 43525. The server itself will listen to a different port, indicated inside the broadcast message.
 
 Assuming the IP-address of the kinectServer is 192.168.1.100, it will send the handshake to 192.168.1.255 / 43525.
 
@@ -32,7 +32,7 @@ for example
 
 > **/ks/server/broadcast** A00363A14660053A 0 192.168.1.100 43522
 
-every client in the network can respond to this broadcast and send a handshake request back to the kinectServer:
+every client in the network can respond to this broadcast and send a handshake request back to the HeadRoom:
 
 > **/ks/request/handshake** \<ClientListeningPort>
 
@@ -44,7 +44,7 @@ In order to get the trackingdata, the server then needs an update message every 
 > 
 upon receiving this request, the server will send a continous stream of the tracking data for the next 11 seconds. Since the server will keep on sending its broadcast message every 10 seconds, the clients resend of the update-message can be triggered by the broadcast-message and thus the connection will never drop.
 
-The server will stop sending the stream of tracking data if no update-message is received anymore and drop the registration of the client. 
+HeadRoom will stop sending the stream of tracking data if no update-message is received anymore and drop the registration of the client. 
 
 If no client is registered anymore, the server will again start sending the broadcast message every second.
 
@@ -125,8 +125,8 @@ in order to compile this app on your system, you need to install openframeworks.
 ###openFrameworks
 To grab a copy of openFrameworks for your platform, check the [download page](http://openframeworks.cc/download) on the main site.  
  
-###kinectServer
-To grab a copy of kinectServer for your platform, check here [download page](http://github.com/maybites).  
+###HeadRoom
+To grab a copy of HeadRoom for your platform, check here [download page](http://github.com/tecartlab).  
  
 The `master` branch of this repository corresponds to the most recent release. This GitHub repository contains code and libs for all the platforms.
 
@@ -140,7 +140,7 @@ drop it onto the \<openframeworksfolder>/addons/\<ofxGuiExtended>
 to come...
 
 ##Version
-kinectServer uses [Semantic Versioning](http://semver.org/), 
+HeadRoom uses [Semantic Versioning](http://semver.org/), 
 
 Version 0.0.2
 - switch to ofxGuiExtended
@@ -152,9 +152,9 @@ Version 0.0.1
 
 ##Credits
 
-(c) by beamstreamer.com
+(c) by tecartlab.com
 
-created by Martin Froehlich for [beamstreamer.com](http://beamstreamer.com)
+created by Martin Froehlich for [tecartlab.com](http://tecartlab.com)
 
 loosely based on a concept by Andrew Sempre and his [performance-space](https://bitbucket.org/tezcatlipoca/performance-space)
 
