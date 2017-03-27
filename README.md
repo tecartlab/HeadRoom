@@ -22,15 +22,15 @@ The results are sent as UDP and/or TCP data over the network to a requesting cli
 
 ## Communication
 
-On startup, HeadRoom will send every second a OSC-broadcast-announcement to the broadcast address (of the newtork the machine resides in) to port 43525. The server itself will listen to a different port, indicated inside the broadcast message.
+On startup, HeadRoom will send every second a OSC-broadcast-announcement to the broadcast address (of the newtork the machine resides in) to port 43500. The server itself will listen to a different port (default = 43600), indicated inside the broadcast message.
 
-Assuming the IP-address of the kinectServer is 192.168.1.100, it will send the handshake to 192.168.1.255 / 43525.
+Assuming the IP-address of the kinectServer is 192.168.1.100, it will send the handshake to 192.168.1.255 / 43500.
 
 > **/ks/server/broadcast** \<kinectid> \<serverID> \<ServerIP> \<ServerListeningPort>
 
 for example
 
-> **/ks/server/broadcast** A00363A14660053A 0 192.168.1.100 43522
+> **/ks/server/broadcast** A00363A14660053A 0 192.168.1.100 43600
 
 every client in the network can respond to this broadcast and send a handshake request back to the HeadRoom:
 
