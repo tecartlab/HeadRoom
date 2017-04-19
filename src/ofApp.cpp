@@ -124,7 +124,8 @@ void ofApp::setup(){
 
     createHelp();
     
-
+    capMesh.reSize(4);
+    
     ////////////////
     //CAIRO RENDER //
     ////////////////
@@ -438,7 +439,7 @@ void ofApp::update(){
             measurementCycleFine();
         }
 
-        updatePointCloud(capturemesh, blobGrain.get(), true, false);
+        updatePointCloud(capMesh.update(), blobGrain.get(), true, false);
         if(bPreviewPointCloud) {
             updatePointCloud(previewmesh, blobGrain.get() + 1, false, true);
         }
@@ -673,7 +674,7 @@ void ofApp::drawCapturePointCloud() {
     glPointSize(blobGrain.get() * 2);
 	ofPushMatrix();
 	ofScale(0.01, 0.01, 0.01);
-    capturemesh.drawVertices();
+    capMesh.draw();
 	ofPopMatrix();
     glDisable(GL_DEPTH_TEST);
 }

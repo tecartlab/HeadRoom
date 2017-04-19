@@ -10,6 +10,7 @@
 #include "Grid.h"
 #include "TrackingNetworkManager.h"
 #include "Frustum.h"
+#include "CaptureMeshArray.h"
 
 #include <ofMatrix4x4.h>
 
@@ -102,7 +103,9 @@ class ofApp : public ofBaseApp{
 
     bool bPreviewPointCloud;
     
-    ofVboMesh previewmesh, capturemesh;
+    ofVboMesh previewmesh;//, capturemesh;
+    
+    CaptureMeshArray capMesh;
     
     Frustum kinectFrustum;
     

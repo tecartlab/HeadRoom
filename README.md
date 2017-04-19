@@ -8,6 +8,12 @@ by Martin Fröhlich
 
 It is based on openFrameworks and libfreenect, should run on OSX (tested), Windows and Linux.
 
+NOTE: Xbox Kinect models > 1414 (1473, etc) or Kinect4Windows devices that have been plugged into an XBox will not work with ofxKinect on Mac OSX
+
+If you have an Xbox Kinect model 1473+ or Kinect4Windows device and want to use it with ofxKinect on OSX, DO NOT plug it into an XBox! If you do, it will receive a firmware update which will cause it to freeze after about 20 secs with libfreenect/ofxKinect on OSX. Linux and Windows are fine. The fix is in the works.
+
+In the meantime, we suggest you get the original Xbox Kinect model 1414 and keep those new toys away from an XBox ...
+
 ### Functionality
 
 HeadRoom runs as an application on a dedicated computer with one attached kinect device. The machine needs to be powerfull enough to do all the tracking analysis necessary. 

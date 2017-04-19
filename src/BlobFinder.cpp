@@ -106,6 +106,8 @@ void BlobFinder::update(){
     // load grayscale captured depth image from the color source
     grayImage.setFromColorImage(colorImg);
     
+    //grayImage.blurHeavily();
+    
     grayEyeLevel = grayImage;
     
     ofPixelsRef eyeRef = grayEyeLevel.getPixels();
@@ -124,6 +126,10 @@ void BlobFinder::update(){
     float sensorFieldDepth = sensorFieldBack - sensorFieldFront;
     
     int eyeLevelColor = eyeLevel.get() / sensorFieldHeigth * 255;
+    
+    int headTopThreshold = eyeLevelColor / 4;
+    
+    //ofLog(OF_LOG_NOTICE, "eyeLevelColor = " + ofToString(eyeLevelColor));
     
     //ofLog(OF_LOG_NOTICE, "eyref size : " + ofToString(eyeRef.size()));
     
@@ -147,7 +153,23 @@ void BlobFinder::update(){
                 brightness = (pixelBrightness > brightness)?pixelBrightness: brightness;
             }
         }
+
+        float averageBrightness = 0;
+        int averageCounter = 0;
+
+        // go through the pixels again and get the average brightness for the headTopThreshold
+        for(int x = bounds.x; x < bounds.x + bounds.width; x++){
+            for(int y = bounds.y; y < bounds.y + bounds.height; y++){
+                pixelBrightness = greyref.getColor(x, y).getBrightness();
+                if(pixelBrightness > brightness - headTopThreshold){
+                    averageBrightness += pixelBrightness;
+                    averageCounter++;
+                }
+            }
+        }
         
+        brightness = averageBrightness / averageCounter;
+
         //calculate the blob pos in worldspace
         ofVec3f blobPos = ofVec3f(((float)bounds.getCenter().x / captureScreenSize.x) * sensorFieldWidth + sensorFieldLeft, sensorFieldBack - ((float)bounds.getCenter().y / captureScreenSize.y ) * sensorFieldDepth, (brightness / 255.0) * sensorFieldHeigth + sensorFieldBottom);
 
@@ -166,13 +188,15 @@ void BlobFinder::update(){
                 }else{
                     eyeRef.setColor(x, y, black);
                 }
-                if(pixelBrightness >= brightness - 2){
+                if(pixelBrightness >= brightness - (eyeLevelColor / 4)){
                     headtop2d += ofVec2f(x, y);
                     brighCounter++;
                 }
             }
         }
         headtop2d /= brighCounter;
+        
+        //ofLog(OF_LOG_NOTICE, "headtop2d = " + ofToString(headtop2d));
         
         ofVec3f headTop = ofVec3f((headtop2d.x / captureScreenSize.x) * sensorFieldWidth + sensorFieldLeft, sensorFieldBack - (headtop2d.y / captureScreenSize.y ) * sensorFieldDepth, (brightness / 255.0) * sensorFieldHeigth + sensorFieldBottom);
 
@@ -237,6 +261,8 @@ void BlobFinder::update(){
             
                 //calculate the gazeVector
                 ofVec3f gaze = trackedBlobs[bid].getCurrentHeadCenter() - gazePoint.get();
+                
+                gaze.z = 0;
                 
                 float smalestAngle = 180;
                 ofVec3f eyePoint;
