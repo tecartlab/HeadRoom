@@ -44,14 +44,24 @@ void TrackingNetworkManager::setup(ofxGui &gui, string _kinectSerial){
     panel->loadTheme("theme/theme_light.json");
     panel->setName("Broadcasting..");
 
+    streamingBodyBlob.addListener(this, &TrackingNetworkManager::listenerBool);
+    streamingHeadBlob.addListener(this, &TrackingNetworkManager::listenerBool);
+    streamingHead.addListener(this, &TrackingNetworkManager::listenerBool);
+    streamingEye.addListener(this, &TrackingNetworkManager::listenerBool);
+
+    broadcastIP.addListener(this, &TrackingNetworkManager::listenerString);
+    broadcastPort.addListener(this, &TrackingNetworkManager::listenerInt);
+    listeningIP.addListener(this, &TrackingNetworkManager::listenerString);
+    listeningPort.addListener(this, &TrackingNetworkManager::listenerInt);
+    
     broadcastGroup = panel->addGroup("Broadcast");
     //panel->add(broadcastLabel.set("Broadcast"));
     broadcastGroup->add<ofxGuiTextField>(broadcastIP.set("IP","127.0.0.1"));
-    broadcastGroup->add<ofxGuiIntInputField>(broadcastPort.set("Port", NETWORK_BROADCAST_PORT, 0, 65535));
+    broadcastGroup->add<ofxGuiIntInputField>(broadcastPort.set("Port", NETWORK_BROADCAST_PORT, NETWORK_BROADCAST_PORT, NETWORK_BROADCAST_PORT + 99));
     
     listeningGroup = panel->addGroup("Listening");
     listeningGroup->add<ofxGuiTextField>(listeningIP.set("IP",localAddress));
-    listeningGroup->add<ofxGuiIntInputField>(listeningPort.set("Port", NETWORK_LISTENING_PORT, NETWORK_LISTENING_PORT, NETWORK_LISTENING_PORT + 20));
+    listeningGroup->add<ofxGuiIntInputField>(listeningPort.set("Port", NETWORK_LISTENING_PORT, NETWORK_LISTENING_PORT, NETWORK_LISTENING_PORT + 99));
 
     
     streamingGuiGroup.setName("Streaming");
@@ -78,6 +88,23 @@ void TrackingNetworkManager::setup(ofxGui &gui, string _kinectSerial){
     frameNumber = 0;
 }
 
+void TrackingNetworkManager::listenerString(string & _string){
+    ofLog(OF_LOG_NOTICE, "listenerString " + _string + " from");
+}
+
+void TrackingNetworkManager::listenerInt(int & _int){
+    ofLog(OF_LOG_NOTICE, "listenerInt " + ofToString(_int) + " ");
+}
+
+void TrackingNetworkManager::listenerBool(bool & _bool){
+    ofLog(OF_LOG_NOTICE, "listenerBool " + ofToString(_bool) +
+          " streamingBodyBlob:" + ofToString(streamingBodyBlob.get()) +
+          " streamingHeadBlob:" + ofToString(streamingHeadBlob.get()) +
+          " streamingHead:" + ofToString(streamingHead.get()) +
+          " streamingEye:" + ofToString(streamingEye.get()));
+}
+
+
 //--------------------------------------------------------------
 void TrackingNetworkManager::update(BlobFinder & _blobFinder, Frustum & _frustum, ofVec3f _trans){
     frameNumber++;
@@ -101,7 +128,7 @@ void TrackingNetworkManager::update(BlobFinder & _blobFinder, Frustum & _frustum
 	while(serverReceiver.hasWaitingMessages()){
 		// get the next message
 		ofxOscMessage m;
-		serverReceiver.getNextMessage(&m);
+		serverReceiver.getNextMessage(m);
 		//Log received message for easier debugging of participants' messages:
         ofLog(OF_LOG_NOTICE, "Server recvd msg " + getOscMsgAsString(m) + " from " + m.getRemoteIp());
         
@@ -117,7 +144,8 @@ void TrackingNetworkManager::update(BlobFinder & _blobFinder, Frustum & _frustum
                 sendCalibFrustum(_frustum, incomingHost, m.getArgAsInt32(0));
                 sendCalibSensorBox(_blobFinder, incomingHost, m.getArgAsInt32(0));
                 sendCalibTrans(_trans, incomingHost, m.getArgAsInt32(0));
-			}else{
+                sendGazePoint(_blobFinder, incomingHost, m.getArgAsInt32(0));
+            }else{
                 ofLog(OF_LOG_WARNING, "Server recvd malformed message. Expected: /ks/request/handshake <ClientListeningPort> | received: " + getOscMsgAsString(m) + " from " + incomingHost);
             }
 		} else if(m.getAddress() == "/ks/request/update"){
@@ -146,6 +174,7 @@ void TrackingNetworkManager::update(BlobFinder & _blobFinder, Frustum & _frustum
 }
 
 void TrackingNetworkManager::sendTrackingData(BlobFinder & _blobFinder){
+    
     for(int i = 0; i < _blobFinder.trackedBlobs.size(); i++){
         if(streamingBodyBlob.get()){
             ofxOscMessage bodyBlob;
@@ -192,6 +221,22 @@ void TrackingNetworkManager::sendTrackingData(BlobFinder & _blobFinder){
             head.addFloatArg(_blobFinder.trackedBlobs[i].headCenter.z * scale);
             
             sendMessageToTrackingClients(head);
+        }
+        if(streamingEye.get()){
+            ofxOscMessage eye;
+            eye.setAddress("/ks/server/track/eye");
+            eye.addIntArg(kinectID);
+            eye.addIntArg(frameNumber);
+            eye.addIntArg(i);
+            eye.addIntArg(_blobFinder.trackedBlobs[i].sortPos);
+            eye.addFloatArg(_blobFinder.trackedBlobs[i].eyeCenter.x * scale);
+            eye.addFloatArg(_blobFinder.trackedBlobs[i].eyeCenter.y * scale);
+            eye.addFloatArg(_blobFinder.trackedBlobs[i].eyeCenter.z * scale);
+            eye.addFloatArg(_blobFinder.trackedBlobs[i].eyeGaze.x);
+            eye.addFloatArg(_blobFinder.trackedBlobs[i].eyeGaze.y);
+            eye.addFloatArg(_blobFinder.trackedBlobs[i].eyeGaze.z);
+            
+            sendMessageToTrackingClients(eye);
         }
         if(streamingEye.get()){
             ofxOscMessage eye;
@@ -256,6 +301,18 @@ void TrackingNetworkManager::sendCalibSensorBox(BlobFinder & _blobFinder, string
     sensorbox.addFloatArg(_blobFinder.sensorBoxTop.get() * scale);
     sensorbox.addFloatArg(_blobFinder.sensorBoxFront.get() * scale);
     sensorbox.addFloatArg(_blobFinder.sensorBoxBack.get() * scale);
+    
+    broadcastSender.setup(_ip, _port);
+    broadcastSender.sendMessage(sensorbox);
+}
+
+void TrackingNetworkManager::sendGazePoint(BlobFinder & _blobFinder, string _ip, int _port){
+    ofxOscMessage sensorbox;
+    sensorbox.setAddress("/ks/server/calib/gazepoint");
+    sensorbox.addIntArg(kinectID);
+    sensorbox.addFloatArg(_blobFinder.gazePoint.get().x * scale);
+    sensorbox.addFloatArg(_blobFinder.gazePoint.get().y * scale);
+    sensorbox.addFloatArg(_blobFinder.gazePoint.get().z * scale);
     
     broadcastSender.setup(_ip, _port);
     broadcastSender.sendMessage(sensorbox);

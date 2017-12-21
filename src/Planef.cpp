@@ -47,4 +47,8 @@ ofVec3f Planef::getOrigin(){
     return orig;
 }
 
+ofVec3f Planef::getNormal(){
+    return normal;
+}
+
 

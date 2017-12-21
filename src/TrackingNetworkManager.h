@@ -30,8 +30,8 @@
 #define BROADCAST_NOCLIENT_FREQ     1000
 #define BROADCAST_CLIENT_FREQ       10000
 
-#define NETWORK_BROADCAST_PORT 43500
-#define NETWORK_LISTENING_PORT 43600
+#define NETWORK_BROADCAST_PORT 47500
+#define NETWORK_LISTENING_PORT 47600
 
 class TrackingNetworkManager {
     
@@ -46,11 +46,16 @@ public:
     void sendCalibFrustum(Frustum & _frustum, string ip, int port);
     void sendCalibTrans(ofVec3f & _trans, string _ip, int _port);
     void sendCalibSensorBox(BlobFinder & _blobFinder, string _ip, int _port);
+    void sendGazePoint(BlobFinder & _blobFinder, string _ip, int _port);
 
     void sendMessageToTrackingClients(ofxOscMessage _msg);
     void checkTrackingClients(long _currentMillis);
     int getTrackingClientIndex(string _ip, int _port);
-    
+
+    void listenerString(string & _string);
+    void listenerInt(int & _int);
+    void listenerBool(bool & _bool);
+
     void sendBroadCastAddress();
     
     void gatherLocalIPs();

@@ -139,6 +139,8 @@ void ofApp::setup(){
      */
     
     ofSetLogLevel(OF_LOG_NOTICE);
+    
+    ofLogToFile("myLogFile.txt", true);
 }
 
 
@@ -275,6 +277,9 @@ void ofApp::updateCalc(){
 
     
     Planef REL_floorPlane = Planef(planePoint1, planePoint2, planePoint3);
+    if(REL_floorPlane.getNormal().z < 0.f){ // if it points downwards
+        REL_floorPlane = Planef(planePoint3, planePoint2, planePoint1);
+    }
     
     Linef KINECT_Z_axis = Linef(ofVec3f(0, 0, 0), ofVec3f(0, 0, -1));
     
@@ -296,7 +301,7 @@ void ofApp::updateCalc(){
     ofVec3f HELPER_Z_Axis = ofVec3f(HELPER_X_Axis).cross(ofVec3f(ABS_Y_Axis.direction).scale(100));
 
     float kinectRransform_xAxisRot = ABS_frustumCenterPoint.angle(ofVec3f(HELPER_Z_Axis).scale(-1.));
-    float kinectRransform_yAxisRot = HELPER_X_Axis.angle(ABS_X_Axis);
+    float kinectRransform_yAxisRot = -HELPER_X_Axis.angle(ABS_X_Axis);
     
     float kinectRransform_zTranslate = ABS_frustumCenterPoint.length();
 
@@ -704,16 +709,16 @@ void ofApp::exit() {
 
 void ofApp::createHelp(){
     help = string("press k -> to update the calculation\n");
-    help += "press K -> to show the calculation results \n";
+    help += "press r -> to show the calculation results \n";
 	help += "press v -> to show visualizations\n";
 	help += "press p -> to show pointcloud\n";
 	help += "press s -> to save current settings.\n";
 	help += "press l -> to load last saved settings\n";
 	help += "press 1 - 6 -> to change the viewport\n";
-	help += "press A|B|C + mouse-release -> to change the calibration points in viewport 1\n";
+	help += "press a|b|c + mouse-release -> to change the calibration points in viewport 1\n";
     
-	help += "press c -> to close the connection, connection is: " + ofToString(kinect.isConnected()) + "\n";
-	help += "press o -> to open the connection it again\n";
+	help += "press e -> to close the connection, connection is: " + ofToString(kinect.isConnected()) + "\n";
+	help += "press o -> to open the connection again\n";
     help += "ATTENTION: Setup-Settings (ServerID and Video) will only apply after restart\n";
  	help += "Broadcasting ip: "+networkMng.broadcastIP.get()+" port: "+ofToString(networkMng.broadcastPort.get())+" serverID: "+ofToString(networkMng.kinectID)+" \n";
  	help += "Correction Distance Math -> corrected distance = distance * (Base + distance / Divisor)\n";
@@ -743,11 +748,11 @@ void ofApp::keyPressed(int key){
 			kinect.open();
 			break;
 			
-		case 'c':
+		case 'e':
 			kinect.close();
 			break;
             
-        case 'K':
+        case 'r':
             bShowCalcData = !bShowCalcData;
             break;
             
@@ -865,19 +870,19 @@ void ofApp::mouseDragged(int x, int y, int button){
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button){
     if(iMainCamera == 0 || iMainCamera == 1) {
-        if(ofGetKeyPressed('A')){
+        if(ofGetKeyPressed('a')){
             int posX = (x - VIEWGRID_WIDTH) / viewMain.width * KINECT_IMG_WIDTH;
             int posY = y;
             if(0 <= posX && posX < KINECT_IMG_WIDTH &&
                0 <= posY && posY < KINECT_IMG_HEIGHT)
                 calibPoint1.set(ofVec3f(posX, posY));
-        }else if(ofGetKeyPressed('B')){
+        }else if(ofGetKeyPressed('b')){
             int posX = (x - VIEWGRID_WIDTH) / viewMain.width * KINECT_IMG_WIDTH;
             int posY = y;
             if(0 <= posX && posX < KINECT_IMG_WIDTH &&
                0 <= posY && posY < KINECT_IMG_HEIGHT)
                 calibPoint2.set(ofVec3f(posX, posY));
-        }else if(ofGetKeyPressed('C')){
+        }else if(ofGetKeyPressed('c')){
             int posX = (x - VIEWGRID_WIDTH) / viewMain.width * KINECT_IMG_WIDTH;
             int posY = y;
             if(0 <= posX && posX < KINECT_IMG_WIDTH &&

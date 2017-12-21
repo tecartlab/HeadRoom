@@ -15,7 +15,7 @@ void BlobFinder::setup(ofxGui &gui){
     //////////
     
     captureScreenSize = ofVec2f(640, 480);
-    gazePointer.setRadius(50);
+    gazePointer.setRadius(1000);
     
     panel = gui.addPanel();
     
@@ -45,7 +45,7 @@ void BlobFinder::setup(ofxGui &gui){
     
     blobGuiGroup.setName("Blobs");
     blobGuiGroup.add(blobAreaMin.set("AreaMin", 1000, 0, 30000));
-    blobGuiGroup.add(blobAreaMax.set("AreaMax", 6000, 0, 30000));
+    blobGuiGroup.add(blobAreaMax.set("AreaMax", 6000, 0, 50000));
     blobGuiGroup.add(countBlob.set("MaxBlobs", 5, 1, N_MAX_BLOBS));
     panel->addGroup(blobGuiGroup);
 
@@ -339,7 +339,7 @@ void BlobFinder::drawBodyBlobs2d(ofRectangle _rect){
     
     ofNoFill();
     for(int i = 0; i < trackedBlobs.size(); i++){
-        ofRect(_rect.x + trackedBlobs[i].baseRectangle2d.x * xFactor, _rect.y + trackedBlobs[i].baseRectangle2d.y * yFactor, trackedBlobs[i].baseRectangle2d.width * xFactor, trackedBlobs[i].baseRectangle2d.height * yFactor);
+        ofDrawRectangle(_rect.x + trackedBlobs[i].baseRectangle2d.x * xFactor, _rect.y + trackedBlobs[i].baseRectangle2d.y * yFactor, trackedBlobs[i].baseRectangle2d.width * xFactor, trackedBlobs[i].baseRectangle2d.height * yFactor);
         ofDrawBitmapString("blob[" + ofToString(i) + "]\n sort = " + ofToString(trackedBlobs[i].sortPos) + "\n x = " + ofToString(trackedBlobs[i].headTop.x) + "\n y = " + ofToString(trackedBlobs[i].headTop.y) + "\n z = " + ofToString(trackedBlobs[i].headTop.z),trackedBlobs[i].baseRectangle2d.getCenter().x + _rect.x, trackedBlobs[i].baseRectangle2d.getCenter().y + _rect.y);
         
     }
@@ -371,9 +371,10 @@ void BlobFinder::drawEyeCenters(){
 }
 
 void BlobFinder::drawGazePoint(){
-    gazePointer.setPosition(gazePoint.get());
-    gazePointer.ofNode::draw();
-    ofLine(gazePoint.get().x, gazePoint.get().y, 0, gazePoint.get().x, gazePoint.get().y, 3000);
+    //gazePointer.setPosition(gazePoint.get());
+    //gazePointer.ofNode::draw();
+    ofDrawSphere(gazePoint.get().x, gazePoint.get().y, gazePoint.get().z, 50);
+    ofDrawLine(gazePoint.get().x, gazePoint.get().y, 0, gazePoint.get().x, gazePoint.get().y, 3000);
 }
 
 

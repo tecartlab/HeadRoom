@@ -25,6 +25,7 @@ public:
     bool intersects(Linef line);
     bool intersects(Planef _plane);
     ofVec3f getOrigin();
+    ofVec3f getNormal();
     
     ofVec3f normal;
     float p;
