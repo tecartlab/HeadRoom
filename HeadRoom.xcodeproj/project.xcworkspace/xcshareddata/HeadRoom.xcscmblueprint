@@ -8,7 +8,7 @@
     "5C3A8CDA5E958C03C8E8E4C674FD32B019D96FDB" : 9223372036854775807,
     "F29457DC2E58A3C077D1E731966FB62B66D3E9F2" : 9223372036854775807
   },
-  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "4197CEC8-1C42-4D1B-8654-457996AEF075",
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "2F963314-7153-497F-9D27-180E2A512FA1",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
     "2DE9C8846D9375EAACFABA8963120E8E7719BAF5" : "..\/..",
     "5C3A8CDA5E958C03C8E8E4C674FD32B019D96FDB" : "..\/..\/addons\/ofxGuiExtended",
@@ -29,7 +29,7 @@
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "5C3A8CDA5E958C03C8E8E4C674FD32B019D96FDB"
     },
     {
-      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/maybites\/of_kinectServer.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/tecartlab\/HeadRoom.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "F29457DC2E58A3C077D1E731966FB62B66D3E9F2"
     }

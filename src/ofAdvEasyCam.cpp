@@ -1,6 +1,7 @@
 
 #include "ofAdvEasyCam.h"
 #include "ofMath.h"
+#include "ofVectorMath.h"
 #include "ofUtils.h"
 
 // when an ofEasyCam is moving due to momentum, this keeps it
@@ -57,7 +58,7 @@ void ofAdvEasyCam::begin(ofRectangle viewport){
 			ofVec3f targetPos =  target.getGlobalPosition();
 			ofVec3f mousePosXYZ = ofVec3f(mousePosScreen.x, mousePosScreen.y, targetPos.z);
 			
-			float sphereRadius = min(viewport.width, viewport.height)/2;
+			float sphereRadius = fmin(viewport.width, viewport.height)/2;
 			float diffSquared = sphereRadius * sphereRadius - (targetPos - mousePosXYZ).lengthSquared();
 			if(diffSquared <= 0){
 				mousePosXYZ.z = 0;
@@ -104,9 +105,9 @@ void ofAdvEasyCam::begin(ofRectangle viewport){
 				target.move(translation);
 			}
 			if (rotation.asVec3().lengthSquared() > epsilonTransform){
-				target.rotate(rotation.conj());
+				target.rotate(toGlm(rotation.z()));
 			}
-			if (abs(distanceScaleVelocity - 1.0f) > epsilonTransform){
+			if (std::abs(distanceScaleVelocity - 1.0f) > epsilonTransform){
 				setDistance(getDistance() * (1.0f + distanceScaleVelocity), false);
 			}
 			

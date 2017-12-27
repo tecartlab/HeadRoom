@@ -539,7 +539,7 @@ void ofApp::draw(){
         ofSetColor(255, 0, 255, 255);
         ofNoFill();
         ofSetLineWidth(3);
-        ofRect(viewGrid[iMainCamera]);
+        ofDrawRectangle(viewGrid[iMainCamera]);
     } else {
 
         blobFinder.contourEyeFinder.draw(viewMain);
@@ -556,10 +556,11 @@ void ofApp::draw(){
 	ofSetColor(255, 255, 255);
     
     if(bShowHelp) {
-        ofDrawBitmapString(help, 20 ,VIEWPORT_HEIGHT + 20);
-        //ofLog(OF_LOG_NOTICE, "help printed");
-    }else if(bShowCalcData){
-        ofDrawBitmapString(calcdata, 20 ,VIEWPORT_HEIGHT + 20);
+        if(bShowCalcData){
+            ofDrawBitmapString(calcdata, 20 ,VIEWPORT_HEIGHT + 20);
+        } else {
+            ofDrawBitmapString(help, 20 ,VIEWPORT_HEIGHT + 20);
+        }
     }
 
     ofDrawBitmapString("fps: " + ofToString(ofGetFrameRate()), ofGetWidth() - 200, 10);
@@ -689,12 +690,12 @@ void ofApp::drawCalibrationPoints(){
     ofPushStyle();
     ofSetColor(255, 0, 0);
     ofNoFill();
-    ofDrawBitmapString("A", calibPoint1.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH + 5, calibPoint1.get().y -5);
-    ofDrawBitmapString("B", calibPoint2.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH + 5, calibPoint2.get().y -5);
-    ofDrawBitmapString("C", calibPoint3.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH + 5, calibPoint3.get().y -5);
-    ofCircle(calibPoint1.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH, calibPoint1.get().y, 2);
-    ofCircle(calibPoint2.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH, calibPoint2.get().y, 2);
-    ofCircle(calibPoint3.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH, calibPoint3.get().y, 2);
+    ofDrawBitmapString("a", calibPoint1.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH + 5, calibPoint1.get().y -5);
+    ofDrawBitmapString("b", calibPoint2.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH + 5, calibPoint2.get().y -5);
+    ofDrawBitmapString("c", calibPoint3.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH + 5, calibPoint3.get().y -5);
+    ofDrawCircle(calibPoint1.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH, calibPoint1.get().y, 2);
+    ofDrawCircle(calibPoint2.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH, calibPoint2.get().y, 2);
+    ofDrawCircle(calibPoint3.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH, calibPoint3.get().y, 2);
     ofPopStyle();
     glEnable(GL_DEPTH_TEST);
 }
@@ -708,16 +709,17 @@ void ofApp::exit() {
 }
 
 void ofApp::createHelp(){
-    help = string("press k -> to update the calculation\n");
-    help += "press r -> to show the calculation results \n";
-	help += "press v -> to show visualizations\n";
-	help += "press p -> to show pointcloud\n";
+    help = string("press v -> to show visualizations\n");
+    help += "press p -> to show pointcloud\n";
+    help += "press k -> to update the calculation\n";
+    help += "press h -> to show help \n";
+    help += "press r -> to show calculation results \n";
 	help += "press s -> to save current settings.\n";
 	help += "press l -> to load last saved settings\n";
 	help += "press 1 - 6 -> to change the viewport\n";
 	help += "press a|b|c + mouse-release -> to change the calibration points in viewport 1\n";
     
-	help += "press e -> to close the connection, connection is: " + ofToString(kinect.isConnected()) + "\n";
+	help += "press t -> to terminate the connection, connection is: " + ofToString(kinect.isConnected()) + "\n";
 	help += "press o -> to open the connection again\n";
     help += "ATTENTION: Setup-Settings (ServerID and Video) will only apply after restart\n";
  	help += "Broadcasting ip: "+networkMng.broadcastIP.get()+" port: "+ofToString(networkMng.broadcastPort.get())+" serverID: "+ofToString(networkMng.kinectID)+" \n";
@@ -748,7 +750,7 @@ void ofApp::keyPressed(int key){
 			kinect.open();
 			break;
 			
-		case 'e':
+		case 't':
 			kinect.close();
 			break;
             

@@ -20,6 +20,8 @@
 #include "ofRectangle.h"
 #include "ofAppRunner.h"
 #include "ofCamera.h"
+#include "ofGraphics.h"
+#include "ofMatrix4x4.h"
 
 // Use the public API of ofNode for all transformations
 //class ofCamera : public ofNodeWithTarget {

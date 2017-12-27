@@ -23,7 +23,7 @@ bool BlobTracker::isAlive(){
 }
 
 bool BlobTracker::finder(ofRectangle _rect){
-    if(baseRectangle2d.inside(_rect.getCenter()) || glm::distance(baseRectangle2d.getCenter() , _rect.getCenter()) < (baseRectangle2d.getPerimeter() / 4.))
+    if(baseRectangle2d.inside(_rect.getCenter()) || glm::distance(baseRectangle2d.getCenter() , _rect.getCenter()) <(baseRectangle2d.getPerimeter() / 4.))
         return true;
     return false;
 }

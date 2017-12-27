@@ -57,7 +57,7 @@ private:
 	ofVec3f mousePosScreenPrev;
 	int lastFrame;
     int mouseX, mouseY;
-    set<int> pressedMouseButtons;
+    std::set<int> pressedMouseButtons;
 	
 	unsigned long lastTap;
 	bool mousePressedPrev[2];
