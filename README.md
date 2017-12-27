@@ -126,10 +126,12 @@ the frame message is sent each time after the other messages
 
 ##Download and installation
 
-in order to compile this app on your system, you need to install openframeworks.
+in order to compile this app on your system, you need openframeworks.
 
 ###openFrameworks
-To grab a copy of openFrameworks for your platform, check the [download page](http://openframeworks.cc/download) on the main site.  
+You need to install the current master branch from github, check the [download page](http://openframeworks.cc/download) on the main site.
+
+Check out the Commit fc829d5 from 05/10/2017 by arturo. Some of the later commits are missing the libs/openFrameworks/types/ofBaseTypes.h file, which is required by the ofxGuiExtended external. (see below) 
  
 ###HeadRoom
 To grab a copy of HeadRoom for your platform, check here [download page](http://github.com/tecartlab).  
