@@ -66,14 +66,17 @@ void ofAdvEasyCam::begin(ofRectangle viewport){
 				mousePosXYZ.z = sqrtf(diffSquared);
 			}
 			mousePosXYZ.z += targetPos.z;
-			ofVec3f mousePosView = ofMatrix4x4::getInverseOf(target.getGlobalTransformMatrix()) * mousePosXYZ;
+            
+            ofVec3f mousePosOtherXYZ =ofVec3f(mousePosXYZ.x, mousePosXYZ.z, mousePosXYZ.y);
+            
+			ofVec3f mousePosView = ofMatrix4x4::getInverseOf(target.getGlobalTransformMatrix()) * mousePosOtherXYZ;
 			
 			bool mousePressedCur[] = {getMousePressed(0), getMousePressed(2)};
 			
 			//calc new rotation velocity
 			ofQuaternion newRotation;
 			if(mousePressedPrev[0] && mousePressedCur[0]){
-				newRotation.makeRotate(mousePosViewPrev, mousePosView);
+				//newRotation.makeRotate(mousePosViewPrev, mousePosView);
 			}
 			
 			//calc new scale velocity
@@ -93,10 +96,10 @@ void ofAdvEasyCam::begin(ofRectangle viewport){
 			
 			//apply drag towards new velocities
 			distanceScaleVelocity = ofLerp(distanceScaleVelocity, newDistanceScaleVelocity, drag); // TODO: add dt
-			rotation.slerp(drag, rotation, newRotation); // TODO: add dt		
+			rotation.slerp(drag, rotation, newRotation); // TODO: add dt
 			translation.interpolate(newTranslation, drag);
 			
-			mousePosViewPrev = ofMatrix4x4::getInverseOf(target.getGlobalTransformMatrix()) * mousePosXYZ;
+			mousePosViewPrev = ofMatrix4x4::getInverseOf(target.getGlobalTransformMatrix()) * mousePosOtherXYZ;
 			
 			// apply transforms if they're big enough
 			// TODO: these should be scaled by dt

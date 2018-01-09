@@ -377,6 +377,13 @@ void BlobFinder::drawGazePoint(){
     ofDrawLine(gazePoint.get().x, gazePoint.get().y, 0, gazePoint.get().x, gazePoint.get().y, 3000);
 }
 
+bool BlobFinder::hasParamUpdate(){
+    if(parameterHasUpdated){
+        parameterHasUpdated = false;
+        return true;
+    }
+    return false;
+}
 
 
 
@@ -411,4 +418,5 @@ void BlobFinder::updateSensorBox(int & value){
     //captureCam.setPosition((sensorBoxLeft.get() + sensorBoxRight.get())/2, (sensorBoxBack.get() + sensorBoxBack.get())/2, sensorBoxTop.get());
     //captureCam.setPosition(5, 5, 0);
     //captureCam.
+    parameterHasUpdated = true;
 }

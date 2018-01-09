@@ -174,7 +174,17 @@ void TrackingNetworkManager::update(BlobFinder & _blobFinder, Frustum & _frustum
 }
 
 void TrackingNetworkManager::sendTrackingData(BlobFinder & _blobFinder){
-    
+    // send frame number
+    ofxOscMessage frame;
+    frame.setAddress("/ks/server/track/frame");
+    frame.addIntArg(kinectID);
+    frame.addIntArg(frameNumber);
+    frame.addIntArg(streamingBodyBlob.get());
+    frame.addIntArg(streamingHeadBlob.get());
+    frame.addIntArg(streamingHead.get());
+    frame.addIntArg(streamingEye.get());
+    sendMessageToTrackingClients(frame);
+ 
     for(int i = 0; i < _blobFinder.trackedBlobs.size(); i++){
         if(streamingBodyBlob.get()){
             ofxOscMessage bodyBlob;
@@ -238,29 +248,13 @@ void TrackingNetworkManager::sendTrackingData(BlobFinder & _blobFinder){
             
             sendMessageToTrackingClients(eye);
         }
-        if(streamingEye.get()){
-            ofxOscMessage eye;
-            eye.setAddress("/ks/server/track/eye");
-            eye.addIntArg(kinectID);
-            eye.addIntArg(frameNumber);
-            eye.addIntArg(i);
-            eye.addIntArg(_blobFinder.trackedBlobs[i].sortPos);
-            eye.addFloatArg(_blobFinder.trackedBlobs[i].eyeCenter.x * scale);
-            eye.addFloatArg(_blobFinder.trackedBlobs[i].eyeCenter.y * scale);
-            eye.addFloatArg(_blobFinder.trackedBlobs[i].eyeCenter.z * scale);
-            eye.addFloatArg(_blobFinder.trackedBlobs[i].eyeGaze.x);
-            eye.addFloatArg(_blobFinder.trackedBlobs[i].eyeGaze.y);
-            eye.addFloatArg(_blobFinder.trackedBlobs[i].eyeGaze.z);
-            
-            sendMessageToTrackingClients(eye);
-        }
         
         // send frame number
-        ofxOscMessage frame;
-        frame.setAddress("/ks/server/track/frame");
-        frame.addIntArg(kinectID);
-        frame.addIntArg(frameNumber);
-        sendMessageToTrackingClients(frame);
+        ofxOscMessage framedone;
+        framedone.setAddress("/ks/server/track/framedone");
+        framedone.addIntArg(kinectID);
+        framedone.addIntArg(frameNumber);
+        sendMessageToTrackingClients(framedone);
     }
 }
 

@@ -87,40 +87,54 @@ the frustum needs to translated by the above transformation matrix to be in the 
 ####sensorbox:
 
 > **/ks/server/calib/sensorbox** \<serverID> \<left(x-axis)[m]> \<right(x-axis)[m]> \<bottom(z-axis)[m]> \<top(z-axis)[m]> \<near(y-axis)[m]> \<far(y-axis)[m]>  
+
+
+---
+####gaze:
+
+> **/ks/server/calib/gazepoint** \<serverID> \<gazePosX[m]> \<gazePosY[m]> \<gazePosZ[m]>
 > 
+
+
 
 ##tracking data
 
+####frame
 
+> **/ks/server/track/frame** \<serverID> \<frameNo> \<sendBodyBlob> \<sendHeadBlob> \<sendHead> \<sendEye>
+
+the message is sent each time at the beginning of a new frame. 'sendBodyBlob', 'sendHeadBlob', 'sendHead', 'sendEye' are 1 if beeing sent.
+
+---
 ####bodyBlob
 
-> **/ks/server/track/bodyblob** \<serverID> \<frameNo> \<blobID> \<sortPos> \<bodyBlobXPos[m]> \<bodyBlobYPos[m]> \<bodyBlobWidth(x-axis)[m]> \<bodyBlobDepth(y-axis)[m]> \<bodyHeight(z-axis)[m]>
+> **/ks/server/track/bodyblob** \<serverID> \<frameNo> \<blobID> \<sortPos> \<bodyBlobPosX[m]> \<bodyBlobPosY[m]> \<bodyBlobWidth(x-axis)[m]> \<bodyBlobDepth(y-axis)[m]> \<bodyHeight(z-axis)[m]>
 
 ---
 ####headBlob
 
-> **/ks/server/track/headblob** \<serverID> \<frameNo> \<blobID> \<sortPos> \<headBlobXPos[m]> \<headBlobYPos[m]> \<headBlobZPos[m]> \<headBlobWidth(x-axis)[m]> \<headBlobDepth(y-axis)[m]>
+> **/ks/server/track/headblob** \<serverID> \<frameNo> \<blobID> \<sortPos> \<headBlobPosX[m]> \<headBlobPosY[m]> \<headBlobPosZ[m]> \<headBlobWidth(x-axis)[m]> \<headBlobDepth(y-axis)[m]>
 
 ---
 ####head
 
-> **/ks/server/track/head** \<serverID> \<frameNo> \<blobID> \<sortPos> \<headTopXPos[m]> \<headTopYPos[m]> \<headTopZPos[m]> \<headCenterXPos[m] \<headCenterYPos[m] \<headCenterZPos[m]>
+> **/ks/server/track/head** \<serverID> \<frameNo> \<blobID> \<sortPos> \<headTopPosX[m]> \<headTopPosY[m]> \<headTopPosZ[m]> \<headCenterPosX[m] \<headCenterPosY[m] \<headCenterPosZ[m]>
 > 
 
 ---
 ####eye
 
-> **/ks/server/track/eye** \<serverID> \<frameNo> \<blobID> \<sortPos> \<eyeXPos[m]> \<eyeYPos[m]> \<eyeZPos[m]> \<eyeGazeX> \<eyeGazeY> \<eyeGazeZ>
+> **/ks/server/track/eye** \<serverID> \<frameNo> \<blobID> \<sortPos> \<eyePosX[m]> \<eyePosY[m]> \<eyePosZ[m]> \<eyeGazeX> \<eyeGazeY> \<eyeGazeZ>
 > 
 
 eyeGazeX, Y, Z is a normalized vector. Beware: The gaze is calculated based on a defined gaze-point and not through facial feature tracking. It assumes that each tracked person looks at this gaze-point.
 
 ---
-####frame
+####framedone
 
-> **/ks/server/track/frame** \<serverID> \<frameNo>
-
-the frame message is sent each time after the other messages
+> **/ks/server/track/framedone** \<serverID> \<frameNo>
+> 
+the last message sent for the current frame.
 
 ---
 

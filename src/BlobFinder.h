@@ -32,6 +32,7 @@ public:
     void captureEnd();
     
     void update();
+    bool hasParamUpdate();
 
     void updateSensorBox(int & value);
     
@@ -87,7 +88,9 @@ public:
     //////////////
     //PROPERTIES//
     //////////////
-    
+
+    bool parameterHasUpdated;
+
     ofxGuiPanel *panel;
     
     ofParameterGroup sensorBoxGuiGroup;

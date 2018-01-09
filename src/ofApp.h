@@ -10,6 +10,7 @@
 #include "Grid.h"
 #include "TrackingNetworkManager.h"
 #include "Frustum.h"
+#include "ofAdvEasyCam.h"
 #include "CaptureMeshArray.h"
 
 #include <ofMatrix4x4.h>

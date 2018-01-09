@@ -21,6 +21,9 @@ void ofApp::setup(){
     
     iMainCamera = 0;
     
+    previewCam.setUpAxis(glm::vec3(0, 0, 1));
+    previewCam.setTranslationSensitivity(2., 2., 2.);
+    
     /////////////////
     //BLOBFINDER   //
     /////////////////
@@ -73,7 +76,7 @@ void ofApp::setup(){
     
     //kinect.init(true); // shows infrared instead of RGB video image
     
-    kinect.open();		// opens first available kinect
+    kinect.open(-1);		// opens first available kinect
     //kinect.open(1);	// open a kinect by id, starting with 0 (sorted by serial # lexicographically))
     //kinect.open("A00362A08602047A");	// open a kinect using it's unique serial #
     
@@ -204,6 +207,7 @@ void ofApp::updateFrustumCone(int & value){
         kinectFrustum.update();
         //createFrustumCone();
     }
+    
 }
 
 void ofApp::measurementCycleRaw(){
@@ -433,7 +437,7 @@ ofVec3f ofApp::calcPlanePoint(ofParameter<ofVec2f> & cpoint, int _size, int _ste
 void ofApp::update(){
 	
 	ofBackground(100, 100, 100);
-	
+    	
 	kinect.update();
 	// there is a new frame and we are connected
 	if(kinect.isFrameNew()) {
@@ -464,6 +468,10 @@ void ofApp::update(){
         /////////////////////////////////////
         blobFinder.update();
 	}
+    
+    if(!kinect.isConnected()){
+        kinect.open(-1);
+    }
 
     networkMng.update(blobFinder, kinectFrustum, transformation.get());
 }
