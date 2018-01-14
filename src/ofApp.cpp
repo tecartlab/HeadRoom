@@ -43,10 +43,12 @@ void ofApp::setup(){
     
     setupCalib->add(captureVideo.set("use video", true));
     setupCalib->add(blobGrain.set("Grain", 2, 1, 4));
+    setupCalib->add(blobSize.set("GrainSize", 2., 1., 5.));
 
     setupCalib->add(calibPoint1.set("calibA", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
     setupCalib->add(calibPoint2.set("calibB", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
     setupCalib->add(calibPoint3.set("calibC", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
+    setupCalib->add(calibPointG.set("calibGaze", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
     
     nearFrustum.addListener(this, &ofApp::updateFrustumCone);
     farFrustum.addListener(this, &ofApp::updateFrustumCone);
@@ -206,8 +208,52 @@ void ofApp::updateFrustumCone(int & value){
         
         kinectFrustum.update();
         //createFrustumCone();
+        bNeedsNetWorkUpdate = true;
     }
     
+}
+
+void ofApp::measurementGCycleRaw(){
+    if(cycleCounter < N_MEASURMENT_CYCLES){
+        planePointGMeas[cycleCounter] = calcPlanePoint(calibPointG, 0, 1);
+        cycleCounter++;
+    } else {
+        planePointG = ofVec3f();
+        for(int y = 0; y < N_MEASURMENT_CYCLES; y++){
+            planePointG += planePointGMeas[y];
+        }
+        planePointG /= N_MEASURMENT_CYCLES;
+        ofLog(OF_LOG_NOTICE, "planePointG: " + ofToString(planePointG));
+        bUpdateGMeasurment = false;
+        bUpdateGMeasurmentFine = true;
+        cycleCounter = 0;
+    }
+}
+
+void ofApp::measurementGCycleFine(){
+    if(cycleCounter < N_MEASURMENT_CYCLES){
+        ofVec3f pGmeas = calcPlanePoint(calibPointG, 0, 1);
+        if(planePointG.z / 1.05 < pGmeas.z &&
+           pGmeas.z < planePointG.z * 1.05){
+            planePointGMeas[cycleCounter] = pGmeas;
+            cycleCounter++;
+        }
+    } else {
+        planePointG = ofVec3f();
+        for(int y = 0; y < N_MEASURMENT_CYCLES; y++){
+            planePointG += planePointGMeas[y];
+        }
+        planePointG /= N_MEASURMENT_CYCLES;
+        bUpdateGMeasurmentFine = false;
+        cycleCounter = 0;
+        
+        // now we have to recalculate it by the kinect transformation
+        planePointG = kinectRransform.preMult(planePointG);
+        
+        blobFinder.gazePoint.set(planePointG);
+        int val = 1;
+        blobFinder.updateSensorBox(val);
+    }
 }
 
 void ofApp::measurementCycleRaw(){
@@ -268,6 +314,46 @@ void ofApp::measurementCycleFine(){
     }
 }
 
+
+//--------------------------------------------------------------
+ofVec3f ofApp::calcPlanePoint(ofParameter<ofVec2f> & cpoint, int _size, int _step){
+    int width = kinect.getWidth();
+    int height = kinect.getHeight();
+    double ref_pix_size = 2 * kinect.getZeroPlanePixelSize() * pixelSizeCorrector.get();
+    double ref_distance = kinect.getZeroPlaneDistance();
+    ofShortPixelsRef raw = kinect.getRawDepthPixels();
+    
+    int size = _size;
+    int step = _step;
+    float factor;
+    int counter = 0;
+    
+    int minX = ((cpoint.get().x - size) >= 0)?(cpoint.get().x - 1): 0;
+    int minY = ((cpoint.get().y - size) >= 0)?(cpoint.get().y - 1): 0;
+    int maxY = ((cpoint.get().y + size) < cpoint.getMax().y)?(cpoint.get().y + size): cpoint.getMax().y - 1;
+    int maxX = ((cpoint.get().x + size) < cpoint.getMax().x)?(cpoint.get().x + size): cpoint.getMax().x - 1;
+    
+    ofVec3f ppoint;
+    
+    float corrDistance;
+    
+    for(int y = minY; y <= maxY; y = y + step) {
+        for(int x = minX; x <= maxX; x = x + step) {
+            corrDistance = (float)raw[y * width + x] * (depthCorrectionBase.get() + (float)raw[y * width + x] / depthCorrectionDivisor.get());
+            factor = ref_pix_size * corrDistance / ref_distance;
+            if(raw[y * width + x] > 0) {
+                ppoint += ofVec3f((x - DEPTH_X_RES/2) *factor, -(y - DEPTH_Y_RES/2) *factor, -corrDistance);
+                counter++;
+            }
+        }
+    }
+    ppoint /= counter;
+    
+    return ppoint;
+    
+}
+
+
 //--------------------------------------------------------------
 void ofApp::updateCalc(){
         
@@ -292,20 +378,25 @@ void ofApp::updateCalc(){
     //X-Z plane
     Planef KINECT_horizontal_Plane = Planef(ofVec3f(0, 0, 0), ofVec3f(0, 0, -1), ofVec3f(1, 0, -1));
     
-    Linef ABS_Y_Axis;
+    Linef ABS_Y_AxisLine;
     if(KINECT_vertical_Plane.intersects(REL_floorPlane))
-       ABS_Y_Axis = KINECT_vertical_Plane.getIntersection(REL_floorPlane);
+       ABS_Y_AxisLine = KINECT_vertical_Plane.getIntersection(REL_floorPlane);
     
     ofVec3f ABS_frustumCenterPoint = REL_floorPlane.getIntersection(KINECT_Z_axis);
     
+    ofVec3f ABS_Y_Axis = ofVec3f(ABS_Y_AxisLine.direction).scale(1000);
     ofVec3f ABS_Z_Axis = ofVec3f(REL_floorPlane.normal).scale(1000);
-    ofVec3f ABS_X_Axis = ofVec3f(ABS_Y_Axis.direction).cross(ABS_Z_Axis);
+    ofVec3f ABS_X_Axis = ofVec3f(ABS_Y_Axis).cross(ABS_Z_Axis);
     
-    ofVec3f HELPER_X_Axis = ofVec3f(ABS_frustumCenterPoint).cross(ofVec3f(ABS_Y_Axis.direction).scale(100));
-    ofVec3f HELPER_Z_Axis = ofVec3f(HELPER_X_Axis).cross(ofVec3f(ABS_Y_Axis.direction).scale(100));
+    ofVec3f HELPER_X_Axis = ofVec3f(ABS_frustumCenterPoint).cross(ABS_Y_Axis);
+    ofVec3f HELPER_Z_Axis = ofVec3f(HELPER_X_Axis).cross(ABS_Y_Axis);
 
     float kinectRransform_xAxisRot = ABS_frustumCenterPoint.angle(ofVec3f(HELPER_Z_Axis).scale(-1.));
-    float kinectRransform_yAxisRot = -HELPER_X_Axis.angle(ABS_X_Axis);
+    float kinectRransform_yAxisRot = HELPER_X_Axis.angle(ABS_X_Axis);
+    // if the angle between the ABS_Z_Axis and the HELPER_X_Axis is < 90 deg, correct the result
+    if(HELPER_X_Axis.angle(ABS_Z_Axis) < 90){
+        kinectRransform_yAxisRot *= -1.0;
+    }
     
     float kinectRransform_zTranslate = ABS_frustumCenterPoint.length();
 
@@ -337,7 +428,7 @@ void ofApp::updateCalc(){
     geometry.addColor(ofColor::green);
     geometry.addVertex(ABS_frustumCenterPoint);
     geometry.addColor(ofColor::green);
-    geometry.addVertex(ABS_frustumCenterPoint + ofVec3f(ABS_Y_Axis.direction).scale(1000));
+    geometry.addVertex(ABS_frustumCenterPoint + ABS_Y_Axis);
     
     geometry.addColor(ofColor::red);
     geometry.addVertex(ABS_frustumCenterPoint);
@@ -380,6 +471,7 @@ void ofApp::updateCalc(){
  //   ofLog(OF_LOG_NOTICE, "updating... ");
 
     updateMatrix();
+    bNeedsNetWorkUpdate = true;
 }
 
 //--------------------------------------------------------------
@@ -395,58 +487,29 @@ void ofApp::updateMatrix(){
 }
 
 //--------------------------------------------------------------
-ofVec3f ofApp::calcPlanePoint(ofParameter<ofVec2f> & cpoint, int _size, int _step){
-    int width = kinect.getWidth();
-    int height = kinect.getHeight();
-    double ref_pix_size = 2 * kinect.getZeroPlanePixelSize() * pixelSizeCorrector.get();
-    double ref_distance = kinect.getZeroPlaneDistance();
-    ofShortPixelsRef raw = kinect.getRawDepthPixels();
-    
-    int size = _size;
-    int step = _step;
-    float factor;
-    int counter = 0;
-    
-    int minX = ((cpoint.get().x - size) >= 0)?(cpoint.get().x - 1): 0;
-    int minY = ((cpoint.get().y - size) >= 0)?(cpoint.get().y - 1): 0;
-    int maxY = ((cpoint.get().y + size) < cpoint.getMax().y)?(cpoint.get().y + size): cpoint.getMax().y - 1;
-    int maxX = ((cpoint.get().x + size) < cpoint.getMax().x)?(cpoint.get().x + size): cpoint.getMax().x - 1;
-    
-    ofVec3f ppoint;
-    
-    float corrDistance;
-    
-    for(int y = minY; y <= maxY; y = y + step) {
-        for(int x = minX; x <= maxX; x = x + step) {
-            corrDistance = (float)raw[y * width + x] * (depthCorrectionBase.get() + (float)raw[y * width + x] / depthCorrectionDivisor.get());
-            factor = ref_pix_size * corrDistance / ref_distance;
-            if(raw[y * width + x] > 0) {
-                ppoint += ofVec3f((x - DEPTH_X_RES/2) *factor, -(y - DEPTH_Y_RES/2) *factor, -corrDistance);
-                counter++;
-            }
-        }
-    }
-    ppoint /= counter;
-    
-    return ppoint;
-    
-}
-
-
-//--------------------------------------------------------------
 void ofApp::update(){
 	
 	ofBackground(100, 100, 100);
-    	
+       	
 	kinect.update();
 	// there is a new frame and we are connected
 	if(kinect.isFrameNew()) {
+        // go calculate the plane with the plane points
         if(bUpdateMeasurment){
             measurementCycleRaw();
         }
         if(bUpdateMeasurmentFine){
             measurementCycleFine();
         }
+        
+        // go calculate the gace point
+        if(bUpdateGMeasurment){
+            measurementGCycleRaw();
+        }
+        if(bUpdateGMeasurmentFine){
+            measurementGCycleFine();
+        }
+        
 
         updatePointCloud(capMesh.update(), blobGrain.get(), true, false);
         if(bPreviewPointCloud) {
@@ -467,13 +530,21 @@ void ofApp::update(){
         // BlobFinding on the captured FBO
         /////////////////////////////////////
         blobFinder.update();
+        
+        //////////////////////////////////
+        // Sending updates via OSC
+        //////////////////////////////////
+        if(blobFinder.hasParamUpdate()){
+            bNeedsNetWorkUpdate = true;
+        }
+        
+        networkMng.update(blobFinder, kinectFrustum, transformation.get(), bNeedsNetWorkUpdate);
+        bNeedsNetWorkUpdate = false;
 	}
     
     if(!kinect.isConnected()){
         kinect.open(-1);
     }
-
-    networkMng.update(blobFinder, kinectFrustum, transformation.get());
 }
 
 //--------------------------------------------------------------
@@ -622,6 +693,10 @@ void ofApp::updatePointCloud(ofVboMesh & mesh, int step, bool useFrustumCone, bo
                    sensorFieldFront < vertex.y && vertex.y < sensorFieldBack &&
                    sensorFieldBottom < vertex.z && vertex.z < sensorFieldTop){
                     mesh.addColor((vertex.z - sensorFieldBottom) / (sensorFieldTop - sensorFieldBottom));
+                } else if(sensorFieldLeft < vertex.x && vertex.x < sensorFieldRight &&
+                     sensorFieldFront < vertex.y && vertex.y < sensorFieldBack &&
+                     sensorFieldBottom < vertex.z && vertex.z < sensorFieldTop){
+                    mesh.addColor((vertex.z - sensorFieldBottom) / (sensorFieldTop - sensorFieldBottom));
                 } else {
                     if(useVideoColor)
                         mesh.addColor(kinect.getColorAt(x,y));
@@ -685,7 +760,7 @@ void ofApp::drawPreview() {
 
 void ofApp::drawCapturePointCloud() {
     glEnable(GL_DEPTH_TEST);
-    glPointSize(blobGrain.get() * 2);
+    glPointSize(blobGrain.get() * blobSize.get());
 	ofPushMatrix();
 	ofScale(0.01, 0.01, 0.01);
     capMesh.draw();
@@ -701,9 +776,15 @@ void ofApp::drawCalibrationPoints(){
     ofDrawBitmapString("a", calibPoint1.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH + 5, calibPoint1.get().y -5);
     ofDrawBitmapString("b", calibPoint2.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH + 5, calibPoint2.get().y -5);
     ofDrawBitmapString("c", calibPoint3.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH + 5, calibPoint3.get().y -5);
+    ofDrawBitmapString("g", calibPointG.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH + 5, calibPointG.get().y -5);
     ofDrawCircle(calibPoint1.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH, calibPoint1.get().y, 2);
     ofDrawCircle(calibPoint2.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH, calibPoint2.get().y, 2);
     ofDrawCircle(calibPoint3.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH, calibPoint3.get().y, 2);
+ 
+    ofSetColor(255, 100, 100);
+    ofDrawBitmapString("g", calibPointG.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH + 5, calibPointG.get().y -5);
+    ofDrawCircle(calibPointG.get().x/KINECT_IMG_WIDTH*viewMain.width + VIEWGRID_WIDTH, calibPointG.get().y, 2);
+ 
     ofPopStyle();
     glEnable(GL_DEPTH_TEST);
 }
@@ -720,6 +801,7 @@ void ofApp::createHelp(){
     help = string("press v -> to show visualizations\n");
     help += "press p -> to show pointcloud\n";
     help += "press k -> to update the calculation\n";
+    help += "press g -> to update the gaze point\n";
     help += "press h -> to show help \n";
     help += "press r -> to show calculation results \n";
 	help += "press s -> to save current settings.\n";
@@ -727,12 +809,10 @@ void ofApp::createHelp(){
 	help += "press 1 - 6 -> to change the viewport\n";
 	help += "press a|b|c + mouse-release -> to change the calibration points in viewport 1\n";
     
-	help += "press t -> to terminate the connection, connection is: " + ofToString(kinect.isConnected()) + "\n";
-	help += "press o -> to open the connection again\n";
     help += "ATTENTION: Setup-Settings (ServerID and Video) will only apply after restart\n";
  	help += "Broadcasting ip: "+networkMng.broadcastIP.get()+" port: "+ofToString(networkMng.broadcastPort.get())+" serverID: "+ofToString(networkMng.kinectID)+" \n";
- 	help += "Correction Distance Math -> corrected distance = distance * (Base + distance / Divisor)\n";
-	help += "Correction pixel Site    -> corrected pixel size = pixel size * Factor\n";
+ 	help += "Correction distance math -> corrected distance = distance * (Base + distance / Divisor)\n";
+	help += "Correction pixel size    -> corrected pixel size = pixel size * Factor\n";
     /*
      help += "using opencv threshold = " + ofToString(bThreshWithOpenCV) + " (press spacebar)\n";
      help += "set near threshold " + ofToString(nearThreshold) + " (press: + -)\n";
@@ -755,11 +835,10 @@ void ofApp::keyPressed(int key){
             break;
             
 		case 'o':
-			kinect.open();
 			break;
 			
 		case 't':
-			kinect.close();
+            bPointCloudColorization = (bPointCloudColorization)? false: true;
 			break;
             
         case 'r':
@@ -769,7 +848,11 @@ void ofApp::keyPressed(int key){
         case 'k':
             bUpdateMeasurment = true;
             break;
- 
+            
+        case 'g':
+            bUpdateGMeasurment = true;
+            break;
+
         case 's':
             setupCalib->saveToFile("settings.xml");
             blobFinder.panel->saveToFile("trackings.xml");
@@ -898,6 +981,12 @@ void ofApp::mousePressed(int x, int y, int button){
             if(0 <= posX && posX < KINECT_IMG_WIDTH &&
                0 <= posY && posY < KINECT_IMG_HEIGHT)
                 calibPoint3.set(ofVec3f(posX, posY));
+        }else if(ofGetKeyPressed('g')){
+            int posX = (x - VIEWGRID_WIDTH) / viewMain.width * KINECT_IMG_WIDTH;
+            int posY = y;
+            if(0 <= posX && posX < KINECT_IMG_WIDTH &&
+               0 <= posY && posY < KINECT_IMG_HEIGHT)
+                calibPointG.set(ofVec3f(posX, posY));
         }
     }
 }

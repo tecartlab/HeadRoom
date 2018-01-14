@@ -63,7 +63,9 @@ class ofApp : public ofBaseApp{
     //////////////////
 
     TrackingNetworkManager networkMng;
-    
+ 
+    bool bNeedsNetWorkUpdate = false;
+
     //////////////////
     //OPENGL CAMERAS//
     //////////////////
@@ -126,7 +128,9 @@ class ofApp : public ofBaseApp{
             
     // used for viewing the point cloud
     ofEasyCam previewCam;
-    
+ 
+    bool bPointCloudColorization = false;
+
     ///////////////
     //CALCUALTION//
     ///////////////
@@ -134,6 +138,9 @@ class ofApp : public ofBaseApp{
     void updateMatrix();
     void measurementCycleRaw();
     void measurementCycleFine();
+    
+    void measurementGCycleRaw();
+    void measurementGCycleFine();
 
     void drawCalibrationPoints();
     ofVec3f calcPlanePoint(ofParameter<ofVec2f> & cpoint, int _size, int _step);
@@ -141,6 +148,9 @@ class ofApp : public ofBaseApp{
     bool bUpdateCalc = false;
     bool bUpdateMeasurment = false;
     bool bUpdateMeasurmentFine = false;
+ 
+    bool bUpdateGMeasurment = false;
+    bool bUpdateGMeasurmentFine = false;
     
     int cycleCounter = 0;
    
@@ -148,9 +158,13 @@ class ofApp : public ofBaseApp{
     ofVec3f planePoint2Meas[N_MEASURMENT_CYCLES];
     ofVec3f planePoint3Meas[N_MEASURMENT_CYCLES];
     
+    ofVec3f planePointGMeas[N_MEASURMENT_CYCLES];
+    
     ofVec3f planePoint1;
     ofVec3f planePoint2;
     ofVec3f planePoint3;
+    
+    ofVec3f planePointG;
 
     ofVec3f planeCenterPoint;
 
@@ -181,6 +195,8 @@ class ofApp : public ofBaseApp{
     ofParameter<ofVec2f> calibPoint2;
     ofParameter<ofVec2f> calibPoint3;
     
+    ofParameter<ofVec2f> calibPointG;
+    
     ofParameter<ofVec3f> transformation;
     
     ofParameterGroup frustumGuiGroup;
@@ -195,6 +211,7 @@ class ofApp : public ofBaseApp{
     ofParameter<float> pixelSizeCorrector;
 
     ofParameter<int> blobGrain;
+    ofParameter<float> blobSize;
 
     ofParameter<bool> captureVideo;
 

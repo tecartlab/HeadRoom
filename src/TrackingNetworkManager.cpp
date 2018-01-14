@@ -106,7 +106,7 @@ void TrackingNetworkManager::listenerBool(bool & _bool){
 
 
 //--------------------------------------------------------------
-void TrackingNetworkManager::update(BlobFinder & _blobFinder, Frustum & _frustum, ofVec3f _trans){
+void TrackingNetworkManager::update(BlobFinder & _blobFinder, Frustum & _frustum, ofVec3f _trans, bool _calibUpdate){
     frameNumber++;
     
     long currentMillis = ofGetElapsedTimeMillis();
@@ -118,9 +118,6 @@ void TrackingNetworkManager::update(BlobFinder & _blobFinder, Frustum & _frustum
         sendBroadCastAddress();
     }
     
-    //send trackingdata to all connected clients
-    sendTrackingData(_blobFinder);
-    
     // OSC receiver queues up new messages, so you need to iterate
 	// through waiting messages to get each incoming message
     
@@ -130,7 +127,7 @@ void TrackingNetworkManager::update(BlobFinder & _blobFinder, Frustum & _frustum
 		ofxOscMessage m;
 		serverReceiver.getNextMessage(m);
 		//Log received message for easier debugging of participants' messages:
-        ofLog(OF_LOG_NOTICE, "Server recvd msg " + getOscMsgAsString(m) + " from " + m.getRemoteIp());
+        ofLog(OF_LOG_NOTICE, "Server recvd msg " + getOscMsgAsString(m) + " from " + m.getRemoteHost());
         
 		// check the address of the incoming message
 		if(m.getAddress() == "/ks/request/handshake"){
@@ -140,11 +137,7 @@ void TrackingNetworkManager::update(BlobFinder & _blobFinder, Frustum & _frustum
 			// get the first argument (listeningport) as an int
 			if(m.getNumArgs() == 1 && m.getArgType(0) == OFXOSC_TYPE_INT32){
                 knownClients[getTrackingClientIndex(incomingHost, m.getArgAsInt32(0))].update(currentMillis);
-                // Send calib-data
-                sendCalibFrustum(_frustum, incomingHost, m.getArgAsInt32(0));
-                sendCalibSensorBox(_blobFinder, incomingHost, m.getArgAsInt32(0));
-                sendCalibTrans(_trans, incomingHost, m.getArgAsInt32(0));
-                sendGazePoint(_blobFinder, incomingHost, m.getArgAsInt32(0));
+                _calibUpdate = true;
             }else{
                 ofLog(OF_LOG_WARNING, "Server recvd malformed message. Expected: /ks/request/handshake <ClientListeningPort> | received: " + getOscMsgAsString(m) + " from " + incomingHost);
             }
@@ -164,6 +157,17 @@ void TrackingNetworkManager::update(BlobFinder & _blobFinder, Frustum & _frustum
 			ofLogWarning("Server got weird message: " + m.getAddress());
 		}
 	}
+    
+    if(_calibUpdate){
+        // Send calib-data
+        sendCalibFrustum(_frustum);
+        sendCalibSensorBox(_blobFinder);
+        sendCalibTrans(_trans);
+        sendCalibGazePoint(_blobFinder);
+    }
+
+    //send trackingdata to all connected clients
+    sendTrackingData(_blobFinder);
     
 	//this is purely workaround for a mysterious OSCpack bug on 64bit linux
 	// after startup, reinit the receivers
@@ -258,7 +262,7 @@ void TrackingNetworkManager::sendTrackingData(BlobFinder & _blobFinder){
     }
 }
 
-void TrackingNetworkManager::sendCalibFrustum(Frustum & _frustum, string _ip, int _port){
+void TrackingNetworkManager::sendCalibFrustum(Frustum & _frustum){
     ofxOscMessage frustum;
     frustum.setAddress("/ks/server/calib/frustum");
     frustum.addIntArg(kinectID);
@@ -269,11 +273,10 @@ void TrackingNetworkManager::sendCalibFrustum(Frustum & _frustum, string _ip, in
     frustum.addFloatArg(_frustum.near * scale);
     frustum.addFloatArg(_frustum.far * scale);
     
-    broadcastSender.setup(_ip, _port);
-    broadcastSender.sendMessage(frustum);
+    sendMessageToTrackingClients(frustum);
 }
 
-void TrackingNetworkManager::sendCalibTrans(ofVec3f & _trans, string _ip, int _port){
+void TrackingNetworkManager::sendCalibTrans(ofVec3f & _trans){
     ofxOscMessage trans;
     trans.setAddress("/ks/server/calib/trans");
     trans.addIntArg(kinectID);
@@ -281,11 +284,10 @@ void TrackingNetworkManager::sendCalibTrans(ofVec3f & _trans, string _ip, int _p
     trans.addFloatArg(_trans.y);
     trans.addFloatArg(_trans.z * scale);
     
-    broadcastSender.setup(_ip, _port);
-    broadcastSender.sendMessage(trans);
+    sendMessageToTrackingClients(trans);
 }
 
-void TrackingNetworkManager::sendCalibSensorBox(BlobFinder & _blobFinder, string _ip, int _port){
+void TrackingNetworkManager::sendCalibSensorBox(BlobFinder & _blobFinder){
     ofxOscMessage sensorbox;
     sensorbox.setAddress("/ks/server/calib/sensorbox");
     sensorbox.addIntArg(kinectID);
@@ -296,11 +298,10 @@ void TrackingNetworkManager::sendCalibSensorBox(BlobFinder & _blobFinder, string
     sensorbox.addFloatArg(_blobFinder.sensorBoxFront.get() * scale);
     sensorbox.addFloatArg(_blobFinder.sensorBoxBack.get() * scale);
     
-    broadcastSender.setup(_ip, _port);
-    broadcastSender.sendMessage(sensorbox);
+    sendMessageToTrackingClients(sensorbox);
 }
 
-void TrackingNetworkManager::sendGazePoint(BlobFinder & _blobFinder, string _ip, int _port){
+void TrackingNetworkManager::sendCalibGazePoint(BlobFinder & _blobFinder){
     ofxOscMessage sensorbox;
     sensorbox.setAddress("/ks/server/calib/gazepoint");
     sensorbox.addIntArg(kinectID);
@@ -308,8 +309,7 @@ void TrackingNetworkManager::sendGazePoint(BlobFinder & _blobFinder, string _ip,
     sensorbox.addFloatArg(_blobFinder.gazePoint.get().y * scale);
     sensorbox.addFloatArg(_blobFinder.gazePoint.get().z * scale);
     
-    broadcastSender.setup(_ip, _port);
-    broadcastSender.sendMessage(sensorbox);
+    sendMessageToTrackingClients(sensorbox);
 }
 
 void TrackingNetworkManager::sendMessageToTrackingClients(ofxOscMessage _msg){

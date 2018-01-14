@@ -44,8 +44,8 @@ void BlobFinder::setup(ofxGui &gui){
     panel->addGroup(sensorBoxGuiGroup);
     
     blobGuiGroup.setName("Blobs");
-    blobGuiGroup.add(blobAreaMin.set("AreaMin", 1000, 0, 30000));
-    blobGuiGroup.add(blobAreaMax.set("AreaMax", 6000, 0, 50000));
+    blobGuiGroup.add(blobAreaMin.set("AreaMin", 1000, 0, 50000));
+    blobGuiGroup.add(blobAreaMax.set("AreaMax", 6000, 0, 100000));
     blobGuiGroup.add(countBlob.set("MaxBlobs", 5, 1, N_MAX_BLOBS));
     panel->addGroup(blobGuiGroup);
 
@@ -373,7 +373,7 @@ void BlobFinder::drawEyeCenters(){
 void BlobFinder::drawGazePoint(){
     //gazePointer.setPosition(gazePoint.get());
     //gazePointer.ofNode::draw();
-    ofDrawSphere(gazePoint.get().x, gazePoint.get().y, gazePoint.get().z, 50);
+    ofDrawSphere(gazePoint.get().x, gazePoint.get().y, gazePoint.get().z, 10);
     ofDrawLine(gazePoint.get().x, gazePoint.get().y, 0, gazePoint.get().x, gazePoint.get().y, 3000);
 }
 
