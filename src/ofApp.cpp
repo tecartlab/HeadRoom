@@ -106,7 +106,7 @@ void ofApp::setup(){
     intrinsicGuiGroup.setName("Corrections");
     intrinsicGuiGroup.add(depthCorrectionBase.set("base", 1.0, 0.9, 1.1));
     intrinsicGuiGroup.add(depthCorrectionDivisor.set("divisor", 100000, 90000, 110000));
-    intrinsicGuiGroup.add(pixelSizeCorrector.set("pixl factor", 1.0, 0.9, 1.1));
+    intrinsicGuiGroup.add(pixelSizeCorrector.set("pixl factor", 1.0, 0.9, 1.2));
     deviceCalib->addGroup(intrinsicGuiGroup);
 
     deviceCalib->loadFromFile(kinectSerialID + ".xml");
@@ -674,6 +674,17 @@ void ofApp::updatePointCloud(ofVboMesh & mesh, int step, bool useFrustumCone, bo
     float sensorFieldTop = blobFinder.sensorBoxTop .get();
     float sensorFieldBottom = blobFinder.sensorBoxBottom.get();
     
+    float centerH = (sensorFieldLeft + sensorFieldRight) / 2.0;
+    float centerK = (sensorFieldFront + sensorFieldBack) / 2.0;
+    float radiusX = (sensorFieldRight - sensorFieldLeft) / 2.0;
+    float radiusY = (sensorFieldBack - sensorFieldFront) / 2.0;
+    
+    radiusX = radiusX * radiusX;
+    radiusY = radiusY * radiusY;
+    
+    //https://math.stackexchange.com/questions/76457/check-if-a-point-is-within-an-ellipse#76463
+    //(x−h)^2/rx^2+(y−k)^2/ry^2≤1.
+    
 	for(int y = 0; y < h; y += step) {
 		for(int x = 0; x < w; x += step) {
             vertex.z = 0;
@@ -690,13 +701,9 @@ void ofApp::updatePointCloud(ofVboMesh & mesh, int step, bool useFrustumCone, bo
             }
             if(vertex.z != 0){
                 if(sensorFieldLeft < vertex.x && vertex.x < sensorFieldRight &&
-                   sensorFieldFront < vertex.y && vertex.y < sensorFieldBack &&
-                   sensorFieldBottom < vertex.z && vertex.z < sensorFieldTop){
-                    mesh.addColor((vertex.z - sensorFieldBottom) / (sensorFieldTop - sensorFieldBottom));
-                } else if(sensorFieldLeft < vertex.x && vertex.x < sensorFieldRight &&
-                     sensorFieldFront < vertex.y && vertex.y < sensorFieldBack &&
-                     sensorFieldBottom < vertex.z && vertex.z < sensorFieldTop){
-                    mesh.addColor((vertex.z - sensorFieldBottom) / (sensorFieldTop - sensorFieldBottom));
+                    sensorFieldFront < vertex.y && vertex.y < sensorFieldBack &&
+                    sensorFieldBottom < vertex.z && vertex.z < sensorFieldTop){
+                        mesh.addColor((vertex.z - sensorFieldBottom) / (sensorFieldTop - sensorFieldBottom));
                 } else {
                     if(useVideoColor)
                         mesh.addColor(kinect.getColorAt(x,y));

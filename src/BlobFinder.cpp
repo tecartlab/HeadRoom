@@ -35,12 +35,12 @@ void BlobFinder::setup(ofxGui &gui){
     sensorBoxBottom.addListener(this, &BlobFinder::updateSensorBox);
     
     sensorBoxGuiGroup.setName("SensorBox");
-    sensorBoxGuiGroup.add(sensorBoxLeft.set("left", -500, 0, -4000));
-    sensorBoxGuiGroup.add(sensorBoxRight.set("right", 500, 0, 4000));
+    sensorBoxGuiGroup.add(sensorBoxLeft.set("left", -500, 1000, -4000));
+    sensorBoxGuiGroup.add(sensorBoxRight.set("right", 500, -1000, 4000));
     sensorBoxGuiGroup.add(sensorBoxFront.set("front", 0, 0, 10000));
-    sensorBoxGuiGroup.add(sensorBoxBack.set("back", 2000, 0, 7000));
-    sensorBoxGuiGroup.add(sensorBoxTop.set("top", 2200, 0, 3000));
-    sensorBoxGuiGroup.add(sensorBoxBottom.set("bottom", 1000, 0, 3000));
+    sensorBoxGuiGroup.add(sensorBoxBack.set("back", 2000, 0, 10000));
+    sensorBoxGuiGroup.add(sensorBoxTop.set("top", 2200, 0, 5000));
+    sensorBoxGuiGroup.add(sensorBoxBottom.set("bottom", 1000, 0, 5000));
     panel->addGroup(sensorBoxGuiGroup);
     
     blobGuiGroup.setName("Blobs");
@@ -251,7 +251,7 @@ void BlobFinder::update(){
         ofRectangle bounds = contourEyeFinder.blobs[i].boundingRect;
         for(int bid = 0; bid < trackedBlobs.size(); bid++){
             // find the blob
-            if(trackedBlobs[bid].finder(bounds)){
+            if(trackedBlobs[bid].isAlive() & trackedBlobs[bid].finder(bounds)){
                 
                 //calculate the blob pos in worldspace
                 ofVec3f headBlobCenter = ofVec3f(((float)bounds.getCenter().x / captureScreenSize.x) * sensorFieldWidth + sensorFieldLeft, sensorFieldBack - ((float)bounds.getCenter().y / captureScreenSize.y ) * sensorFieldDepth, trackedBlobs[bid].headCenter.z);

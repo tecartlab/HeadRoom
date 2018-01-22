@@ -74,20 +74,20 @@ ofVec3f BlobTracker::getCurrentHeadCenter(){
 }
 
 void BlobTracker::updateHead(ofVec3f _headBlobCenter, ofVec2f _headBlobSize, ofVec3f _eyeCenter){
-    if(!hasHeadUpdated){
-        tracker[0].headBlobCenter = _headBlobCenter;
-        tracker[0].headBlobSize = _headBlobSize;
-        tracker[0].eyeCenter = _eyeCenter;
-    } else {
-        // this means the previous blob was split up.
-        if(tracker.size() > 0 && tracker[0].headBlobCenter.z < _headBlobCenter.z){ //if this new blob is higher then take it
+    if(tracker.size() > 0){
+        if(!hasHeadUpdated){
+            tracker[0].headBlobCenter = _headBlobCenter;
+            tracker[0].headBlobSize = _headBlobSize;
+            tracker[0].eyeCenter = _eyeCenter;
+        } else if(tracker[0].headBlobCenter.z < _headBlobCenter.z){
+            //if this new blob is higher then take it
             tracker[0].headBlobCenter = _headBlobCenter;
             tracker[0].headBlobSize = _headBlobSize;
             tracker[0].eyeCenter = _eyeCenter;
         }
+
+        hasHeadUpdated = true;
     }
-    
-    hasHeadUpdated = true;
 }
 
 void BlobTracker::updateEnd(ofVec3f _kinectPos, int _smoothOffset, float _smoothFactor){
