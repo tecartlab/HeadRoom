@@ -43,7 +43,7 @@ void ofApp::setup(){
     
     setupCalib->add(captureVideo.set("use video", true));
     setupCalib->add(blobGrain.set("Grain", 2, 1, 4));
-    setupCalib->add(blobSize.set("GrainSize", 2., 1., 5.));
+    setupCalib->add(blobSize.set("GrainSize", 2., 1., 20.));
 
     setupCalib->add(calibPoint1.set("calibA", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
     setupCalib->add(calibPoint2.set("calibB", ofVec2f(320, 240), ofVec2f(0, 0), ofVec2f(640, 480)));
@@ -55,7 +55,7 @@ void ofApp::setup(){
 
     frustumGuiGroup.setName("frustumField");
     frustumGuiGroup.add(nearFrustum.set("nearFrustum", 400, 200, 2000));
-    frustumGuiGroup.add(farFrustum.set("farFrustum", 4000, 2000, 6000));
+    frustumGuiGroup.add(farFrustum.set("farFrustum", 4000, 2000, 10000));
     setupCalib->addGroup(frustumGuiGroup);
     
     setupCalib->add(transformation.set("matrix rx ry tz", ofVec3f(0, 0, 0), ofVec3f(-90, -90, -6000), ofVec3f(90, 90, 6000)));
